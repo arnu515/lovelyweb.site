@@ -45,7 +45,7 @@ create trigger auth_insert_trigger after insert on auth.users
 for each row
 execute function auth_insert_trigger();
 
-create or replace function get_user_provider(email text)
+create function get_user_provider(email text)
 returns text
 as $$
 declare
@@ -54,12 +54,10 @@ begin
   select * from auth.users into u where auth.users.email = $1 limit 1;
   if not found then 
     return null;
-  elsif u.confirmed_at is not null and u.encrypted_password is not null then
+  elsif u.encrypted_password is not null then
     return 'password';
   elsif u.raw_app_meta_data ? 'provider' and u.raw_app_meta_data->>'provider' <> 'email' then
     return u.raw_app_meta_data->>'provider';
-  elsif u.confirmed_at is null then
-    return null;
   else
     return 'password';
   end if;

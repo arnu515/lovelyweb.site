@@ -76,7 +76,21 @@ export const actions: Actions = {
       });
 
       if (signInError)
-        return fail(400, {
+        if (signInError.code === 'email_not_confirmed') {
+          const {error} = await supabase.auth.signInWithOtp({
+            email,
+            options: {
+              shouldCreateUser: false
+            }
+          })
+          if (error)   
+            return fail(400, {
+              step: "password",
+              email,
+              error: error.message,
+            });
+          return { step: 'otp', email, error: null }
+        } else return fail(400, {
           step: "password",
           email,
           error: signInError.message,
