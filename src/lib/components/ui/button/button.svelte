@@ -1,25 +1,22 @@
 <script lang="ts">
-	import type { ComponentProps } from "svelte";
 	import { Button as ButtonPrimitive } from "bits-ui";
+	import { type Events, type Props, buttonVariants } from "./index.js";
 	import { cn } from "$lib/utils.js";
-	import { buttonVariants } from "./index.js";
 
-	type $$Props = ComponentProps<ButtonPrimitive.Root> & {
-		variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
-		size?: "default" | "sm" | "lg" | "icon";
-	};
+	type $$Props = Props;
+	type $$Events = Events;
 
+	let className: $$Props["class"] = undefined;
 	export let variant: $$Props["variant"] = "default";
 	export let size: $$Props["size"] = "default";
 	export let builders: $$Props["builders"] = [];
-
-	let className: $$Props["class"] = undefined;
 	export { className as class };
 </script>
 
 <ButtonPrimitive.Root
 	{builders}
-	class={cn(buttonVariants({ variant, size }), className)}
+	class={cn(buttonVariants({ variant, size, className }))}
+	type="button"
 	{...$$restProps}
 	on:click
 	on:keydown
