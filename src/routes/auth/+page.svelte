@@ -1,5 +1,7 @@
 <script lang="ts">
     import { Button } from "$lib/components/ui/button";
+    import { Input } from "$lib/components/ui/input";
+    import { Label } from "$lib/components/ui/label";
     import { enhance } from "$app/forms";
     import * as Alert from "$lib/components/ui/alert";
     import { Github, Loader2 } from "lucide-svelte";
@@ -104,21 +106,21 @@
                     <input type="hidden" name="step" value={step} />
                     {#if step === "email"}
                         <div>
-                            <label
-                                for="email"
+                            <Label
                                 class={cn(
                                     "block text-sm font-medium text-gray-300 mb-2",
                                     step !== "email" && "sr-only",
                                 )}
+                                for="email"
                             >
                                 Email
-                            </label>
-                            <input
+                            </Label>
+                            <Input
                                 id="email"
                                 name="email"
                                 type="email"
                                 required
-                                class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                class="w-full bg-gray-800 border-gray-600 text-white placeholder-gray-400 focus:ring-purple-500 focus:border-purple-500"
                                 placeholder="Enter your email"
                                 value={form?.email || ""}
                                 autocomplete="email"
@@ -148,90 +150,90 @@
                     {/if}
                     {#if step === "password"}
                         <div>
-                            <label
+                            <Label
                                 for="password"
                                 class="block text-sm font-medium text-gray-300 mb-2"
                             >
                                 Password
-                            </label>
-                            <input
+                            </Label>
+                            <Input
                                 id="password"
                                 name="password"
                                 type="password"
                                 required
-                                class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                class="w-full bg-gray-800 border-gray-600 text-white placeholder-gray-400 focus:ring-purple-500 focus:border-purple-500"
                                 placeholder="Enter your password"
                                 autocomplete="current-password"
                             />
                         </div>
                     {:else if step === "otp"}
                         <div>
-                            <label
+                            <Label
                                 for="otp"
                                 class="block text-sm font-medium text-gray-300 mb-2"
                             >
                                 OTP Code
-                            </label>
-                            <input
+                            </Label>
+                            <Input
                                 id="otp"
                                 name="otp"
                                 type="text"
                                 required
                                 maxlength={8}
                                 minlength={8}
-                                class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                class="w-full bg-gray-800 border-gray-600 text-white placeholder-gray-400 focus:ring-purple-500 focus:border-purple-500"
                                 placeholder="Enter OTP"
                                 autocomplete="one-time-code"
                             />
                         </div>
                     {:else if step === "profile"}
                         <div>
-                            <label
+                            <Label
                                 for="name"
                                 class="block text-sm font-medium text-gray-300 mb-2"
                             >
                                 Name
-                            </label>
-                            <input
+                            </Label>
+                            <Input
                                 id="name"
                                 name="name"
                                 type="text"
                                 required
-                                class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                class="w-full bg-gray-800 border-gray-600 text-white placeholder-gray-400 focus:ring-purple-500 focus:border-purple-500"
                                 placeholder="Your name"
                                 autocomplete="name"
                             />
                         </div>
                         <div>
-                            <label
+                            <Label
                                 for="username"
                                 class="block text-sm font-medium text-gray-300 mb-2"
                             >
                                 Username
-                            </label>
-                            <input
+                            </Label>
+                            <Input
                                 id="username"
                                 name="username"
                                 type="text"
                                 required
-                                class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                class="w-full bg-gray-800 border-gray-600 text-white placeholder-gray-400 focus:ring-purple-500 focus:border-purple-500"
                                 placeholder="Choose a username"
                                 autocomplete="username"
                             />
                         </div>
                         <div>
-                            <label
+                            <Label
                                 for="password"
                                 class="block text-sm font-medium text-gray-300 mb-2"
                             >
                                 Password
-                            </label>
-                            <input
+                            </Label>
+                            <Input
                                 id="password"
                                 name="password"
                                 type="password"
                                 required
-                                class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                class="w-full bg-gray-800 border-gray-600 text-white placeholder-gray-400 focus:ring-purple-500 focus:border-purple-500"
                                 placeholder="Enter a password"
                                 autocomplete="new-password"
                             />
