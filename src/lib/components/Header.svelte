@@ -24,7 +24,7 @@
 </script>
 
 <header class="fixed top-0 left-0 right-0 z-50 transition-all duration-300 {isScrolled ? 'glass dark:glass-dark shadow-lg' : ''}">
-	<nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+	<nav class="mx-auto px-4 sm:px-6 lg:px-8">
 		<div class="flex items-center justify-between h-16">
 			<!-- Logo -->
 			<a href="/" class="flex items-center space-x-2">
