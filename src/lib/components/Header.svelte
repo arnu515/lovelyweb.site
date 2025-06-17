@@ -27,12 +27,12 @@
 	<nav class="container mx-auto px-4 sm:px-6 lg:px-8">
 		<div class="flex items-center justify-between h-16">
 			<!-- Logo -->
-			<div class="flex items-center space-x-2">
+			<a href="/" class="flex items-center space-x-2">
 				<div class="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
 					<Mail class="w-5 h-5 text-white" />
 				</div>
 				<span class="text-xl font-bold text-gradient">organised.today</span>
-			</div>
+			</a>
 
 			<!-- Desktop Navigation -->
 			<div class="hidden md:block">
