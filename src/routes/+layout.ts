@@ -1,17 +1,24 @@
-import { createSupabaseLoadClient } from '$lib/supabase'
+import { createBrowserClient, createServerClient, isBrowser } from '@supabase/ssr'
+import { PUBLIC_SUPABASE_ANON_KEY, PUBLIC_SUPABASE_URL } from "$env/static/public"
 import type { LayoutLoad } from './$types'
 
 export const load: LayoutLoad = async ({ fetch, data, depends }) => {
   depends('supabase:auth')
 
-  const supabase = createSupabaseLoadClient(fetch)
+  const supabase = isBrowser()
+    ? createBrowserClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {global: {fetch}})
+    : createServerClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {global: {fetch}, cookies: { getAll: () => data.cookies}})
 
+  // TODO: Are we making two duplicate network requests here?
   const {
     data: { session },
   } = await supabase.auth.getSession()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   return {
     supabase,
-    session,
+    auth: session && user ? { session, user } : { session: null, user: null },
   }
 }

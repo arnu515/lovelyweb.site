@@ -1,22 +1,8 @@
 <script lang="ts">
-	import Header from '$lib/components/Header.svelte';
 	import Hero from '$lib/components/Hero.svelte';
 	import Features from '$lib/components/Features.svelte';
 	import Pricing from '$lib/components/Pricing.svelte';
 	import About from '$lib/components/About.svelte';
-	import Footer from '$lib/components/Footer.svelte';
-	import { goto } from '$app/navigation';
-	import { onMount } from 'svelte';
-	import type { PageData } from './$types';
-
-	export let data: PageData;
-
-	onMount(() => {
-		// Redirect to app if user is already logged in
-		if (data.session) {
-			goto('/app');
-		}
-	});
 </script>
 
 <svelte:head>
@@ -31,10 +17,7 @@
 	<meta name="twitter:title" content="organised.today - AI-Powered Communication Platform" />
 	<meta name="twitter:description" content="Unify email, chat, and meetings with AI-powered organisation. Never miss important communications again." />
 </svelte:head>
-
-<Header session={data.session} />
 <Hero />
 <Features />
 <Pricing />
 <About />
-<Footer />

@@ -1,11 +1,9 @@
 <script lang="ts">
 	import { Button } from "$lib/components/ui/button";
-	import { Menu, X, Mail, MessageCircle, Video, Users } from "lucide-svelte";
+	import { Menu, X, Mail } from "lucide-svelte";
 	import { onMount } from "svelte";
-	import { page } from '$app/stores';
-	import { goto } from '$app/navigation';
 
-	export let session = null;
+	export let isLoggedIn = false;
 
 	let isScrolled = false;
 	let mobileMenuOpen = false;
@@ -54,25 +52,25 @@
 
 			<!-- CTA Buttons -->
 			<div class="hidden md:flex items-center space-x-4">
-				{#if session}
+				{#if isLoggedIn}
 					<Button 
-						variant="ghost" 
-						class="text-gray-700 dark:text-gray-300"
-						on:click={() => goto('/app')}
+						variant="ghost"
+						href="/app"
+						class="gradient-primary text-white hover:scale-105 transition-transform duration-200"
 					>
 						Dashboard
 					</Button>
 				{:else}
 					<Button 
 						variant="ghost" 
+						href="/auth"
 						class="text-gray-700 dark:text-gray-300"
-						on:click={() => goto('/auth')}
 					>
 						Sign In
 					</Button>
 					<Button 
 						class="gradient-primary text-white hover:scale-105 transition-transform duration-200"
-						on:click={() => goto('/auth')}
+						href="/auth"
 					>
 						Get Started
 					</Button>

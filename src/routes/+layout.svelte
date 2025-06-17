@@ -3,21 +3,18 @@
 	import { ModeWatcher } from 'mode-watcher';
 	import { invalidate } from '$app/navigation'
 	import { onMount } from 'svelte'
-	import { createSupabaseClient } from '$lib/supabase'
+	import type { LayoutData } from "./$types"
 
-	export let data
-
-	$: ({ session } = data)
+	export let data: LayoutData
+	console.log(data.auth.user)
+	$: ({ auth: {session}, supabase } = data)
 
 	onMount(() => {
-		const supabase = createSupabaseClient()
-		
 		const {
 			data: { subscription },
-		} = supabase.auth.onAuthStateChange((event, _session) => {
-			if (_session?.expires_at !== session?.expires_at) {
+		} = supabase.auth.onAuthStateChange((_, newSession) => {
+			if (newSession?.expires_at !== session?.expires_at) 
 				invalidate('supabase:auth')
-			}
 		})
 
 		return () => subscription.unsubscribe()

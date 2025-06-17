@@ -1,317 +1,272 @@
 <script lang="ts">
-	import { Button } from "$lib/components/ui/button";
-	import { Github, Mail, ArrowLeft, Loader2 } from "lucide-svelte";
-	import { createSupabaseClient } from '$lib/supabase';
-	import { goto } from '$app/navigation';
-	import { onMount } from 'svelte';
+    import { Button } from "$lib/components/ui/button";
+    import { enhance } from "$app/forms";
+    import * as Alert from "$lib/components/ui/alert";
+    import { Github, Loader2 } from "lucide-svelte";
+    import { goto } from "$app/navigation";
+    import type { Step } from "./+page.server.ts";
+    import { cn } from "$lib/utils";
 
-	let email = '';
-	let password = '';
-	let showPassword = false;
-	let showMagicLink = false;
-	let loading = false;
-	let error = '';
-	let success = '';
-	let emailExists = false;
-	let hasPassword = false;
+    export let data;
+    export let form;
 
-	const supabase = createSupabaseClient();
+    let loading = false;
+    $: error = form?.error || "";
 
-	onMount(() => {
-		// Check if user is already logged in
-		supabase.auth.getSession().then(({ data: { session } }) => {
-			if (session) {
-				goto('/app');
-			}
-		});
-	});
-
-	async function signInWithGitHub() {
-		loading = true;
-		error = '';
-		
-		const { error: authError } = await supabase.auth.signInWithOAuth({
-			provider: 'github',
-			options: {
-				redirectTo: `${window.location.origin}/app`
-			}
-		});
-
-		if (authError) {
-			error = authError.message;
-		}
-		loading = false;
-	}
-
-	async function checkEmail() {
-		if (!email) {
-			error = 'Email is required';
-			return;
-		}
-
-		loading = true;
-		error = '';
-
-		// Try to sign in with a dummy password to check if user exists
-		const { error: signInError } = await supabase.auth.signInWithPassword({
-			email,
-			password: 'dummy-password-check'
-		});
-
-		if (signInError) {
-			if (signInError.message.includes('Invalid login credentials')) {
-				// User might exist but wrong password, or user doesn't exist
-				// Try to sign up to see if email is already registered
-				const { error: signUpError } = await supabase.auth.signUp({
-					email,
-					password: 'dummy-password-check'
-				});
-
-				if (signUpError && signUpError.message.includes('already registered')) {
-					// User exists, ask for password
-					emailExists = true;
-					hasPassword = true;
-					showPassword = true;
-				} else {
-					// User doesn't exist, send magic link
-					emailExists = false;
-					sendMagicLink();
-					return;
-				}
-			} else {
-				error = signInError.message;
-			}
-		} else {
-			// This shouldn't happen with dummy password, but just in case
-			goto('/app');
-		}
-
-		loading = false;
-	}
-
-	async function signInWithPassword() {
-		if (!password) {
-			error = 'Password is required';
-			return;
-		}
-
-		loading = true;
-		error = '';
-
-		const { error: signInError } = await supabase.auth.signInWithPassword({
-			email,
-			password
-		});
-
-		if (signInError) {
-			if (signInError.message.includes('Invalid login credentials')) {
-				// User might not have a password set, send magic link
-				hasPassword = false;
-				showMagicLink = true;
-				sendMagicLink();
-				return;
-			} else {
-				error = signInError.message;
-			}
-		} else {
-			goto('/app');
-		}
-
-		loading = false;
-	}
-
-	async function sendMagicLink() {
-		loading = true;
-		error = '';
-		success = '';
-
-		const { error: magicLinkError } = await supabase.auth.signInWithOtp({
-			email,
-			options: {
-				emailRedirectTo: `${window.location.origin}/app`
-			}
-		});
-
-		if (magicLinkError) {
-			error = magicLinkError.message;
-		} else {
-			success = 'Check your email for a magic link to sign in!';
-			showMagicLink = true;
-		}
-
-		loading = false;
-	}
-
-	function resetForm() {
-		email = '';
-		password = '';
-		showPassword = false;
-		showMagicLink = false;
-		error = '';
-		success = '';
-		emailExists = false;
-		hasPassword = false;
-	}
+    $: step = (form?.step || "email") as Step;
 </script>
 
 <svelte:head>
-	<title>Sign In - organised.today</title>
+    <title>Sign In - organised.today</title>
 </svelte:head>
 
 <div class="min-h-screen bg-gray-900 flex items-center justify-center p-4">
-	<div class="w-full max-w-md">
-		<div class="glass-dark rounded-2xl p-8 border border-gray-700/50">
-			<!-- Header -->
-			<div class="mb-8">
-				<h1 class="text-2xl font-bold text-white mb-2">
-					{showMagicLink ? 'Check your email' : showPassword ? 'Welcome back' : 'Welcome back'}
-				</h1>
-				<p class="text-gray-400">
-					{showMagicLink ? 'We sent you a magic link' : showPassword ? 'Enter your password to continue' : 'Sign in to your account'}
-				</p>
-			</div>
+    <div class="w-full max-w-md">
+        <div class="glass-dark rounded-2xl p-8 border border-gray-700/50">
+            <!-- Header -->
+            <div class="mb-8">
+                <h1 class="text-2xl font-bold text-white mb-2">
+                    {#if step === "email"}
+                        Enter your email
+                    {:else if step === "otp"}
+                        Enter sign-in code
+                    {:else if step === "profile"}
+                        Set-up your profile
+                    {:else if step === "password"}
+                        Enter your password
+                    {/if}
+                </h1>
+                <p class="text-gray-400">
+                    {#if step === "email"}
+                        Enter your email to sign in/up
+                    {:else if step === "password"}
+                        Enter your password to continue
+                    {:else if step === "otp"}
+                        A code was sent to your email. Enter it below to
+                        continue
+                    {:else if step === "profile"}
+                        We need a few more details to create your account
+                    {/if}
+                </p>
+            </div>
 
-			{#if showMagicLink}
-				<!-- Magic Link Sent -->
-				<div class="text-center space-y-6">
-					<div class="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto">
-						<Mail class="w-8 h-8 text-green-400" />
-					</div>
-					<div>
-						<p class="text-green-400 mb-2">Magic link sent!</p>
-						<p class="text-gray-400 text-sm">
-							Check your email and click the link to sign in.
-						</p>
-					</div>
-					<Button 
-						variant="ghost" 
-						class="w-full text-gray-400 hover:text-white"
-						on:click={resetForm}
-					>
-						<ArrowLeft class="w-4 h-4 mr-2" />
-						Back to sign in
-					</Button>
-				</div>
-			{:else}
-				<!-- Sign In Form -->
-				<div class="space-y-6">
-					<!-- GitHub Sign In -->
-					<Button 
-						variant="outline" 
-						class="w-full bg-gray-800 border-gray-600 text-white hover:bg-gray-700"
-						on:click={signInWithGitHub}
-						disabled={loading}
-					>
-						{#if loading}
-							<Loader2 class="w-4 h-4 mr-2 animate-spin" />
-						{:else}
-							<Github class="w-4 h-4 mr-2" />
-						{/if}
-						Continue with GitHub
-					</Button>
+            {#if error}
+                <Alert.Root variant="destructive" class="my-4 space-y-2">
+                    <Alert.Title>An error occured</Alert.Title>
+                    <Alert.Description>{error}</Alert.Description>
+                </Alert.Root>
+            {:else if data.auth?.user}
+                <Alert.Root variant="warning" class="my-4 space-y-2">
+                    <Alert.Title>You're already logged in</Alert.Title>
+                    <Alert.Description
+                        >Logged in as <code>{data.auth.user.email}</code>.<br
+                        /><a
+                            href="/app"
+                            class="underline text-amber-700 dark:text-amber-300"
+                            >Go to your Dashboard</a
+                        ></Alert.Description
+                    >
+                </Alert.Root>
+            {/if}
 
-					<!-- Divider -->
-					<div class="relative">
-						<div class="absolute inset-0 flex items-center">
-							<div class="w-full border-t border-gray-600"></div>
-						</div>
-						<div class="relative flex justify-center text-sm">
-							<span class="px-2 bg-gray-900 text-gray-400">or</span>
-						</div>
-					</div>
+            <div class="space-y-6">
+                {#if step === "email"}
+                    <Button
+                        variant="outline"
+                        class="w-full bg-gray-800 border-gray-600 text-white hover:bg-gray-700"
+                        on:click={() => goto("/auth/oauth/github")}
+                    >
+                        <Github class="w-4 h-4 mr-2" />
+                        Continue with GitHub
+                    </Button>
 
-					<!-- Email Form -->
-					<div class="space-y-4">
-						<div>
-							<label for="email" class="block text-sm font-medium text-gray-300 mb-2">
-								Email
-							</label>
-							<input
-								id="email"
-								type="email"
-								bind:value={email}
-								disabled={showPassword || loading}
-								class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:opacity-50"
-								placeholder="Enter your email"
-								on:keydown={(e) => e.key === 'Enter' && !showPassword && checkEmail()}
-							/>
-						</div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-full border-t border-gray-600"></div>
+                        <span class="text-gray-400">or</span>
+                        <div class="w-full border-t border-gray-600"></div>
+                    </div>
+                {/if}
 
-						{#if showPassword}
-							<div>
-								<div class="flex items-center justify-between mb-2">
-									<label for="password" class="block text-sm font-medium text-gray-300">
-										Password
-									</label>
-									<button 
-										class="text-sm text-purple-400 hover:text-purple-300"
-										on:click={() => {
-											showPassword = false;
-											sendMagicLink();
-										}}
-									>
-										Forgot Password?
-									</button>
-								</div>
-								<input
-									id="password"
-									type="password"
-									bind:value={password}
-									disabled={loading}
-									class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-									placeholder="Enter your password"
-									on:keydown={(e) => e.key === 'Enter' && signInWithPassword()}
-								/>
-							</div>
-						{/if}
+                <form
+                    use:enhance={async () => {
+                        loading = true;
+                        return async ({ update }) => {
+                            loading = false;
+                            update({ reset: false });
+                        };
+                    }}
+                    method="POST"
+                    enctype={step === "profile"
+                        ? "multipart/form-data"
+                        : undefined}
+                    class="space-y-4"
+                >
+                    <input type="hidden" name="step" value={step} />
+                    {#if step === "email"}
+                        <div>
+                            <label
+                                for="email"
+                                class={cn(
+                                    "block text-sm font-medium text-gray-300 mb-2",
+                                    step !== "email" && "sr-only",
+                                )}
+                            >
+                                Email
+                            </label>
+                            <input
+                                id="email"
+                                name="email"
+                                type="email"
+                                required
+                                class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                placeholder="Enter your email"
+                                value={form?.email || ""}
+                                autocomplete="email"
+                            />
+                        </div>
+                    {:else}
+                        <div
+                            class="flex text-sm items-center justify-between gap-1"
+                        >
+                            <p class="truncate">
+                                Email: <span
+                                    class="font-mono text-muted-foreground"
+                                    >{form?.email}</span
+                                >
+                            </p>
+                            <Button
+                                size="sm"
+                                variant="link"
+                                on:click={() => (step = "email")}>Change</Button
+                            >
+                        </div>
+                        <input
+                            type="hidden"
+                            name="email"
+                            value={form?.email || ""}
+                        />
+                    {/if}
+                    {#if step === "password"}
+                        <div>
+                            <label
+                                for="password"
+                                class="block text-sm font-medium text-gray-300 mb-2"
+                            >
+                                Password
+                            </label>
+                            <input
+                                id="password"
+                                name="password"
+                                type="password"
+                                required
+                                class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                placeholder="Enter your password"
+                                autocomplete="current-password"
+                            />
+                        </div>
+                    {:else if step === "otp"}
+                        <div>
+                            <label
+                                for="otp"
+                                class="block text-sm font-medium text-gray-300 mb-2"
+                            >
+                                OTP Code
+                            </label>
+                            <input
+                                id="otp"
+                                name="otp"
+                                type="text"
+                                required
+                                maxlength={8}
+                                minlength={8}
+                                class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                placeholder="Enter OTP"
+                                autocomplete="one-time-code"
+                            />
+                        </div>
+                    {:else if step === "profile"}
+                        <div>
+                            <label
+                                for="name"
+                                class="block text-sm font-medium text-gray-300 mb-2"
+                            >
+                                Name
+                            </label>
+                            <input
+                                id="name"
+                                name="name"
+                                type="text"
+                                required
+                                class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                placeholder="Your name"
+                                autocomplete="name"
+                            />
+                        </div>
+                        <div>
+                            <label
+                                for="username"
+                                class="block text-sm font-medium text-gray-300 mb-2"
+                            >
+                                Username
+                            </label>
+                            <input
+                                id="username"
+                                name="username"
+                                type="text"
+                                required
+                                class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                placeholder="Choose a username"
+                                autocomplete="username"
+                            />
+                        </div>
+                        <div>
+                            <label
+                                for="password"
+                                class="block text-sm font-medium text-gray-300 mb-2"
+                            >
+                                Password
+                            </label>
+                            <input
+                                id="password"
+                                name="password"
+                                type="password"
+                                required
+                                class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                placeholder="Enter a password"
+                                autocomplete="new-password"
+                            />
+                        </div>
+                    {/if}
+                    <Button
+                        class="w-full gradient-primary text-white gap-2"
+                        disabled={loading}
+                        type="submit"
+                    >
+                        {#if loading}
+                            <Loader2 class="size-5 animate-spin" />
+                        {/if}
+                        {#if step === "email"}
+                            Continue
+                        {:else if step === "otp"}
+                            Continue
+                        {:else if step === "profile"}
+                            Create Account
+                        {:else if step === "password"}
+                            Sign In
+                        {/if}
+                    </Button>
+                </form>
 
-						<!-- Error Message -->
-						{#if error}
-							<div class="text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-lg p-3">
-								{error}
-							</div>
-						{/if}
-
-						<!-- Success Message -->
-						{#if success}
-							<div class="text-green-400 text-sm bg-green-500/10 border border-green-500/20 rounded-lg p-3">
-								{success}
-							</div>
-						{/if}
-
-						<!-- Submit Button -->
-						<Button 
-							class="w-full gradient-primary text-white"
-							on:click={showPassword ? signInWithPassword : checkEmail}
-							disabled={loading || !email}
-						>
-							{#if loading}
-								<Loader2 class="w-4 h-4 mr-2 animate-spin" />
-							{/if}
-							{showPassword ? 'Sign In' : 'Continue'}
-						</Button>
-
-						{#if showPassword}
-							<Button 
-								variant="ghost" 
-								class="w-full text-gray-400 hover:text-white"
-								on:click={resetForm}
-							>
-								<ArrowLeft class="w-4 h-4 mr-2" />
-								Back
-							</Button>
-						{/if}
-					</div>
-
-					<!-- Terms -->
-					<p class="text-xs text-gray-500 text-center">
-						By continuing, you agree to organised.today's 
-						<a href="#" class="text-purple-400 hover:text-purple-300">Terms of Service</a> and 
-						<a href="#" class="text-purple-400 hover:text-purple-300">Privacy Policy</a>, 
-						and to receive periodic emails with updates.
-					</p>
-				</div>
-			{/if}
-		</div>
-	</div>
+                <!-- Terms -->
+                <p class="text-xs text-gray-500 text-center">
+                    By continuing, you agree to organised.today's
+                    <a
+                        href="/terms"
+                        class="text-purple-400 hover:text-purple-300"
+                        >Terms of Service</a
+                    >.
+                </p>
+            </div>
+        </div>
+    </div>
 </div>
