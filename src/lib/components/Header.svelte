@@ -2,6 +2,10 @@
 	import { Button } from "$lib/components/ui/button";
 	import { Menu, X, Mail, MessageCircle, Video, Users } from "lucide-svelte";
 	import { onMount } from "svelte";
+	import { page } from '$app/stores';
+	import { goto } from '$app/navigation';
+
+	export let session = null;
 
 	let isScrolled = false;
 	let mobileMenuOpen = false;
@@ -50,12 +54,29 @@
 
 			<!-- CTA Buttons -->
 			<div class="hidden md:flex items-center space-x-4">
-				<Button variant="ghost" class="text-gray-700 dark:text-gray-300">
-					Sign In
-				</Button>
-				<Button class="gradient-primary text-white hover:scale-105 transition-transform duration-200">
-					Get Started
-				</Button>
+				{#if session}
+					<Button 
+						variant="ghost" 
+						class="text-gray-700 dark:text-gray-300"
+						on:click={() => goto('/app')}
+					>
+						Dashboard
+					</Button>
+				{:else}
+					<Button 
+						variant="ghost" 
+						class="text-gray-700 dark:text-gray-300"
+						on:click={() => goto('/auth')}
+					>
+						Sign In
+					</Button>
+					<Button 
+						class="gradient-primary text-white hover:scale-105 transition-transform duration-200"
+						on:click={() => goto('/auth')}
+					>
+						Get Started
+					</Button>
+				{/if}
 			</div>
 
 			<!-- Mobile menu button -->
