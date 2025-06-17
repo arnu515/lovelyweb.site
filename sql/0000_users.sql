@@ -45,9 +45,20 @@ create trigger auth_insert_trigger after insert on auth.users
 for each row
 execute function auth_insert_trigger();
 
-create function does_user_exist(eml text)
-returns boolean
+create or replace function get_user_provider(email text)
+returns text
 as $$
+declare
+  u record;
 begin
-  return (select exists(select 1 from auth.users where email = eml));
+  select * from auth.users into u where auth.users.email = $1 limit 1;
+  if not found then 
+    return null;
+  elsif u.encrypted_password is not null then
+    return 'password';
+  elsif u.raw_app_meta_data ? 'provider' then
+    return u.raw_app_meta_data->>'provider';
+  else
+    return 'password';
+  end if;
 end $$ language plpgsql security definer;

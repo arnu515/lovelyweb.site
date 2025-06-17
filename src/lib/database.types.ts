@@ -35,9 +35,9 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      does_user_exist: {
-        Args: { eml: string }
-        Returns: boolean
+      get_user_provider: {
+        Args: { email: string }
+        Returns: string
       }
     }
     Enums: {
