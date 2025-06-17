@@ -71,10 +71,9 @@
 	<div class="container mx-auto px-4 sm:px-6 lg:px-8">
 		<!-- Section Header -->
 		<div class="text-center max-w-3xl mx-auto mb-16">
-			<h2 class="text-4xl md:text-5xl font-bold mb-6">
-				<span class="text-gradient">Simple, Transparent</span>
-				<br />
-				Pricing
+			<h2 class="text-4xl md:text-5xl font-bold mb-6 flex flex-col gap-4 justify-center content-center">
+				<span class="text-gradient" style="font-size: 0.7em; line-height: 1em;">Simple, Transparent</span>
+				<span>Pricing</span>
 			</h2>
 			<p class="text-xl text-gray-600 dark:text-gray-300 leading-relaxed">
 				Choose the perfect plan for your team. Start free and scale as you grow.
@@ -84,10 +83,10 @@
 		<!-- Pricing Cards -->
 		<div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
 			{#each plans as plan, index}
-				<div class="relative group">
+				<div class="relative group animate-slide-up" style="animation-delay: {index * 0.1}s;">
 					<!-- Popular Badge -->
 					{#if plan.popular}
-						<div class="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
+						<div class="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10 group-hover:-top-8 group-hover:scale-105 transition-all duration-300">
 							<div class="gradient-primary text-white px-4 py-2 rounded-full text-sm font-semibold">
 								Most Popular
 							</div>
@@ -95,7 +94,7 @@
 					{/if}
 
 					<!-- Card -->
-					<div class="glass dark:glass-dark rounded-2xl p-8 h-full {plan.popular ? 'ring-2 ring-purple-500 scale-105' : ''} hover:scale-105 transition-all duration-300 animate-slide-up" style="animation-delay: {index * 0.1}s;">
+					<div class="glass dark:glass-dark rounded-2xl p-8 h-full {plan.popular ? 'ring-2 ring-purple-500' : ''} hover:scale-105 transition-all duration-300 flex-col flex">
 						<!-- Icon -->
 						<div class="w-16 h-16 rounded-2xl bg-gradient-to-r {plan.gradient} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
 							<svelte:component this={plan.icon} class="w-8 h-8 text-white" />
@@ -137,7 +136,7 @@
 
 						<!-- CTA Button -->
 						<Button 
-							class={`w-full ${plan.popular ? 'gradient-primary text-white hover:scale-105' : 'border border-purple-200 dark:border-purple-800 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20'} transition-all duration-200`}
+							class="w-full gradient-primary flex text-white hover:scale-105 transition-all duration-200 mt-auto"
 							size="lg"
 						>
 							{plan.cta}
