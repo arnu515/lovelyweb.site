@@ -62,3 +62,10 @@ begin
     return 'password';
   end if;
 end $$ language plpgsql security definer;
+
+create policy "Enable read access for all users (TODO: clamp down on org members)"
+on "public"."users"
+as PERMISSIVE
+for SELECT
+to authenticated
+using ( true );
