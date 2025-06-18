@@ -90,7 +90,7 @@
 					Ready to transform your workflow?
 				</h3>
 				<p class="text-gray-600 dark:text-gray-300 mb-6">
-					Join thousands of teams already using organised.today to streamline their communication.
+					Join thousands of teams already using lovelyweb.site to streamline their communication.
 				</p>
 				<div class="flex flex-col sm:flex-row gap-4 justify-center">
 					<button class="gradient-primary text-white px-8 py-3 rounded-lg font-semibold hover:scale-105 transition-transform duration-200">
