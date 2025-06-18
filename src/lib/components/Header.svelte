@@ -33,7 +33,7 @@
 				<div class="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
 					<Mail class="w-5 h-5 text-white" />
 				</div>
-				<span class="text-xl font-bold text-gradient">organised.today</span>
+				<span class="text-xl font-bold text-gradient">lovelyweb.site</span>
 			</a>
 
 			<!-- Desktop Navigation -->

@@ -44,7 +44,7 @@
 					<div class="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
 						<Mail class="w-5 h-5 text-white" />
 					</div>
-					<span class="text-xl font-bold text-gradient">organised.today</span>
+					<span class="text-xl font-bold text-gradient">lovelyweb.site</span>
 				</div>
 				<p class="text-gray-400 mb-6 max-w-sm">
 					Unify your communication workflow with AI-powered email, chat, and meeting management.
@@ -141,7 +141,7 @@
 		<!-- Bottom -->
 		<div class="border-t border-gray-800 pt-8 mt-12 flex flex-col md:flex-row justify-between items-center">
 			<p class="text-gray-400 text-sm">
-				© 2024 organised.today. All rights reserved.
+				© 2024 lovelyweb.site. All rights reserved.
 			</p>
 			<p class="text-gray-400 text-sm flex items-center mt-4 md:mt-0">
 				Made with <Heart class="w-4 h-4 text-red-500 mx-1" /> in the UK
