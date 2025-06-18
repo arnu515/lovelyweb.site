@@ -8,6 +8,7 @@
     import { goto } from "$app/navigation";
     import type { Step } from "./+page.server.ts";
     import { cn } from "$lib/utils";
+    import { onMount } from "svelte";
 
     export let data;
     export let form;
@@ -16,6 +17,27 @@
     $: error = form?.error || "";
 
     $: step = (form?.step || "email") as Step;
+
+    // Fragment error handling
+    let fragmentError: string | null = null;
+    onMount(() => {
+        const hash = window.location.hash?.replace(/^#/, "");
+        if (hash) {
+            const params = new URLSearchParams(hash);
+            if (params.has("error") || params.has("error_message")) {
+                fragmentError =
+                    params.get("error_message") ||
+                    params.get("error") ||
+                    "An unknown error occurred.";
+            }
+            // Remove the hash from the URL without reloading the page
+            history.replaceState(
+                null,
+                "",
+                window.location.pathname + window.location.search,
+            );
+        }
+    });
 </script>
 
 <svelte:head>
@@ -52,7 +74,12 @@
                 </p>
             </div>
 
-            {#if error}
+            {#if fragmentError}
+                <Alert.Root variant="destructive" class="my-4 space-y-2">
+                    <Alert.Title>Authentication Error</Alert.Title>
+                    <Alert.Description>{fragmentError}</Alert.Description>
+                </Alert.Root>
+            {:else if error}
                 <Alert.Root variant="destructive" class="my-4 space-y-2">
                     <Alert.Title>An error occured</Alert.Title>
                     <Alert.Description>{error}</Alert.Description>
