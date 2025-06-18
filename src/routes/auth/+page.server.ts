@@ -54,7 +54,7 @@ export const actions: Actions = {
       return fail(400, {
         step: "email",
         email,
-        error: "Use another email domain, not ours!",
+        error: "Use another email domain!",
       });
 
     if (step === "email") {
