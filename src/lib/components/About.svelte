@@ -31,7 +31,7 @@
 		<div class="text-center max-w-3xl mx-auto mb-16">
 			<h2 class="text-4xl md:text-5xl font-bold mb-6">
 				<span class="text-gradient">About</span>
-				organised.today
+				lovelyweb.site
 			</h2>
 			<p class="text-xl text-gray-600 dark:text-gray-300 leading-relaxed">
 				We're on a mission to revolutionise how teams communicate and collaborate in the modern workplace.
@@ -45,13 +45,13 @@
 					Our Story
 				</h3>
 				<p class="text-lg text-gray-600 dark:text-gray-300 leading-relaxed">
-					Founded in 2024, organised.today was born from a simple observation: teams were drowning in communication tools that didn't talk to each other. Email, chat, video calls, and documents lived in separate silos, creating chaos instead of clarity.
+					Founded in 2024, lovelyweb.site was born from a simple observation: teams were drowning in communication tools that didn't talk to each other. Email, chat, video calls, and documents lived in separate silos, creating chaos instead of clarity.
 				</p>
 				<p class="text-lg text-gray-600 dark:text-gray-300 leading-relaxed">
 					We set out to build something different—a unified platform that harnesses the power of AI to not just connect these tools, but to make them intelligent, predictive, and truly helpful.
 				</p>
 				<p class="text-lg text-gray-600 dark:text-gray-300 leading-relaxed">
-					Today, thousands of teams across the globe use organised.today to streamline their communication, boost productivity, and focus on what matters most: their work and their people.
+					Today, thousands of teams across the globe use lovelyweb.site to streamline their communication, boost productivity, and focus on what matters most: their work and their people.
 				</p>
 			</div>
 

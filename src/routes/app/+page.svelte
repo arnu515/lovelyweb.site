@@ -5,7 +5,7 @@
 </script>
 
 <svelte:head>
-	<title>Dashboard - organised.today</title>
+	<title>Dashboard - lovelyweb.site</title>
 </svelte:head>
 
 <div class="container mx-auto px-4 py-8">

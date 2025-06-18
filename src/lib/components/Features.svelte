@@ -54,7 +54,7 @@
 				for Modern Teams
 			</h2>
 			<p class="text-xl text-gray-600 dark:text-gray-300 leading-relaxed">
-				Everything you need to streamline communication, boost productivity, and keep your team organised in one intelligent platform.
+				Join thousands of teams already using lovelyweb.site to streamline their communication.
 			</p>
 		</div>
 

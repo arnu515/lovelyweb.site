@@ -41,7 +41,7 @@
 </script>
 
 <svelte:head>
-    <title>Sign In - organised.today</title>
+    <title>Sign In - lovelyweb.site</title>
 </svelte:head>
 
 <div class="min-h-screen bg-gray-900 flex items-center justify-center p-4">
