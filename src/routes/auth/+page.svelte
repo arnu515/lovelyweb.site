@@ -41,7 +41,7 @@
 </script>
 
 <svelte:head>
-    <title>Sign In - lovelyweb.site</title>
+    <title>Sign In - organised.today</title>
 </svelte:head>
 
 <div class="min-h-screen bg-gray-900 flex items-center justify-center p-4">
@@ -288,7 +288,7 @@
 
                 <!-- Terms -->
                 <p class="text-xs text-gray-500 text-center">
-                    By continuing, you agree to organised.today's
+                    By continuing, you agree to lovelyweb.site's
                     <a
                         href="/terms"
                         class="text-purple-400 hover:text-purple-300"
