@@ -18,9 +18,11 @@ const supabase: Handle = async ({ event, resolve }) => {
       data: { session },
     } = await event.locals.supabase.auth.getSession()
     if (!session) return { session: null, user: null }
-    const { data: { user }, error } = await event.locals.supabase.auth.getUser()
-    if (error || !user) return { session: null, user: null }
-    return { session, user }
+    const { data: { user } } = await event.locals.supabase.auth.getUser()
+    if (!user) return { session: null, user: null }
+    const { data: profile }= await event.locals.supabase.from("users").select("*").eq("id", user.id).single()
+    if (!profile) return { session: null, user: null }
+    return { session, user: { ...user, ...profile } }
   }
 
   return resolve(event, {

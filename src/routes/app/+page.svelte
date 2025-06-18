@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { Button } from "$lib/components/ui/button";
-	import { goto } from '$app/navigation';
 	import type { PageData } from './$types';
 
 	export let data: PageData;
@@ -26,15 +24,11 @@
 				<div class="space-y-2 text-left">
 					<p><strong>Email:</strong> {data.auth.user.email}</p>
 					<p><strong>User ID:</strong> {data.auth.user.id}</p>
-					<p><strong>Provider:</strong> {data.auth.user.app_metadata.provider || 'email'}</p>
-					{#if data.auth.user.user_metadata.full_name}
-						<p><strong>Name:</strong> {data.auth.user.user_metadata.full_name}</p>
-					{/if}
-					{#if data.auth.user.user_metadata.avatar_url}
-						<p><strong>Avatar:</strong> 
-							<img src={data.auth.user.user_metadata.avatar_url} alt="Avatar" class="inline-block w-8 h-8 rounded-full ml-2" />
-						</p>
-					{/if}
+					<p><strong>Username:</strong> {data.auth.user.username}</p>
+					<p><strong>Name:</strong> {data.auth.user.name}</p>
+					<p><strong>Avatar:</strong> 
+						<img src={data.auth.user.avatar_url} alt="Avatar" class="inline-block w-8 h-8 rounded-full ml-2" />
+					</p>
 				</div>
 			</div>
 		{/if}
