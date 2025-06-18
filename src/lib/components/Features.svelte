@@ -104,15 +104,3 @@
 		</div>
 	</div>
 </section>
-
-<style>
-	.bg-grid-gray-100 {
-		background-image: radial-gradient(circle, #f3f4f6 1px, transparent 1px);
-		background-size: 20px 20px;
-	}
-	
-	.dark .bg-grid-gray-800 {
-		background-image: radial-gradient(circle, #374151 1px, transparent 1px);
-		background-size: 20px 20px;
-	}
-</style>
