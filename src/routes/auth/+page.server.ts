@@ -3,6 +3,21 @@ import { z } from "zod/v4";
 import { redirect, fail } from "@sveltejs/kit";
 import { md5 } from "$lib/utils";
 
+function getSafeNext(url: URL, fallback = "/app") {
+  const next = url.searchParams.get("next");
+  if (!next) return fallback;
+  try {
+    // If new URL(next, url.origin) has the same origin, it's safe
+    const dest = new URL(next, url.origin);
+    if (dest.origin === url.origin && dest.pathname.startsWith("/")) {
+      return dest.pathname + dest.search + dest.hash;
+    }
+  } catch {
+    // Ignore invalid URLs
+  }
+  return fallback;
+}
+
 const steps = ["email", "password", "otp", "profile"] as const;
 export type Step = (typeof steps)[number];
 
@@ -76,26 +91,27 @@ export const actions: Actions = {
       });
 
       if (signInError)
-        if (signInError.code === 'email_not_confirmed') {
-          const {error} = await supabase.auth.signInWithOtp({
+        if (signInError.code === "email_not_confirmed") {
+          const { error } = await supabase.auth.signInWithOtp({
             email,
             options: {
-              shouldCreateUser: false
-            }
-          })
-          if (error)   
+              shouldCreateUser: false,
+            },
+          });
+          if (error)
             return fail(400, {
               step: "password",
               email,
               error: error.message,
             });
-          return { step: 'otp', email, error: null }
-        } else return fail(400, {
-          step: "password",
-          email,
-          error: signInError.message,
-        });
-      redirect(303, "/app");
+          return { step: "otp", email, error: null };
+        } else
+          return fail(400, {
+            step: "password",
+            email,
+            error: signInError.message,
+          });
+      redirect(303, getSafeNext(url));
     } else if (step === "otp") {
       const parsed = otpSchema.safeParse(form.get("otp"));
       if (!parsed.success) {
@@ -119,7 +135,7 @@ export const actions: Actions = {
         });
       }
 
-      redirect(303, "/app");
+      redirect(303, getSafeNext(url));
     } else if (step === "profile") {
       const parsed = onboardingSchema.safeParse({
         name: form.get("name"),
@@ -137,17 +153,17 @@ export const actions: Actions = {
 
       const avatar_url = `https://www.gravatar.com/avatar/${md5(email)}?s=64&d=identicon`;
 
-      const { data, error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email,
         password: parsed.data.password,
         options: {
           data: {
             avatar_url,
             name: parsed.data.name,
-            username: parsed.data.username
-          }
-        }
-      })
+            username: parsed.data.username,
+          },
+        },
+      });
 
       if (error) {
         console.log(error);
