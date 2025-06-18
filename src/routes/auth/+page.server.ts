@@ -157,7 +157,6 @@ export const actions: Actions = {
           error: error.message,
         });
       }
-      console.log("sign up", data);
 
       return { step: "otp", email, error: null };
     }

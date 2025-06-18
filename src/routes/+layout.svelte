@@ -6,7 +6,6 @@
 	import type { LayoutData } from "./$types"
 
 	export let data: LayoutData
-	console.log(data.auth.user)
 	$: ({ auth: {session}, supabase } = data)
 
 	onMount(() => {
