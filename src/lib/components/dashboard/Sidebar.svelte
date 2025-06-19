@@ -208,24 +208,24 @@
           <Plus class="icon stroke-white" />
           <span>Compose</span>
         </Button>
-        <Button variant="ghost" class={cn("sb-btn", currentPage === 'email' && 'active')} href="/app/email" on:click={handleNavigation}>
+        <Button variant="ghost" class={cn("sb-btn", currentPage === 'email/inbox' && 'active')} href="/app/email/inbox" on:click={handleNavigation}>
           <Inbox class="icon" />
           <span>Inbox</span>
           <span class="badge">12</span>
         </Button>
-        <Button variant="ghost" class="sb-btn" on:click={handleNavigation}>
+        <Button variant="ghost" class={cn("sb-btn", currentPage === 'email/sent' && 'active')} href="/app/email/sent" on:click={handleNavigation}>
           <Send class="icon" />
           <span>Sent Items</span>
         </Button>
-        <Button variant="ghost" class="sb-btn" on:click={handleNavigation}>
+        <Button variant="ghost" class={cn("sb-btn", currentPage === 'email/archive' && 'active')} href="/app/email/archive" on:click={handleNavigation}>
           <Archive class="icon" />
           <span>Archived</span>
         </Button>
-        <Button variant="ghost" class="sb-btn" on:click={handleNavigation}>
+        <Button variant="ghost" class={cn("sb-btn", currentPage === 'email/spam' && 'active')} href="/app/email/spam" on:click={handleNavigation}>
           <AlertTriangle class="icon" />
           <span>Spam</span>
         </Button>
-        <Button variant="ghost" class="sb-btn" on:click={handleNavigation}>
+        <Button variant="ghost" class={cn("sb-btn", currentPage === 'email/trash' && 'active')} href="/app/email/trash" on:click={handleNavigation}>
           <Trash2 class="icon" />
           <span>Trash</span>
         </Button>
