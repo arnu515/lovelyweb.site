@@ -204,7 +204,7 @@
         </h3>
       </div>
       <div class="space-y-1">
-        <Button variant="ghost" class="sb-btn compose-btn">
+        <Button variant="ghost" class="sb-btn compose-btn mb-1">
           <Plus class="icon stroke-white" />
           <span>Compose</span>
         </Button>
