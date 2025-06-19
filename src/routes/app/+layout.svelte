@@ -12,9 +12,10 @@
   onMount(() => {
     const checkMobile = () => {
       isMobile = window.innerWidth < 768;
-      if (!isMobile) {
+      if (!isMobile)
         sidebarOpen = true;
-      }
+      else
+        sidebarOpen = false;
     };
 
     checkMobile();
