@@ -16,7 +16,7 @@ export const load: LayoutLoad = async ({ fetch, data, depends }) => {
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  let profile = null;
+  let profile: App.Locals['auth']['user'] = null;
   if (user) {
     const { data }= await supabase.from("users").select("*").eq("id", user.id).single()
     profile = data
