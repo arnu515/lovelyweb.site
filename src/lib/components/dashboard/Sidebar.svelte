@@ -283,7 +283,8 @@
           {#each recentContacts as contact}
             <Button
               variant="ghost"
-              class="h-auto w-full justify-start p-2 transition-all duration-200 hover:bg-white/20 dark:hover:bg-gray-800/50"
+            class={cn('sb-btn', currentPage === 'email' && 'active')}
+            href="/app/email"
               on:click={handleNavigation}
             >
               <div class="relative mr-3">
