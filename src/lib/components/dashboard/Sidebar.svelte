@@ -5,7 +5,7 @@
     Settings,
     UserPlus,
     Smartphone,
-    FileEdit as Edit3,
+    Plus,
     Inbox,
     Send,
     Archive,
@@ -19,11 +19,15 @@
     Mail
   } from 'lucide-svelte';
   import { Button } from '$lib/components/ui/button';
+  import { page } from "$app/stores"
+  import { cn } from '$lib/utils';
 
   export let user: any;
+  console.log($page)
 
   let orgDropdownOpen = false;
-  let currentPage = 'home'; // This would come from the router in a real app
+  // page path without /app
+  $: currentPage = $page.url.pathname.replace(/\/app\/?/, '');
 
   // Mock data for recent contacts
   const recentContacts = [
@@ -159,8 +163,8 @@
     <div>
       <Button 
         variant="ghost" 
-        class="sb-btn {currentPage === 'home' ? 'active' : ''}"
-        on:click={() => currentPage = 'home'}
+        class={cn("sb-btn", currentPage === '' && 'active')}
+        href="/app"
       >
         <Home class="h-5 w-5" />
         <span class="font-medium">Home</span>
@@ -178,13 +182,12 @@
       </div>
       <div class="space-y-1">
         <Button variant="ghost" class="sb-btn compose-btn">
-          <Edit3 class="icon" />
+          <Plus class="icon stroke-white" />
           <span>Compose</span>
         </Button>
         <Button 
           variant="ghost" 
-          class="sb-btn {currentPage === 'inbox' ? 'active' : ''}"
-          on:click={() => currentPage = 'inbox'}
+          class="sb-btn"
         >
           <Inbox class="icon" />
           <span>Inbox</span>
@@ -192,32 +195,28 @@
         </Button>
         <Button 
           variant="ghost" 
-          class="sb-btn {currentPage === 'sent' ? 'active' : ''}"
-          on:click={() => currentPage = 'sent'}
+          class="sb-btn"
         >
           <Send class="icon" />
           <span>Sent Items</span>
         </Button>
         <Button 
           variant="ghost" 
-          class="sb-btn {currentPage === 'archived' ? 'active' : ''}"
-          on:click={() => currentPage = 'archived'}
+          class="sb-btn"
         >
           <Archive class="icon" />
           <span>Archived</span>
         </Button>
         <Button 
           variant="ghost" 
-          class="sb-btn {currentPage === 'spam' ? 'active' : ''}"
-          on:click={() => currentPage = 'spam'}
+          class="sb-btn"
         >
           <AlertTriangle class="icon" />
           <span>Spam</span>
         </Button>
         <Button 
           variant="ghost" 
-          class="sb-btn {currentPage === 'trash' ? 'active' : ''}"
-          on:click={() => currentPage = 'trash'}
+          class="sb-btn"
         >
           <Trash2 class="icon" />
           <span>Trash</span>
@@ -237,16 +236,14 @@
       <div class="space-y-1">
         <Button 
           variant="ghost" 
-          class="sb-btn {currentPage === 'notes' ? 'active' : ''}"
-          on:click={() => currentPage = 'notes'}
+          class="sb-btn"
         >
           <FileText class="icon" />
           <span>Notes</span>
         </Button>
         <Button 
           variant="ghost" 
-          class="sb-btn {currentPage === 'tasks' ? 'active' : ''}"
-          on:click={() => currentPage = 'tasks'}
+          class="sb-btn"
         >
           <CheckSquare class="icon" />
           <span>Tasks</span>
@@ -254,16 +251,14 @@
         </Button>
         <Button 
           variant="ghost" 
-          class="sb-btn {currentPage === 'kanban' ? 'active' : ''}"
-          on:click={() => currentPage = 'kanban'}
+          class="sb-btn"
         >
           <Kanban class="icon" />
           <span>Kanban</span>
         </Button>
         <Button 
           variant="ghost" 
-          class="sb-btn {currentPage === 'calendar' ? 'active' : ''}"
-          on:click={() => currentPage = 'calendar'}
+          class="sb-btn"
         >
           <Calendar class="icon" />
           <span>Calendar</span>
@@ -283,8 +278,7 @@
       <div class="space-y-1">
         <Button 
           variant="ghost" 
-          class="sb-btn {currentPage === 'dm' ? 'active' : ''}"
-          on:click={() => currentPage = 'dm'}
+          class="sb-btn"
         >
           <MessageCircle class="icon" />
           <span>Direct Messages</span>
@@ -337,16 +331,12 @@
     @apply text-purple-600 dark:text-purple-400;
   }
   
-  :global(.sb-btn.compose-btn) {
-    @apply bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700;
-  }
-  
-  :global(.sb-btn.compose-btn .icon) {
-    @apply text-white;
-  }
-  
   :global(.sb-btn .icon) {
     @apply h-4 w-4 text-gray-600 dark:text-gray-400;
+  }
+  
+  :global(.sb-btn.compose-btn) {
+    @apply bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 w-max;
   }
   
   :global(.sb-btn .badge) {
@@ -354,6 +344,6 @@
   }
   
   :global(.sb-btn span) {
-    @apply text-sm font-medium text-gray-900 dark:text-white;
+    @apply text-sm font-medium;
   }
 </style>
