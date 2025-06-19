@@ -150,7 +150,7 @@
           ? 'morning'
           : new Date().getHours() < 18
             ? 'afternoon'
-            : 'evening'}, {user.name}!
+            : 'evening'}, <span class="text-nowrap">{user.name}</span>!
       </h1>
   </div>
 

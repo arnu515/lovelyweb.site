@@ -16,20 +16,15 @@
     Kanban,
     Calendar,
     MessageCircle,
-    Mail
+    Mail,
   } from 'lucide-svelte';
   import { Button } from '$lib/components/ui/button';
   import { page } from '$app/stores';
   import { cn } from '$lib/utils';
-  import { createEventDispatcher } from 'svelte';
 
-  export let user: any;
+  export let user: NonNullable<App.Locals['auth']['user']>;
   export let isOpen = true;
   export let isMobile = false;
-
-  const dispatch = createEventDispatcher();
-
-  console.log($page);
 
   let orgDropdownOpen = false;
   // page path without /app
@@ -74,9 +69,7 @@
   }
 
   function handleNavigation() {
-    if (isMobile) {
-      dispatch('close-sidebar');
-    }
+    isMobile && (isOpen = false);
   }
 </script>
 
@@ -84,12 +77,16 @@
 {#if isMobile && isOpen}
   <div
     class="fixed inset-0 z-40 bg-black/50 md:hidden"
-    on:click={() => dispatch('close-sidebar')}
-    on:keydown={e => e.key === 'Escape' && dispatch('close-sidebar')}
+    on:click={() => isOpen = false}
+    on:keydown={e => e.key === 'Escape' && (isOpen = false)}
     role="button"
     tabindex="0"
   ></div>
 {/if}
+
+<svelte:window
+  on:keydown={e => isMobile && isOpen && e.key === 'Escape' && (isOpen = false)}
+/>
 
 <aside
   class="glass dark:glass-dark fixed left-0 top-0 z-50 flex h-screen w-64 flex-col border-r border-white/20 transition-transform duration-300 dark:border-gray-700/50 md:relative md:translate-x-0 {isOpen

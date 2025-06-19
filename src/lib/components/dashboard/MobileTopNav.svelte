@@ -1,17 +1,8 @@
 <script lang="ts">
   import { Button } from '$lib/components/ui/button';
-  import { Menu, X, Search, Bell, User } from 'lucide-svelte';
-  import { createEventDispatcher } from 'svelte';
+  import { Menu, X } from 'lucide-svelte';
 
-  export let user: any;
   export let sidebarOpen = false;
-
-  const dispatch = createEventDispatcher();
-
-  function toggleSidebar() {
-    sidebarOpen = !sidebarOpen;
-    dispatch('toggle-sidebar', sidebarOpen);
-  }
 </script>
 
 <nav
@@ -22,7 +13,7 @@
       variant="ghost"
       size="icon"
       class="h-10 w-10 hover:bg-white/20 dark:hover:bg-gray-700/60"
-      on:click={toggleSidebar}
+      on:click={() => sidebarOpen = !sidebarOpen}
     >
       {#if sidebarOpen}
         <X class="h-5 w-5" />

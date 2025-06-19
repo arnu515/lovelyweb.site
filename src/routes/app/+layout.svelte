@@ -24,14 +24,6 @@
       window.removeEventListener('resize', checkMobile);
     };
   });
-
-  function handleToggleSidebar(event) {
-    sidebarOpen = event.detail;
-  }
-
-  function handleCloseSidebar() {
-    sidebarOpen = false;
-  }
 </script>
 
 <div
@@ -41,14 +33,12 @@
     user={data.auth.user}
     bind:isOpen={sidebarOpen}
     {isMobile}
-    on:close-sidebar={handleCloseSidebar}
   />
 
   <main class="flex flex-1 flex-col overflow-hidden">
     <MobileTopNav
-      user={data.auth.user}
       bind:sidebarOpen
-      on:toggle-sidebar={handleToggleSidebar}
+      on:toggle-sidebar={({detail}) => sidebarOpen = detail}
     />
 
     <div class="flex-1 overflow-y-auto">
