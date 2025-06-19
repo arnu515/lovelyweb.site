@@ -1,24 +1,5 @@
 <script lang="ts">
-	import { 
-		ChevronDown, 
-		Home, 
-		Settings, 
-		UserPlus, 
-		Smartphone, 
-		Edit3, 
-		Inbox, 
-		Send, 
-		Archive, 
-		AlertTriangle, 
-		Trash2, 
-		FileText, 
-		CheckSquare, 
-		Kanban, 
-		Calendar, 
-		MessageCircle, 
-		User,
-		Mail
-	} from "lucide-svelte";
+	import { ChevronDown, Home, Settings, UserPlus, Smartphone, FileEdit as Edit3, Inbox, Send, Archive, AlertTriangle, Trash2, FileText, CheckSquare, Kanban, Calendar, MessageCircle, User, Mail } from "lucide-svelte";
 	import { Button } from "$lib/components/ui/button";
 
 	export let user: any;
