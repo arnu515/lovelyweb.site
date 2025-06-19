@@ -8,12 +8,11 @@
     Calendar,
     CheckSquare,
     Kanban,
-    User
   } from 'lucide-svelte';
   import { Input } from '$lib/components/ui/input';
   import { Button } from '$lib/components/ui/button';
 
-  export let user: any;
+  export let user: NonNullable<App.Locals['auth']['user']>;
 
   // Mock data for recently viewed places
   const recentlyViewed = [
@@ -146,22 +145,13 @@
 <div class="mx-auto max-w-6xl space-y-8 p-4 md:p-8">
   <!-- Header -->
   <div class="space-y-4 text-center">
-    <div class="mb-4 flex items-center justify-center space-x-3">
-      <div
-        class="gradient-primary flex h-12 w-12 items-center justify-center rounded-full"
-      >
-        <span class="text-lg font-bold text-white"
-          >{user?.name?.charAt(0) || 'U'}</span
-        >
-      </div>
-      <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+      <h1 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
         Good {new Date().getHours() < 12
           ? 'morning'
           : new Date().getHours() < 18
             ? 'afternoon'
-            : 'evening'}, {user?.name || 'User'}!
+            : 'evening'}, {user.name}!
       </h1>
-    </div>
   </div>
 
   <!-- Search Bar -->
@@ -172,7 +162,7 @@
       />
       <Input
         bind:value={searchQuery}
-        placeholder="Ask or find anything from your workspace..."
+        placeholder="Ask or find anything..."
         class="glass dark:glass-dark w-full rounded-xl border-white/30 py-4 pl-12 pr-4 text-base shadow-xl transition-all duration-200 focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/50 dark:border-gray-700/50 md:py-6 md:pl-16 md:pr-6 md:text-lg"
       />
     </div>
