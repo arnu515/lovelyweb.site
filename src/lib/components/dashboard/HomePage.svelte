@@ -35,7 +35,6 @@
 	let searchQuery = "";
 </script>
 
-<div class="flex-1 overflow-y-auto bg-gradient-to-br from-purple-50/30 via-blue-50/30 to-indigo-100/30 dark:from-gray-900/50 dark:via-purple-900/10 dark:to-blue-900/10">
 	<div class="max-w-6xl mx-auto p-8 space-y-8">
 		<!-- Header -->
 		<div class="text-center space-y-4">
@@ -142,4 +141,3 @@
 			</div>
 		</div>
 	</div>
-</div>
