@@ -1,5 +1,5 @@
-import { type ClassValue, clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
+import { type ClassValue, clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -7,14 +7,7 @@ export function cn(...inputs: ClassValue[]) {
 
 export function md5(str: string): string {
   // Simple JS MD5 implementation (https://stackoverflow.com/a/16573331)
-  function cmn(
-    q: number,
-    a: number,
-    b: number,
-    x: number,
-    s: number,
-    t: number,
-  ) {
+  function cmn(q: number, a: number, b: number, x: number, s: number, t: number) {
     a = add32(add32(a, q), add32(x, t));
     return add32((a << s) | (a >>> (32 - s)), b);
   }
@@ -25,7 +18,7 @@ export function md5(str: string): string {
     d: number,
     x: number,
     s: number,
-    t: number,
+    t: number
   ) {
     return cmn((b & c) | (~b & d), a, b, x, s, t);
   }
@@ -36,7 +29,7 @@ export function md5(str: string): string {
     d: number,
     x: number,
     s: number,
-    t: number,
+    t: number
   ) {
     return cmn((b & d) | (c & ~d), a, b, x, s, t);
   }
@@ -47,7 +40,7 @@ export function md5(str: string): string {
     d: number,
     x: number,
     s: number,
-    t: number,
+    t: number
   ) {
     return cmn(b ^ c ^ d, a, b, x, s, t);
   }
@@ -58,12 +51,12 @@ export function md5(str: string): string {
     d: number,
     x: number,
     s: number,
-    t: number,
+    t: number
   ) {
     return cmn(c ^ (b | ~d), a, b, x, s, t);
   }
   function md51(s: string) {
-    let txt = "";
+    let txt = '';
     const n = s.length;
     const state = [1732584193, -271733879, -1732584194, 271733878];
     let i;
@@ -72,8 +65,7 @@ export function md5(str: string): string {
     }
     s = s.substring(i - 64);
     const tail = Array(16).fill(0);
-    for (i = 0; i < s.length; i++)
-      tail[i >> 2] |= s.charCodeAt(i) << (i % 4 << 3);
+    for (i = 0; i < s.length; i++) tail[i >> 2] |= s.charCodeAt(i) << (i % 4 << 3);
     tail[i >> 2] |= 0x80 << (i % 4 << 3);
     if (i > 55) {
       md5cycle(state, tail);
@@ -169,7 +161,7 @@ export function md5(str: string): string {
     return (a + b) & 0xffffffff;
   }
   function rhex(n: number) {
-    let s = "",
+    let s = '',
       j = 0;
     for (; j < 4; j++)
       s +=
@@ -177,5 +169,5 @@ export function md5(str: string): string {
         ((n >> (j * 8)) & 0x0f).toString(16);
     return s;
   }
-  return md51(str).map(rhex).join("");
+  return md51(str).map(rhex).join('');
 }
