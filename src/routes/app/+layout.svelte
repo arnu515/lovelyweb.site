@@ -6,11 +6,11 @@
 </script>
 
 <div
-  class="flex h-screen bg-gradient-to-br from-purple-50/50 via-blue-50/50 to-indigo-100/50 dark:from-gray-900 dark:via-purple-900/20 dark:to-blue-900/20"
+  class="flex h-screen bg-gradient-to-br from-purple-100/80 via-blue-100/80 to-indigo-200/80 dark:from-gray-900 dark:via-purple-900/20 dark:to-blue-900/20"
 >
   <Sidebar user={data.auth.user} />
   <main
-    class="flex-1 overflow-y-auto bg-gradient-to-br from-purple-50/30 via-blue-50/30 to-indigo-100/30 dark:from-gray-900/50 dark:via-purple-900/10 dark:to-blue-900/10"
+    class="flex-1 overflow-y-auto"
   >
     <slot />
   </main>

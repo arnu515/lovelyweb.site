@@ -23,6 +23,7 @@
   export let user: any;
 
   let orgDropdownOpen = false;
+  let currentPage = 'home'; // This would come from the router in a real app
 
   // Mock data for recent contacts
   const recentContacts = [
@@ -64,7 +65,7 @@
 </script>
 
 <aside
-  class="glass dark:glass-dark flex h-screen w-64 flex-col border-r border-white/10 dark:border-gray-700/50"
+  class="glass dark:glass-dark flex h-screen w-64 flex-col border-r border-white/20 dark:border-gray-700/50"
 >
   <!-- Organization Switcher -->
   <div class="border-b border-gray-200/50 p-2 dark:border-gray-700/50">
@@ -156,7 +157,11 @@
   <div class="flex-1 space-y-6 overflow-y-auto p-2">
     <!-- Home -->
     <div>
-      <Button variant="ghost" class="sb-btn">
+      <Button 
+        variant="ghost" 
+        class="sb-btn {currentPage === 'home' ? 'active' : ''}"
+        on:click={() => currentPage = 'home'}
+      >
         <Home class="h-5 w-5" />
         <span class="font-medium">Home</span>
       </Button>
@@ -172,28 +177,48 @@
         </h3>
       </div>
       <div class="space-y-1">
-        <Button variant="ghost" class="sb-btn">
+        <Button variant="ghost" class="sb-btn compose-btn">
           <Edit3 class="icon" />
           <span>Compose</span>
         </Button>
-        <Button variant="ghost" class="sb-btn">
+        <Button 
+          variant="ghost" 
+          class="sb-btn {currentPage === 'inbox' ? 'active' : ''}"
+          on:click={() => currentPage = 'inbox'}
+        >
           <Inbox class="icon" />
           <span>Inbox</span>
           <span class="badge">12</span>
         </Button>
-        <Button variant="ghost" class="sb-btn">
+        <Button 
+          variant="ghost" 
+          class="sb-btn {currentPage === 'sent' ? 'active' : ''}"
+          on:click={() => currentPage = 'sent'}
+        >
           <Send class="icon" />
           <span>Sent Items</span>
         </Button>
-        <Button variant="ghost" class="sb-btn">
+        <Button 
+          variant="ghost" 
+          class="sb-btn {currentPage === 'archived' ? 'active' : ''}"
+          on:click={() => currentPage = 'archived'}
+        >
           <Archive class="icon" />
           <span>Archived</span>
         </Button>
-        <Button variant="ghost" class="sb-btn">
+        <Button 
+          variant="ghost" 
+          class="sb-btn {currentPage === 'spam' ? 'active' : ''}"
+          on:click={() => currentPage = 'spam'}
+        >
           <AlertTriangle class="icon" />
           <span>Spam</span>
         </Button>
-        <Button variant="ghost" class="sb-btn">
+        <Button 
+          variant="ghost" 
+          class="sb-btn {currentPage === 'trash' ? 'active' : ''}"
+          on:click={() => currentPage = 'trash'}
+        >
           <Trash2 class="icon" />
           <span>Trash</span>
         </Button>
@@ -210,20 +235,36 @@
         </h3>
       </div>
       <div class="space-y-1">
-        <Button variant="ghost" class="sb-btn">
+        <Button 
+          variant="ghost" 
+          class="sb-btn {currentPage === 'notes' ? 'active' : ''}"
+          on:click={() => currentPage = 'notes'}
+        >
           <FileText class="icon" />
           <span>Notes</span>
         </Button>
-        <Button variant="ghost" class="sb-btn">
+        <Button 
+          variant="ghost" 
+          class="sb-btn {currentPage === 'tasks' ? 'active' : ''}"
+          on:click={() => currentPage = 'tasks'}
+        >
           <CheckSquare class="icon" />
           <span>Tasks</span>
           <span class="badge">3</span>
         </Button>
-        <Button variant="ghost" class="sb-btn">
+        <Button 
+          variant="ghost" 
+          class="sb-btn {currentPage === 'kanban' ? 'active' : ''}"
+          on:click={() => currentPage = 'kanban'}
+        >
           <Kanban class="icon" />
           <span>Kanban</span>
         </Button>
-        <Button variant="ghost" class="sb-btn">
+        <Button 
+          variant="ghost" 
+          class="sb-btn {currentPage === 'calendar' ? 'active' : ''}"
+          on:click={() => currentPage = 'calendar'}
+        >
           <Calendar class="icon" />
           <span>Calendar</span>
         </Button>
@@ -240,7 +281,11 @@
         </h3>
       </div>
       <div class="space-y-1">
-        <Button variant="ghost" class="sb-btn">
+        <Button 
+          variant="ghost" 
+          class="sb-btn {currentPage === 'dm' ? 'active' : ''}"
+          on:click={() => currentPage = 'dm'}
+        >
           <MessageCircle class="icon" />
           <span>Direct Messages</span>
           <span class="badge">2</span>
@@ -281,16 +326,34 @@
 
 <style lang="postcss">
   :global(.sb-btn) {
-    @apply h-auto w-full items-center justify-start gap-2 p-1 transition-all duration-200 hover:bg-white/20 dark:hover:bg-gray-800/50;
+    @apply h-auto w-full items-center justify-start gap-3 px-3 py-2 transition-all duration-200 hover:bg-white/40 dark:hover:bg-gray-700/60;
   }
+  
+  :global(.sb-btn.active) {
+    @apply bg-purple-100/80 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300;
+  }
+  
+  :global(.sb-btn.active .icon) {
+    @apply text-purple-600 dark:text-purple-400;
+  }
+  
+  :global(.sb-btn.compose-btn) {
+    @apply bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700;
+  }
+  
+  :global(.sb-btn.compose-btn .icon) {
+    @apply text-white;
+  }
+  
   :global(.sb-btn .icon) {
     @apply h-4 w-4 text-gray-600 dark:text-gray-400;
   }
+  
   :global(.sb-btn .badge) {
-    @apply ml-auto rounded-full bg-purple-500 text-xs text-white;
-    padding: 2px 4px;
+    @apply ml-auto flex h-5 w-auto min-w-[20px] items-center justify-center rounded-full bg-gradient-to-r from-purple-500 to-blue-500 px-2 text-xs font-medium text-white shadow-sm;
   }
+  
   :global(.sb-btn span) {
-    @apply text-gray-900 dark:text-white;
+    @apply text-sm font-medium text-gray-900 dark:text-white;
   }
 </style>
