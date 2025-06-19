@@ -37,20 +37,20 @@
 <div
   class="flex h-screen bg-gradient-to-br from-purple-100/80 via-blue-100/80 to-indigo-200/80 dark:from-gray-900 dark:via-purple-900/20 dark:to-blue-900/20"
 >
-  <Sidebar 
-    user={data.auth.user} 
+  <Sidebar
+    user={data.auth.user}
     bind:isOpen={sidebarOpen}
     {isMobile}
     on:close-sidebar={handleCloseSidebar}
   />
-  
+
   <main class="flex flex-1 flex-col overflow-hidden">
-    <MobileTopNav 
-      user={data.auth.user} 
+    <MobileTopNav
+      user={data.auth.user}
       bind:sidebarOpen
       on:toggle-sidebar={handleToggleSidebar}
     />
-    
+
     <div class="flex-1 overflow-y-auto">
       <slot />
     </div>
