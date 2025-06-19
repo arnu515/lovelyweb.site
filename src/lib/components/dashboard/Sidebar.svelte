@@ -21,8 +21,14 @@
   import { Button } from '$lib/components/ui/button';
   import { page } from "$app/stores"
   import { cn } from '$lib/utils';
+  import { createEventDispatcher } from 'svelte';
 
   export let user: any;
+  export let isOpen = true;
+  export let isMobile = false;
+
+  const dispatch = createEventDispatcher();
+
   console.log($page)
 
   let orgDropdownOpen = false;
@@ -66,10 +72,27 @@
   function toggleOrgDropdown() {
     orgDropdownOpen = !orgDropdownOpen;
   }
+
+  function handleNavigation() {
+    if (isMobile) {
+      dispatch('close-sidebar');
+    }
+  }
 </script>
 
+<!-- Mobile overlay -->
+{#if isMobile && isOpen}
+  <div 
+    class="fixed inset-0 z-40 bg-black/50 md:hidden" 
+    on:click={() => dispatch('close-sidebar')}
+    on:keydown={(e) => e.key === 'Escape' && dispatch('close-sidebar')}
+    role="button"
+    tabindex="0"
+  ></div>
+{/if}
+
 <aside
-  class="glass dark:glass-dark flex h-screen w-64 flex-col border-r border-white/20 dark:border-gray-700/50"
+  class="glass dark:glass-dark fixed left-0 top-0 z-50 flex h-screen w-64 flex-col border-r border-white/20 transition-transform duration-300 dark:border-gray-700/50 md:relative md:translate-x-0 {isOpen ? 'translate-x-0' : '-translate-x-full'}"
 >
   <!-- Organization Switcher -->
   <div class="border-b border-gray-200/50 p-2 dark:border-gray-700/50">
@@ -165,6 +188,7 @@
         variant="ghost" 
         class={cn("sb-btn", currentPage === '' && 'active')}
         href="/app"
+        on:click={handleNavigation}
       >
         <Home class="h-5 w-5" />
         <span class="font-medium">Home</span>
@@ -188,6 +212,7 @@
         <Button 
           variant="ghost" 
           class="sb-btn"
+          on:click={handleNavigation}
         >
           <Inbox class="icon" />
           <span>Inbox</span>
@@ -196,6 +221,7 @@
         <Button 
           variant="ghost" 
           class="sb-btn"
+          on:click={handleNavigation}
         >
           <Send class="icon" />
           <span>Sent Items</span>
@@ -203,6 +229,7 @@
         <Button 
           variant="ghost" 
           class="sb-btn"
+          on:click={handleNavigation}
         >
           <Archive class="icon" />
           <span>Archived</span>
@@ -210,6 +237,7 @@
         <Button 
           variant="ghost" 
           class="sb-btn"
+          on:click={handleNavigation}
         >
           <AlertTriangle class="icon" />
           <span>Spam</span>
@@ -217,6 +245,7 @@
         <Button 
           variant="ghost" 
           class="sb-btn"
+          on:click={handleNavigation}
         >
           <Trash2 class="icon" />
           <span>Trash</span>
@@ -237,6 +266,7 @@
         <Button 
           variant="ghost" 
           class="sb-btn"
+          on:click={handleNavigation}
         >
           <FileText class="icon" />
           <span>Notes</span>
@@ -244,6 +274,7 @@
         <Button 
           variant="ghost" 
           class="sb-btn"
+          on:click={handleNavigation}
         >
           <CheckSquare class="icon" />
           <span>Tasks</span>
@@ -252,6 +283,7 @@
         <Button 
           variant="ghost" 
           class="sb-btn"
+          on:click={handleNavigation}
         >
           <Kanban class="icon" />
           <span>Kanban</span>
@@ -259,6 +291,7 @@
         <Button 
           variant="ghost" 
           class="sb-btn"
+          on:click={handleNavigation}
         >
           <Calendar class="icon" />
           <span>Calendar</span>
@@ -279,6 +312,7 @@
         <Button 
           variant="ghost" 
           class="sb-btn"
+          on:click={handleNavigation}
         >
           <MessageCircle class="icon" />
           <span>Direct Messages</span>
@@ -291,6 +325,7 @@
             <Button
               variant="ghost"
               class="h-auto w-full justify-start p-2 transition-all duration-200 hover:bg-white/20 dark:hover:bg-gray-800/50"
+              on:click={handleNavigation}
             >
               <div class="relative mr-3">
                 <img
