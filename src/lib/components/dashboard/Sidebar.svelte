@@ -208,7 +208,7 @@
           <Plus class="icon stroke-white" />
           <span>Compose</span>
         </Button>
-        <Button variant="ghost" class="sb-btn" on:click={handleNavigation}>
+        <Button variant="ghost" class={cn("sb-btn", currentPage === 'email' && 'active')} href="/app/email" on:click={handleNavigation}>
           <Inbox class="icon" />
           <span>Inbox</span>
           <span class="badge">12</span>
