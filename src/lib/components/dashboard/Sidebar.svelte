@@ -19,7 +19,7 @@
     Mail
   } from 'lucide-svelte';
   import { Button } from '$lib/components/ui/button';
-  import { page } from "$app/stores"
+  import { page } from '$app/stores';
   import { cn } from '$lib/utils';
   import { createEventDispatcher } from 'svelte';
 
@@ -29,7 +29,7 @@
 
   const dispatch = createEventDispatcher();
 
-  console.log($page)
+  console.log($page);
 
   let orgDropdownOpen = false;
   // page path without /app
@@ -82,17 +82,19 @@
 
 <!-- Mobile overlay -->
 {#if isMobile && isOpen}
-  <div 
-    class="fixed inset-0 z-40 bg-black/50 md:hidden" 
+  <div
+    class="fixed inset-0 z-40 bg-black/50 md:hidden"
     on:click={() => dispatch('close-sidebar')}
-    on:keydown={(e) => e.key === 'Escape' && dispatch('close-sidebar')}
+    on:keydown={e => e.key === 'Escape' && dispatch('close-sidebar')}
     role="button"
     tabindex="0"
   ></div>
 {/if}
 
 <aside
-  class="glass dark:glass-dark fixed left-0 top-0 z-50 flex h-screen w-64 flex-col border-r border-white/20 transition-transform duration-300 dark:border-gray-700/50 md:relative md:translate-x-0 {isOpen ? 'translate-x-0' : '-translate-x-full'}"
+  class="glass dark:glass-dark fixed left-0 top-0 z-50 flex h-screen w-64 flex-col border-r border-white/20 transition-transform duration-300 dark:border-gray-700/50 md:relative md:translate-x-0 {isOpen
+    ? 'translate-x-0'
+    : '-translate-x-full'}"
 >
   <!-- Organization Switcher -->
   <div class="border-b border-gray-200/50 p-2 dark:border-gray-700/50">
@@ -184,9 +186,9 @@
   <div class="flex-1 space-y-6 overflow-y-auto p-2">
     <!-- Home -->
     <div>
-      <Button 
-        variant="ghost" 
-        class={cn("sb-btn", currentPage === '' && 'active')}
+      <Button
+        variant="ghost"
+        class={cn('sb-btn', currentPage === '' && 'active')}
         href="/app"
         on:click={handleNavigation}
       >
@@ -209,44 +211,24 @@
           <Plus class="icon stroke-white" />
           <span>Compose</span>
         </Button>
-        <Button 
-          variant="ghost" 
-          class="sb-btn"
-          on:click={handleNavigation}
-        >
+        <Button variant="ghost" class="sb-btn" on:click={handleNavigation}>
           <Inbox class="icon" />
           <span>Inbox</span>
           <span class="badge">12</span>
         </Button>
-        <Button 
-          variant="ghost" 
-          class="sb-btn"
-          on:click={handleNavigation}
-        >
+        <Button variant="ghost" class="sb-btn" on:click={handleNavigation}>
           <Send class="icon" />
           <span>Sent Items</span>
         </Button>
-        <Button 
-          variant="ghost" 
-          class="sb-btn"
-          on:click={handleNavigation}
-        >
+        <Button variant="ghost" class="sb-btn" on:click={handleNavigation}>
           <Archive class="icon" />
           <span>Archived</span>
         </Button>
-        <Button 
-          variant="ghost" 
-          class="sb-btn"
-          on:click={handleNavigation}
-        >
+        <Button variant="ghost" class="sb-btn" on:click={handleNavigation}>
           <AlertTriangle class="icon" />
           <span>Spam</span>
         </Button>
-        <Button 
-          variant="ghost" 
-          class="sb-btn"
-          on:click={handleNavigation}
-        >
+        <Button variant="ghost" class="sb-btn" on:click={handleNavigation}>
           <Trash2 class="icon" />
           <span>Trash</span>
         </Button>
@@ -263,36 +245,20 @@
         </h3>
       </div>
       <div class="space-y-1">
-        <Button 
-          variant="ghost" 
-          class="sb-btn"
-          on:click={handleNavigation}
-        >
+        <Button variant="ghost" class="sb-btn" on:click={handleNavigation}>
           <FileText class="icon" />
           <span>Notes</span>
         </Button>
-        <Button 
-          variant="ghost" 
-          class="sb-btn"
-          on:click={handleNavigation}
-        >
+        <Button variant="ghost" class="sb-btn" on:click={handleNavigation}>
           <CheckSquare class="icon" />
           <span>Tasks</span>
           <span class="badge">3</span>
         </Button>
-        <Button 
-          variant="ghost" 
-          class="sb-btn"
-          on:click={handleNavigation}
-        >
+        <Button variant="ghost" class="sb-btn" on:click={handleNavigation}>
           <Kanban class="icon" />
           <span>Kanban</span>
         </Button>
-        <Button 
-          variant="ghost" 
-          class="sb-btn"
-          on:click={handleNavigation}
-        >
+        <Button variant="ghost" class="sb-btn" on:click={handleNavigation}>
           <Calendar class="icon" />
           <span>Calendar</span>
         </Button>
@@ -309,11 +275,7 @@
         </h3>
       </div>
       <div class="space-y-1">
-        <Button 
-          variant="ghost" 
-          class="sb-btn"
-          on:click={handleNavigation}
-        >
+        <Button variant="ghost" class="sb-btn" on:click={handleNavigation}>
           <MessageCircle class="icon" />
           <span>Direct Messages</span>
           <span class="badge">2</span>
@@ -355,29 +317,29 @@
 
 <style lang="postcss">
   :global(.sb-btn) {
-    @apply h-auto w-full items-center justify-start gap-3 px-3 py-2 transition-all duration-200 hover:bg-white/40 dark:hover:bg-gray-700/60;
+    @apply h-auto w-full items-center justify-start gap-3 px-3 py-2 transition-all duration-200 hover:bg-gray-200/60 dark:hover:bg-gray-700/60;
   }
-  
+
   :global(.sb-btn.active) {
     @apply bg-purple-100/80 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300;
   }
-  
+
   :global(.sb-btn.active .icon) {
     @apply text-purple-600 dark:text-purple-400;
   }
-  
+
   :global(.sb-btn .icon) {
     @apply h-4 w-4 text-gray-600 dark:text-gray-400;
   }
-  
+
   :global(.sb-btn.compose-btn) {
-    @apply bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 w-max;
+    @apply w-max bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700;
   }
-  
+
   :global(.sb-btn .badge) {
     @apply ml-auto flex h-5 w-auto min-w-[20px] items-center justify-center rounded-full bg-gradient-to-r from-purple-500 to-blue-500 px-2 text-xs font-medium text-white shadow-sm;
   }
-  
+
   :global(.sb-btn span) {
     @apply text-sm font-medium;
   }
