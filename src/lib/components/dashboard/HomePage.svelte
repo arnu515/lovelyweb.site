@@ -168,7 +168,7 @@
   <div class="mx-auto max-w-4xl">
     <div class="relative">
       <Search
-        class="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 transform text-gray-400 md:left-6 md:h-6 md:w-6"
+        class="absolute left-4 top-1/2 z-10 h-5 w-5 -translate-y-1/2 transform text-gray-400 md:left-6 md:h-6 md:w-6"
       />
       <Input
         bind:value={searchQuery}
