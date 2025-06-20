@@ -6,14 +6,14 @@
 </script>
 
 <nav
-  class="flex backdrop-blur-md h-16 items-center justify-between border-b border-gray-300/80 px-4 dark:border-gray-700/50 md:hidden"
+  class="flex h-16 items-center justify-between border-b border-gray-300/80 px-4 backdrop-blur-md dark:border-gray-700/50 md:hidden"
 >
   <div class="flex items-center space-x-3">
     <Button
       variant="ghost"
       size="icon"
       class="h-10 w-10 hover:bg-white/20 dark:hover:bg-gray-700/60"
-      on:click={() => sidebarOpen = !sidebarOpen}
+      on:click={() => (sidebarOpen = !sidebarOpen)}
     >
       {#if sidebarOpen}
         <X class="h-5 w-5" />

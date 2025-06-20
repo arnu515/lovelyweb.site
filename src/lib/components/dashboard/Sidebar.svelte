@@ -16,7 +16,7 @@
     Kanban,
     Calendar,
     MessageCircle,
-    Mail,
+    Mail
   } from 'lucide-svelte';
   import { Button } from '$lib/components/ui/button';
   import { page } from '$app/stores';
@@ -77,7 +77,7 @@
 {#if isMobile && isOpen}
   <div
     class="fixed inset-0 z-40 bg-black/50 md:hidden"
-    on:click={() => isOpen = false}
+    on:click={() => (isOpen = false)}
     on:keydown={e => e.key === 'Escape' && (isOpen = false)}
     role="button"
     tabindex="0"
@@ -208,24 +208,49 @@
           <Plus class="icon stroke-white" />
           <span>Compose</span>
         </Button>
-        <Button variant="ghost" class={cn("sb-btn", currentPage === 'email/inbox' && 'active')} href="/app/email/inbox" on:click={handleNavigation}>
+        <Button
+          variant="ghost"
+          class={cn('sb-btn', currentPage === 'email/inbox' && 'active')}
+          href="/app/email/inbox"
+          on:click={handleNavigation}
+        >
           <Inbox class="icon" />
           <span>Inbox</span>
           <span class="badge">12</span>
         </Button>
-        <Button variant="ghost" class={cn("sb-btn", currentPage === 'email/sent' && 'active')} href="/app/email/sent" on:click={handleNavigation}>
+        <Button
+          variant="ghost"
+          class={cn('sb-btn', currentPage === 'email/sent' && 'active')}
+          href="/app/email/sent"
+          on:click={handleNavigation}
+        >
           <Send class="icon" />
           <span>Sent Items</span>
         </Button>
-        <Button variant="ghost" class={cn("sb-btn", currentPage === 'email/archive' && 'active')} href="/app/email/archive" on:click={handleNavigation}>
+        <Button
+          variant="ghost"
+          class={cn('sb-btn', currentPage === 'email/archive' && 'active')}
+          href="/app/email/archive"
+          on:click={handleNavigation}
+        >
           <Archive class="icon" />
           <span>Archived</span>
         </Button>
-        <Button variant="ghost" class={cn("sb-btn", currentPage === 'email/spam' && 'active')} href="/app/email/spam" on:click={handleNavigation}>
+        <Button
+          variant="ghost"
+          class={cn('sb-btn', currentPage === 'email/spam' && 'active')}
+          href="/app/email/spam"
+          on:click={handleNavigation}
+        >
           <AlertTriangle class="icon" />
           <span>Spam</span>
         </Button>
-        <Button variant="ghost" class={cn("sb-btn", currentPage === 'email/trash' && 'active')} href="/app/email/trash" on:click={handleNavigation}>
+        <Button
+          variant="ghost"
+          class={cn('sb-btn', currentPage === 'email/trash' && 'active')}
+          href="/app/email/trash"
+          on:click={handleNavigation}
+        >
           <Trash2 class="icon" />
           <span>Trash</span>
         </Button>
@@ -283,8 +308,8 @@
           {#each recentContacts as contact}
             <Button
               variant="ghost"
-            class={cn('sb-btn', currentPage === 'email' && 'active')}
-            href="/app/email"
+              class={cn('sb-btn', currentPage === 'email' && 'active')}
+              href="/app/email"
               on:click={handleNavigation}
             >
               <div class="relative mr-3">

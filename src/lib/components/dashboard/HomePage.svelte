@@ -7,7 +7,7 @@
     FileText,
     Calendar,
     CheckSquare,
-    Kanban,
+    Kanban
   } from 'lucide-svelte';
   import { Input } from '$lib/components/ui/input';
   import { Button } from '$lib/components/ui/button';
@@ -145,13 +145,13 @@
 <div class="mx-auto max-w-6xl space-y-8 p-4 md:p-8">
   <!-- Header -->
   <div class="space-y-4 text-center">
-      <h1 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
-        Good {new Date().getHours() < 12
-          ? 'morning'
-          : new Date().getHours() < 18
-            ? 'afternoon'
-            : 'evening'}, <span class="text-nowrap">{user.name}</span>!
-      </h1>
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white md:text-3xl">
+      Good {new Date().getHours() < 12
+        ? 'morning'
+        : new Date().getHours() < 18
+          ? 'afternoon'
+          : 'evening'}, <span class="text-nowrap">{user.name}</span>!
+    </h1>
   </div>
 
   <!-- Search Bar -->

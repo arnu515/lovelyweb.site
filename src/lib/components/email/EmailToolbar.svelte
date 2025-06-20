@@ -31,17 +31,21 @@
   }>();
 </script>
 
-<div class="glass dark:glass-dark border-b border-white/20 p-3 md:p-4 dark:border-gray-700/50">
+<div
+  class="glass dark:glass-dark border-b border-white/20 p-3 dark:border-gray-700/50 md:p-4"
+>
   <!-- Search Bar -->
   <div class="mb-4">
     <div class="relative max-w-full md:max-w-2xl">
-      <Search class="absolute left-3 md:left-4 top-1/2 h-4 w-4 md:h-5 md:w-5 -translate-y-1/2 text-gray-400" />
+      <Search
+        class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 md:left-4 md:h-5 md:w-5"
+      />
       <Input
         id="search-input"
         bind:value={searchQuery}
         placeholder="Search emails..."
-        class="glass dark:glass-dark w-full border-white/30 py-2 md:py-3 pl-10 md:pl-12 pr-4 text-sm md:text-base shadow-lg transition-all duration-200 focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/50 dark:border-gray-700/50"
-        on:input={(e) => dispatch('search', { query: e.target.value })}
+        class="glass dark:glass-dark w-full border-white/30 py-2 pl-10 pr-4 text-sm shadow-lg transition-all duration-200 focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/50 dark:border-gray-700/50 md:py-3 md:pl-12 md:text-base"
+        on:input={e => dispatch('search', { query: e.target.value })}
       />
     </div>
   </div>
@@ -56,14 +60,14 @@
         class="h-4 w-4 md:h-5 md:w-5"
         aria-label="Select all emails"
       />
-      
+
       {#if someSelected}
         <div class="flex items-center space-x-1 md:space-x-2">
           <Button
             variant="ghost"
             size="sm"
             on:click={() => dispatch('markSelectedAsRead')}
-            class="h-7 w-7 md:h-8 md:w-8 p-0 md:px-3 md:w-auto hover:bg-white/20 dark:hover:bg-gray-700/60"
+            class="h-7 w-7 p-0 hover:bg-white/20 dark:hover:bg-gray-700/60 md:h-8 md:w-8 md:w-auto md:px-3"
             title="Mark as read"
             aria-label="Mark selected emails as read"
           >
@@ -74,7 +78,7 @@
             variant="ghost"
             size="sm"
             on:click={() => dispatch('markSelectedAsUnread')}
-            class="h-7 w-7 md:h-8 md:w-8 p-0 md:px-3 md:w-auto hover:bg-white/20 dark:hover:bg-gray-700/60"
+            class="h-7 w-7 p-0 hover:bg-white/20 dark:hover:bg-gray-700/60 md:h-8 md:w-8 md:w-auto md:px-3"
             title="Mark as unread"
             aria-label="Mark selected emails as unread"
           >
@@ -85,7 +89,7 @@
             variant="ghost"
             size="sm"
             on:click={() => dispatch('markSelectedAsImportant')}
-            class="h-7 w-7 md:h-8 md:w-8 p-0 md:px-3 md:w-auto hover:bg-white/20 dark:hover:bg-gray-700/60"
+            class="h-7 w-7 p-0 hover:bg-white/20 dark:hover:bg-gray-700/60 md:h-8 md:w-8 md:w-auto md:px-3"
             title="Mark as important"
             aria-label="Mark selected emails as important"
           >
@@ -96,7 +100,7 @@
             variant="ghost"
             size="sm"
             on:click={() => dispatch('archiveSelected')}
-            class="h-7 w-7 md:h-8 md:w-8 p-0 md:px-3 md:w-auto hover:bg-white/20 dark:hover:bg-gray-700/60"
+            class="h-7 w-7 p-0 hover:bg-white/20 dark:hover:bg-gray-700/60 md:h-8 md:w-8 md:w-auto md:px-3"
             title="Archive"
             aria-label="Archive selected emails"
           >
@@ -107,7 +111,7 @@
             variant="ghost"
             size="sm"
             on:click={() => dispatch('deleteSelected')}
-            class="h-7 w-7 md:h-8 md:w-8 p-0 md:px-3 md:w-auto text-red-600 hover:bg-red-100 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-900/30"
+            class="h-7 w-7 p-0 text-red-600 hover:bg-red-100 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-900/30 md:h-8 md:w-8 md:w-auto md:px-3"
             title="Delete"
             aria-label="Delete selected emails"
           >
@@ -118,7 +122,7 @@
             variant="ghost"
             size="sm"
             on:click={() => dispatch('spamSelected')}
-            class="h-7 w-7 md:h-8 md:w-8 p-0 md:px-3 md:w-auto hover:bg-white/20 dark:hover:bg-gray-700/60"
+            class="h-7 w-7 p-0 hover:bg-white/20 dark:hover:bg-gray-700/60 md:h-8 md:w-8 md:w-auto md:px-3"
             title="Mark as spam"
             aria-label="Mark selected emails as spam"
           >
@@ -136,7 +140,7 @@
             builders={[builder]}
             variant="ghost"
             size="sm"
-            class="h-7 md:h-8 px-2 md:px-3 hover:bg-white/20 dark:hover:bg-gray-700/60"
+            class="h-7 px-2 hover:bg-white/20 dark:hover:bg-gray-700/60 md:h-8 md:px-3"
             title="More actions"
             aria-label="More actions"
           >
@@ -144,7 +148,9 @@
             <ChevronDown class="h-3 w-3 md:ml-1" />
           </Button>
         </DropdownMenu.Trigger>
-        <DropdownMenu.Content class="glass dark:glass-dark border-white/20 dark:border-gray-700/50">
+        <DropdownMenu.Content
+          class="glass dark:glass-dark border-white/20 dark:border-gray-700/50"
+        >
           <DropdownMenu.Item>Mark all as read</DropdownMenu.Item>
           <DropdownMenu.Item>Select all</DropdownMenu.Item>
           <DropdownMenu.Separator />

@@ -18,10 +18,11 @@
     archiveEmail: { emailId: string };
   }>();
 
-  $: filteredEmails = emails.filter(email => 
-    email.from.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    email.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    email.preview.toLowerCase().includes(searchQuery.toLowerCase())
+  $: filteredEmails = emails.filter(
+    email =>
+      email.from.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      email.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      email.preview.toLowerCase().includes(searchQuery.toLowerCase())
   );
 </script>
 
@@ -48,7 +49,9 @@
           No emails found
         </h3>
         <p class="mt-2 text-gray-600 dark:text-gray-400">
-          {searchQuery ? 'Try adjusting your search terms.' : 'Your inbox is empty.'}
+          {searchQuery
+            ? 'Try adjusting your search terms.'
+            : 'Your inbox is empty.'}
         </p>
       </div>
     </div>
