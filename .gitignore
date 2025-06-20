@@ -28,3 +28,4 @@ build/
 .env
 .svelte-kit/
 vite.config.ts.*
+supabase/.temp
