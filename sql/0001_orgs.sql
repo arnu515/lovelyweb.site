@@ -45,3 +45,10 @@ using (
     where user_id = (select auth.uid())
   )
 );
+
+create function check_if_org_exists(id text)
+returns boolean
+as $$
+begin
+  return exists(select 1 from organisations o where o.id = $1);
+end $$ language plpgsql security definer;
