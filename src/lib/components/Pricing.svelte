@@ -1,70 +1,8 @@
 <script lang="ts">
   import { Button } from '$lib/components/ui/button';
-  import { Check, Star, Zap, Building } from 'lucide-svelte';
-
-  const plans = [
-    {
-      name: 'Starter',
-      price: 'Free',
-      period: '',
-      description: 'Perfect for individuals and small teams getting started',
-      icon: Star,
-      features: [
-        'Up to 5 team members',
-        '1,000 emails per month',
-        'Basic AI email organisation',
-        'Standard chat features',
-        '5 video meetings per month',
-        '1GB storage',
-        'Community support'
-      ],
-      cta: 'Get Started Free',
-      popular: false,
-      gradient: 'from-gray-500 to-gray-600'
-    },
-    {
-      name: 'Professional',
-      price: '£29',
-      period: '/month',
-      description: 'For growing teams that need advanced AI features',
-      icon: Zap,
-      features: [
-        'Up to 25 team members',
-        'Unlimited emails',
-        'Advanced AI email management',
-        'Smart chat with AI translation',
-        'Unlimited video meetings',
-        '50GB storage',
-        'AI-powered meeting transcription',
-        'Priority support',
-        'Custom integrations'
-      ],
-      cta: 'Start Free Trial',
-      popular: true,
-      gradient: 'from-purple-500 to-blue-500'
-    },
-    {
-      name: 'Enterprise',
-      price: 'Custom',
-      period: '',
-      description: 'For large organisations with custom requirements',
-      icon: Building,
-      features: [
-        'Unlimited team members',
-        'Unlimited everything',
-        'Custom AI model training',
-        'Advanced security & compliance',
-        'Dedicated account manager',
-        'Custom integrations',
-        'On-premise deployment option',
-        '24/7 premium support',
-        'Custom SLA'
-      ],
-      cta: 'Contact Sales',
-      popular: false,
-      gradient: 'from-indigo-500 to-purple-500'
-    }
-  ];
+  import { Check } from 'lucide-svelte';
+  import { PLANS } from '$lib/plans';
+  import { cn } from '$lib/utils';
 </script>
 
 <section
@@ -89,13 +27,13 @@
 
     <!-- Pricing Cards -->
     <div class="mx-auto grid max-w-6xl grid-cols-1 gap-8 md:grid-cols-3">
-      {#each plans as plan, index}
+      {#each PLANS as plan, index}
         <div
           class="group relative animate-slide-up"
           style="animation-delay: {index * 0.1}s;"
         >
           <!-- Popular Badge -->
-          {#if plan.popular}
+          {#if index === 1}
             <div
               class="absolute -top-4 left-1/2 z-10 -translate-x-1/2 transform transition-all duration-300 group-hover:-top-8 group-hover:scale-105"
             >
@@ -109,9 +47,10 @@
 
           <!-- Card -->
           <div
-            class="glass dark:glass-dark h-full rounded-2xl p-8 {plan.popular
-              ? 'ring-2 ring-purple-500'
-              : ''} flex flex-col transition-all duration-300 hover:scale-105"
+            class={cn(
+              'glass dark:glass-dark flex h-full flex-col rounded-2xl p-8 transition-all duration-300 hover:scale-105',
+              index === 1 ? 'ring-2 ring-purple-500' : ''
+            )}
           >
             <!-- Icon -->
             <div
@@ -134,11 +73,7 @@
                 <span class="text-4xl font-bold text-gray-900 dark:text-white">
                   {plan.price}
                 </span>
-                {#if plan.period}
-                  <span class="ml-1 text-gray-600 dark:text-gray-300">
-                    {plan.period}
-                  </span>
-                {/if}
+                <span class="ml-1 text-gray-600 dark:text-gray-300"> /month </span>
               </div>
             </div>
 
@@ -167,15 +102,18 @@
     </div>
 
     <!-- Bottom Note -->
-    <div class="mt-12 text-center">
+    <div class="mx-auto mt-12 max-w-screen-sm text-center">
       <p class="text-gray-600 dark:text-gray-300">
-        All plans include a 14-day free trial. No credit card required.
+        Plan limits are arbitrary. They are put in place since I am using free tiers
+        of the services used to power this application. As people purchase paid
+        plans, the limits will be increased. Thank you for supporting this project.
+        <br />
+        To reiterate: LIMITS ARE ARBITRARY AND MAY CHANGE AT ANY TIME.
       </p>
       <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
         Need a custom solution? <a
-          href="#contact"
-          class="text-purple-600 hover:underline dark:text-purple-400"
-          >Contact our sales team</a
+          href="mailto:support@lovelyweb.site"
+          class="text-purple-600 hover:underline dark:text-purple-400">Contact us</a
         >
       </p>
     </div>
