@@ -22,7 +22,7 @@ export const load: LayoutLoad = async ({ fetch, data, depends }) => {
   const {
     data: { user }
   } = await supabase.auth.getUser();
-  let profile: Database["public"]["Tables"]["users"]["Row"] | null = null;
+  let profile: Database['public']['Tables']['users']['Row'] | null = null;
   if (user) {
     const { data } = await supabase
       .from('users')

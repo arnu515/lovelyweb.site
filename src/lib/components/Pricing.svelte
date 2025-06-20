@@ -71,7 +71,7 @@
             <div class="mb-8">
               <div class="flex items-baseline">
                 <span class="text-4xl font-bold text-gray-900 dark:text-white">
-                  {plan.price}
+                  {plan.price.usd}
                 </span>
                 <span class="ml-1 text-gray-600 dark:text-gray-300"> /month </span>
               </div>
