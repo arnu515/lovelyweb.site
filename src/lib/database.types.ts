@@ -11,36 +11,71 @@ export type Database = {
     Tables: {
       organisations: {
         Row: {
-          id: string;
-          name: string;
-          link: string | null;
           description: string | null;
-          plan: string;
+          id: string;
+          link: string | null;
+          name: string;
           owner_id: string;
-          created_at: string;
-          updated_at: string;
+          plan: Database['public']['Enums']['plan'];
         };
         Insert: {
-          id: string;
-          name: string;
-          link?: string | null;
           description?: string | null;
-          plan?: string;
+          id: string;
+          link?: string | null;
+          name: string;
           owner_id: string;
-          created_at?: string;
-          updated_at?: string;
+          plan?: Database['public']['Enums']['plan'];
         };
         Update: {
-          id?: string;
-          name?: string;
-          link?: string | null;
           description?: string | null;
-          plan?: string;
+          id?: string;
+          link?: string | null;
+          name?: string;
           owner_id?: string;
-          created_at?: string;
-          updated_at?: string;
+          plan?: Database['public']['Enums']['plan'];
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: 'organisations_owner_id_fkey';
+            columns: ['owner_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          }
+        ];
+      };
+      organisations_users: {
+        Row: {
+          id: number;
+          organisation_id: string;
+          user_id: string;
+        };
+        Insert: {
+          id?: never;
+          organisation_id: string;
+          user_id: string;
+        };
+        Update: {
+          id?: never;
+          organisation_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'organisations_users_organisation_id_fkey';
+            columns: ['organisation_id'];
+            isOneToOne: false;
+            referencedRelation: 'organisations';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'organisations_users_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          }
+        ];
       };
       users: {
         Row: {
@@ -68,13 +103,17 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      check_if_org_exists: {
+        Args: { id: string };
+        Returns: boolean;
+      };
       get_user_provider: {
         Args: { email: string };
         Returns: string;
       };
     };
     Enums: {
-      [_ in never]: never;
+      plan: 'free' | 'basic' | 'pro';
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -189,6 +228,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {}
+    Enums: {
+      plan: ['free', 'basic', 'pro']
+    }
   }
 } as const;
