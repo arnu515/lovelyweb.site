@@ -16,7 +16,7 @@ export type Database = {
           link: string | null;
           name: string;
           owner_id: string;
-          plan: Database['public']['Enums']['plan'];
+          plan: Database['public']['Enums']['plan_enum'];
         };
         Insert: {
           description?: string | null;
@@ -24,7 +24,7 @@ export type Database = {
           link?: string | null;
           name: string;
           owner_id: string;
-          plan?: Database['public']['Enums']['plan'];
+          plan?: Database['public']['Enums']['plan_enum'];
         };
         Update: {
           description?: string | null;
@@ -32,7 +32,7 @@ export type Database = {
           link?: string | null;
           name?: string;
           owner_id?: string;
-          plan?: Database['public']['Enums']['plan'];
+          plan?: Database['public']['Enums']['plan_enum'];
         };
         Relationships: [
           {
@@ -113,7 +113,7 @@ export type Database = {
       };
     };
     Enums: {
-      plan: 'free' | 'basic' | 'pro';
+      plan_enum: 'free' | 'basic' | 'pro';
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -229,7 +229,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      plan: ['free', 'basic', 'pro']
+      plan_enum: ['free', 'basic', 'pro']
     }
   }
 } as const;

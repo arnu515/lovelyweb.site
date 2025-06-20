@@ -1,11 +1,11 @@
-create type plan as enum ('free', 'basic', 'pro');
+create type plan_enum as enum ('free', 'basic', 'pro');
 
 create table organisations (
   id text primary key,
   name text not null,
   description text,
   link text,
-  plan plan not null default 'free'::plan,
+  plan plan_enum not null default 'free'::plan_enum,
   owner_id uuid not null references users(id)
 );
 
