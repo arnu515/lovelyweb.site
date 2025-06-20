@@ -1,7 +1,20 @@
+import * as Sentry from '@sentry/sveltekit';
 import { createServerClient } from '@supabase/ssr';
-import { redirect, type Handle } from '@sveltejs/kit';
+import { redirect, type Handle, type ServerInit } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
-import { PUBLIC_SUPABASE_ANON_KEY, PUBLIC_SUPABASE_URL } from '$env/static/public';
+import {
+  PUBLIC_SUPABASE_ANON_KEY,
+  PUBLIC_SUPABASE_URL,
+  PUBLIC_SENTRY_DSN
+} from '$env/static/public';
+
+export const init: ServerInit = () => {
+  Sentry.init({
+    dsn: PUBLIC_SENTRY_DSN,
+    environment: import.meta.env.PROD ? 'production' : 'development',
+    tracesSampleRate: 1
+  });
+};
 
 const supabase: Handle = async ({ event, resolve }) => {
   event.locals.supabase = createServerClient(
@@ -55,4 +68,5 @@ const authGuard: Handle = async ({ event, resolve }) => {
   return resolve(event);
 };
 
-export const handle: Handle = sequence(supabase, authGuard);
+export const handle: Handle = sequence(Sentry.sentryHandle(), supabase, authGuard);
+export const handleError = Sentry.handleErrorWithSentry();
