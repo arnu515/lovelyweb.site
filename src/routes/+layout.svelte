@@ -4,6 +4,7 @@
   import { invalidate } from '$app/navigation';
   import { onMount } from 'svelte';
   import type { LayoutData } from './$types';
+  import { Toaster } from '$lib/components/ui/sonner';
 
   export let data: LayoutData;
   $: ({
@@ -24,6 +25,7 @@
 </script>
 
 <ModeWatcher />
+<Toaster />
 <main>
   <slot />
 </main>
