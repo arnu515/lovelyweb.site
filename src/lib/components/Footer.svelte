@@ -1,7 +1,6 @@
 <script lang="ts">
   import {
     Mail,
-    MessageCircle,
     Twitter,
     Linkedin,
     Github,
@@ -10,41 +9,29 @@
 
   const navigation = {
     product: [
-      { name: 'Features', href: '#features' },
-      { name: 'Pricing', href: '#pricing' },
-      { name: 'Security', href: '#' },
-      { name: 'Integrations', href: '#' }
-    ],
-    company: [
-      { name: 'About', href: '#about' },
-      { name: 'Blog', href: '#' },
-      { name: 'Careers', href: '#' },
-      { name: 'Press', href: '#' }
+      { name: 'Features', href: '/#features' },
+      { name: 'Pricing', href: '/#pricing' },
+      { name: 'About', href: '/#about' },
+      { name: 'The Author', href: 'https://aarnavpai.in' },
     ],
     support: [
-      { name: 'Help Centre', href: '#' },
-      { name: 'Community', href: '#' },
-      { name: 'Contact', href: '#contact' },
-      { name: 'Status', href: '#' }
+      { name: 'Contact', href: 'mailto:support@lovelyweb.site' },
+      { name: 'Source Code', href: 'https://github.com/arnu515/lovelyweb.site' },
     ],
     legal: [
       { name: 'Privacy', href: '/privacy' },
       { name: 'Terms', href: '/terms' },
-      { name: 'Cookies', href: '#' },
-      { name: 'GDPR', href: '#' }
     ]
   };
 
   const social = [
-    { name: 'Twitter', href: '#', icon: Twitter },
-    { name: 'LinkedIn', href: '#', icon: Linkedin },
-    { name: 'GitHub', href: '#', icon: Github }
+    { name: 'GitHub', href: 'https://github.com/arnu515/lovelyweb.site', icon: Github }
   ];
 </script>
 
 <footer class="bg-gray-900 text-white">
   <div class="container mx-auto px-4 py-16 sm:px-6 lg:px-8">
-    <div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-6">
+    <div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-5">
       <!-- Brand -->
       <div class="lg:col-span-2">
         <div class="mb-4 flex items-center space-x-2">
@@ -91,23 +78,6 @@
         </ul>
       </div>
 
-      <!-- Company -->
-      <div>
-        <h3 class="mb-4 text-lg font-semibold">Company</h3>
-        <ul class="space-y-3">
-          {#each navigation.company as item}
-            <li>
-              <a
-                href={item.href}
-                class="text-gray-400 transition-colors duration-200 hover:text-white"
-              >
-                {item.name}
-              </a>
-            </li>
-          {/each}
-        </ul>
-      </div>
-
       <!-- Support -->
       <div>
         <h3 class="mb-4 text-lg font-semibold">Support</h3>
@@ -140,29 +110,6 @@
             </li>
           {/each}
         </ul>
-      </div>
-    </div>
-
-    <!-- Newsletter -->
-    <div class="mt-12 border-t border-gray-800 pt-8">
-      <div class="max-w-2xl">
-        <h3 class="mb-4 text-lg font-semibold">Stay updated</h3>
-        <p class="mb-4 text-gray-400">
-          Get the latest updates on new features, product announcements, and
-          communication tips.
-        </p>
-        <div class="flex max-w-md flex-col gap-4 sm:flex-row">
-          <input
-            type="email"
-            placeholder="Enter your email"
-            class="flex-1 rounded-lg border border-gray-700 bg-gray-800 px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
-          />
-          <button
-            class="gradient-primary rounded-lg px-6 py-2 font-semibold text-white transition-transform duration-200 hover:scale-105"
-          >
-            Subscribe
-          </button>
-        </div>
       </div>
     </div>
 
