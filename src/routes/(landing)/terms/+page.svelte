@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Button } from '$lib/components/ui/button';
-  import { ArrowLeft, Scale, Shield, CreditCard, Users, Coins } from 'lucide-svelte';
+  import { Scale, Shield, CreditCard, Users, Coins } from 'lucide-svelte';
 </script>
 
 <svelte:head>
@@ -12,7 +12,7 @@
 </svelte:head>
 
 <div class="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-purple-900/20 dark:to-blue-900/20">
-  <div class="container mx-auto px-4 py-12 sm:px-6 lg:px-8">
+  <div class="container mx-auto px-4 py-20 sm:px-6 lg:px-8">
     <div class="mx-auto max-w-4xl">
       <!-- Page Header -->
       <div class="mb-12 text-center">
