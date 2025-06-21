@@ -173,8 +173,8 @@
       <p class="text-sm text-gray-400">
         © 2024 lovelyweb.site. All rights reserved.
       </p>
-      <p class="mt-4 flex items-center text-sm text-gray-400 md:mt-0">
-        Made with <Heart class="mx-1 h-4 w-4 text-red-500" /> in the UK
+      <p class="mt-4 flex items-center gap-1 text-sm text-gray-400 md:mt-0">
+        Made with <Heart class="h-4 w-4 text-red-500" /> for the <a href="https://hackathon.dev" class="text-purple-600 hover:underline dark:text-purple-400">World's Largest Hackathon</a>
       </p>
     </div>
   </div>
