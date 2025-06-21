@@ -4,131 +4,25 @@
   import { Label } from '$lib/components/ui/label';
   import { Textarea } from '$lib/components/ui/textarea';
   import * as Alert from '$lib/components/ui/alert';
-  import { enhance } from '$app/forms';
-  import { Building, Check, Loader2, ArrowLeft, ArrowRight, Zap, Star, Crown } from 'lucide-svelte';
+  import { Building, Check, Loader2, ArrowLeft, ArrowRight } from 'lucide-svelte';
   import { cn } from '$lib/utils';
-  import { onMount } from 'svelte';
+  import { fade } from 'svelte/transition';
+  import { PLANS } from '$lib/plans';
 
   export let data;
   export let form;
 
   let loading = false;
-  let checkingSlug = false;
-  let orgName = form?.name || '';
-  let orgLink = form?.link || '';
-  let orgDescription = form?.description || '';
-  let selectedPlan = form?.plan || '';
+  let orgName = '';
+  let orgId = '';
+  let orgLink = '';
+  let orgDescription = '';
+  let selectedPlan = 'basic';
 
-  $: step = form?.step || 'details';
-  $: error = form?.error || '';
-  $: slug = form?.slug || '';
+  $: step = 'plan';
+  $: error = '';
 
-  // Auto-generate slug as user types
-  let slugCheckTimeout: NodeJS.Timeout;
-  $: if (orgName && step === 'details') {
-    clearTimeout(slugCheckTimeout);
-    slugCheckTimeout = setTimeout(() => {
-      checkSlugAvailability();
-    }, 500);
-  }
-
-  async function checkSlugAvailability() {
-    if (!orgName.trim()) return;
-    
-    checkingSlug = true;
-    const formData = new FormData();
-    formData.append('name', orgName);
-    
-    try {
-      const response = await fetch('?/checkSlug', {
-        method: 'POST',
-        body: formData
-      });
-      const result = await response.json();
-      // Handle the slug check result if needed
-    } catch (err) {
-      console.error('Error checking slug:', err);
-    } finally {
-      checkingSlug = false;
-    }
-  }
-
-  function generateSlugPreview(name: string): string {
-    return name
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-')
-      .trim()
-      .replace(/^-+|-+$/g, '');
-  }
-
-  $: slugPreview = generateSlugPreview(orgName);
-
-  const plans = [
-    {
-      id: 'free',
-      name: 'Free',
-      price: '£0',
-      period: '/month',
-      description: 'Perfect for small teams getting started',
-      icon: Building,
-      features: [
-        'Up to 5 team members',
-        '1,000 emails per month',
-        'Basic organisation',
-        'Community support',
-        '1GB storage'
-      ],
-      gradient: 'from-gray-500 to-gray-600',
-      popular: false
-    },
-    {
-      id: 'basic',
-      name: 'Basic',
-      price: '£15',
-      period: '/month',
-      description: 'For growing teams that need more features',
-      icon: Zap,
-      features: [
-        'Up to 25 team members',
-        'Unlimited emails',
-        'Advanced AI organisation',
-        'Priority support',
-        '50GB storage',
-        'Custom integrations'
-      ],
-      gradient: 'from-blue-500 to-cyan-500',
-      popular: true
-    },
-    {
-      id: 'pro',
-      name: 'Pro',
-      price: '£45',
-      period: '/month',
-      description: 'For large teams with advanced needs',
-      icon: Crown,
-      features: [
-        'Unlimited team members',
-        'Unlimited everything',
-        'Custom AI training',
-        'Dedicated support',
-        'Unlimited storage',
-        'Advanced security',
-        'Custom branding'
-      ],
-      gradient: 'from-purple-500 to-pink-500',
-      popular: false
-    }
-  ];
-
-  onMount(() => {
-    return () => {
-      if (slugCheckTimeout) {
-        clearTimeout(slugCheckTimeout);
-      }
-    };
-  });
+  const plans = PLANS;
 </script>
 
 <svelte:head>
@@ -138,55 +32,89 @@
 <div class="mx-auto max-w-4xl p-4 md:p-8">
   <!-- Header -->
   <div class="mb-8 text-center">
-    <div class="gradient-primary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl">
+    <div
+      class="gradient-primary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl"
+    >
       <Building class="h-8 w-8 text-white" />
     </div>
     <h1 class="mb-2 text-3xl font-bold text-gray-900 dark:text-white md:text-4xl">
       {step === 'details' ? 'Create Your Organisation' : 'Choose Your Plan'}
     </h1>
     <p class="text-lg text-gray-600 dark:text-gray-300">
-      {step === 'details' 
+      {step === 'details'
         ? 'Set up your organisation to start collaborating with your team'
-        : 'Select the plan that best fits your team\'s needs'
-      }
+        : "Select the plan that best fits your team's needs"}
     </p>
   </div>
 
   <!-- Progress Indicator -->
   <div class="mb-8">
-    <div class="flex items-center justify-center space-x-4">
+    <div class="hidden items-center justify-center space-x-4 md:flex">
       <div class="flex items-center">
-        <div class={cn(
-          "flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium transition-colors",
-          step === 'details' 
-            ? "bg-purple-600 text-white" 
-            : "bg-green-500 text-white"
-        )}>
-          {step === 'details' ? '1' : <Check class="h-4 w-4" />}
+        <div
+          class={cn(
+            'flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium transition-colors',
+            step === 'profile'
+              ? 'bg-purple-600 text-white'
+              : 'bg-green-500 text-white'
+          )}
+        >
+          {#if step === 'plan'}1{:else}<Check class="h-4 w-4" />{/if}
         </div>
         <span class="ml-2 text-sm font-medium text-gray-900 dark:text-white">
-          Organisation Details
+          Choose Plan
         </span>
       </div>
       <div class="h-px w-12 bg-gray-300 dark:bg-gray-600"></div>
       <div class="flex items-center">
-        <div class={cn(
-          "flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium transition-colors",
-          step === 'pricing' 
-            ? "bg-purple-600 text-white" 
-            : "bg-gray-300 text-gray-600 dark:bg-gray-600 dark:text-gray-400"
-        )}>
-          2
+        <div
+          class={cn(
+            'flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium transition-colors',
+            step === 'details'
+              ? 'bg-purple-600 text-white'
+              : 'bg-gray-300 text-gray-600 dark:bg-gray-600 dark:text-gray-400'
+          )}
+        >
+          {#if step === 'plan' || step === 'details'}2{:else}<Check
+              class="h-4 w-4"
+            />{/if}
         </div>
-        <span class={cn(
-          "ml-2 text-sm font-medium transition-colors",
-          step === 'pricing' 
-            ? "text-gray-900 dark:text-white" 
-            : "text-gray-500 dark:text-gray-400"
-        )}>
-          Choose Plan
+        <span
+          class={cn(
+            'ml-2 text-sm font-medium transition-colors',
+            step === 'plan'
+              ? 'text-gray-900 dark:text-white'
+              : 'text-gray-500 dark:text-gray-400'
+          )}
+        >
+          Organisation Details
         </span>
       </div>
+      {#if selectedPlan !== 'free'}
+        <div class="h-px w-12 bg-gray-300 dark:bg-gray-600"></div>
+        <div class="flex items-center">
+          <div
+            class={cn(
+              'flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium transition-colors',
+              step === 'payment'
+                ? 'bg-purple-600 text-white'
+                : 'bg-gray-300 text-gray-600 dark:bg-gray-600 dark:text-gray-400'
+            )}
+          >
+            3
+          </div>
+          <span
+            class={cn(
+              'ml-2 text-sm font-medium transition-colors',
+              step === 'plan'
+                ? 'text-gray-900 dark:text-white'
+                : 'text-gray-500 dark:text-gray-400'
+            )}
+          >
+            Payment Details
+          </span>
+        </div>
+      {/if}
     </div>
   </div>
 
@@ -197,27 +125,17 @@
     </Alert.Root>
   {/if}
 
-  <form
-    use:enhance={async () => {
-      loading = true;
-      return async ({ update }) => {
-        loading = false;
-        update({ reset: false });
-      };
-    }}
-    method="POST"
-    action="?/createOrganisation"
-    class="space-y-6"
-  >
-    <input type="hidden" name="step" value={step} />
-    
+  <section class="space-y-8">
     {#if step === 'details'}
       <!-- Organisation Details Form -->
       <div class="glass dark:glass-dark rounded-2xl p-6 md:p-8">
         <div class="space-y-6">
           <!-- Organisation Name -->
           <div>
-            <Label for="name" class="mb-2 block text-sm font-medium text-gray-900 dark:text-white">
+            <Label
+              for="name"
+              class="mb-2 block text-sm font-medium text-gray-900 dark:text-white"
+            >
               Organisation Name *
             </Label>
             <Input
@@ -229,33 +147,47 @@
               class="glass dark:glass-dark w-full border-white/30 dark:border-gray-700/50"
               placeholder="Enter your organisation name"
             />
+            {#if selectedPlan === 'free'}
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Your email subdomain will be randomly generated.<br/>
+              Upgrade to a paid plan to choose a subdomain.
+            </p>
+            {/if}
           </div>
 
-          <!-- Organisation ID Preview -->
-          {#if orgName}
-            <div class="rounded-lg bg-purple-50 p-4 dark:bg-purple-900/20">
-              <Label class="mb-2 block text-sm font-medium text-purple-700 dark:text-purple-300">
-                Organisation ID
-              </Label>
-              <div class="flex items-center space-x-2">
-                <code class="rounded bg-purple-100 px-2 py-1 text-sm text-purple-800 dark:bg-purple-800/50 dark:text-purple-200">
-                  {slug || slugPreview}
-                </code>
-                {#if checkingSlug}
-                  <Loader2 class="h-4 w-4 animate-spin text-purple-600" />
-                {:else if slug}
-                  <Check class="h-4 w-4 text-green-500" />
-                {/if}
-              </div>
-              <p class="mt-1 text-xs text-purple-600 dark:text-purple-400">
-                This will be your unique organisation identifier
-              </p>
-            </div>
+          {#if selectedPlan !== 'free'}
+          <!-- Organisation ID -->
+          <div>
+            <Label
+              for="id"
+              class="mb-2 block text-sm font-medium text-gray-900 dark:text-white"
+            >
+              Organisation ID *
+            </Label>
+            <Input
+              id="id"
+              name="id"
+              type="text"
+              required
+              bind:value={orgId}
+              pattern="[a-z0-9]+"
+              minlength={4}
+              maxlength={36}
+              class="glass dark:glass-dark w-full border-white/30 dark:border-gray-700/50"
+              placeholder="This ID will be your email subdomain"
+            />
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Only lowercase latin letters, numbers, and hyphens are allowed.
+            </p>
+          </div>
           {/if}
 
           <!-- Website Link -->
           <div>
-            <Label for="link" class="mb-2 block text-sm font-medium text-gray-900 dark:text-white">
+            <Label
+              for="link"
+              class="mb-2 block text-sm font-medium text-gray-900 dark:text-white"
+            >
               Website Link
             </Label>
             <Input
@@ -273,7 +205,10 @@
 
           <!-- Description -->
           <div>
-            <Label for="description" class="mb-2 block text-sm font-medium text-gray-900 dark:text-white">
+            <Label
+              for="description"
+              class="mb-2 block text-sm font-medium text-gray-900 dark:text-white"
+            >
               Description
             </Label>
             <Textarea
@@ -292,7 +227,16 @@
       </div>
 
       <!-- Next Button -->
-      <div class="flex justify-end">
+      <div class="flex items-center justify-between gap-4">
+        <Button
+          type="button"
+          variant="ghost"
+          class="gap-2"
+          on:click={() => (step = 'plan')}
+        >
+          <ArrowLeft class="h-4 w-4" />
+          Back
+        </Button>
         <Button
           type="submit"
           disabled={loading || !orgName.trim()}
@@ -301,31 +245,28 @@
           {#if loading}
             <Loader2 class="h-4 w-4 animate-spin" />
           {/if}
-          Next: Choose Plan
+          Create Organisation
           <ArrowRight class="h-4 w-4" />
         </Button>
       </div>
-
-    {:else if step === 'pricing'}
-      <!-- Hidden fields to preserve data -->
-      <input type="hidden" name="name" value={form?.name || ''} />
-      <input type="hidden" name="link" value={form?.link || ''} />
-      <input type="hidden" name="description" value={form?.description || ''} />
-      <input type="hidden" name="slug" value={form?.slug || ''} />
-
-      <!-- Pricing Plans -->
+    {:else if step === 'plan'}
       <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
         {#each plans as plan}
-          <div class="relative">
-            {#if plan.popular}
-              <div class="absolute -top-4 left-1/2 z-10 -translate-x-1/2 transform">
-                <div class="gradient-primary rounded-full px-4 py-2 text-sm font-semibold text-white">
-                  Most Popular
+          <div class="group relative animate-slide-up">
+            {#if selectedPlan === plan.id}
+              <div
+                class="absolute -top-4 left-1/2 z-10 -translate-x-1/2 transform transition-all duration-300 group-hover:-top-8 group-hover:scale-105"
+              >
+                <div
+                  class="gradient-primary rounded-full px-4 py-2 text-sm font-semibold text-white"
+                  transition:fade={{ duration: 150 }}
+                >
+                  Selected
                 </div>
               </div>
             {/if}
 
-            <label class="block cursor-pointer">
+            <label class="block h-full cursor-pointer">
               <input
                 type="radio"
                 name="plan"
@@ -333,13 +274,16 @@
                 bind:group={selectedPlan}
                 class="sr-only"
               />
-              <div class={cn(
-                "glass dark:glass-dark h-full rounded-2xl p-6 transition-all duration-300 hover:scale-105",
-                selectedPlan === plan.id && "ring-2 ring-purple-500",
-                plan.popular && "ring-2 ring-purple-500"
-              )}>
+              <div
+                class={cn(
+                  'glass dark:glass-dark h-full rounded-2xl p-6 transition-all duration-300 hover:scale-105',
+                  selectedPlan === plan.id && 'ring-2 ring-purple-500'
+                )}
+              >
                 <!-- Icon -->
-                <div class="h-16 w-16 rounded-2xl bg-gradient-to-r {plan.gradient} mb-6 flex items-center justify-center">
+                <div
+                  class="h-16 w-16 rounded-2xl bg-gradient-to-r {plan.gradient} mb-6 flex items-center justify-center"
+                >
                   <svelte:component this={plan.icon} class="h-8 w-8 text-white" />
                 </div>
 
@@ -355,10 +299,11 @@
                 <div class="mb-6">
                   <div class="flex items-baseline">
                     <span class="text-3xl font-bold text-gray-900 dark:text-white">
-                      {plan.price}
+                      <!-- TODO: Get other currencies -->
+                      ${plan.price.usd}
                     </span>
                     <span class="ml-1 text-gray-600 dark:text-gray-300">
-                      {plan.period}
+                      /month
                     </span>
                   </div>
                 </div>
@@ -374,15 +319,6 @@
                     </li>
                   {/each}
                 </ul>
-
-                <!-- Selection Indicator -->
-                {#if selectedPlan === plan.id}
-                  <div class="mt-6 flex items-center justify-center">
-                    <div class="flex h-6 w-6 items-center justify-center rounded-full bg-purple-600">
-                      <Check class="h-4 w-4 text-white" />
-                    </div>
-                  </div>
-                {/if}
               </div>
             </label>
           </div>
@@ -390,47 +326,33 @@
       </div>
 
       <!-- Navigation Buttons -->
-      <div class="flex items-center justify-between">
+      <div class="flex justify-end">
         <Button
-          type="button"
-          variant="ghost"
-          class="gap-2"
-          on:click={() => {
-            // Go back to details step
-            const form = new FormData();
-            form.append('step', 'details');
-            form.append('name', data.name || '');
-            form.append('link', data.link || '');
-            form.append('description', data.description || '');
-            // This would need to be handled differently in a real app
-            window.history.back();
-          }}
-        >
-          <ArrowLeft class="h-4 w-4" />
-          Back
-        </Button>
-
-        <Button
-          type="submit"
-          disabled={loading || !selectedPlan}
+          on:click={() => (step = 'details')}
           class="gradient-primary gap-2 px-8 py-3 text-white transition-transform duration-200 hover:scale-105"
         >
-          {#if loading}
-            <Loader2 class="h-4 w-4 animate-spin" />
-          {/if}
           Create Organisation
         </Button>
       </div>
     {/if}
-  </form>
+  </section>
 
   <!-- Help Text -->
   <div class="mt-8 text-center">
     <p class="text-sm text-gray-500 dark:text-gray-400">
       By creating an organisation, you agree to our <a href="/terms" class="text-purple-600 hover:underline dark:text-purple-400">Terms of Service</a>.
-      Need help? <a href="/contact" class="text-purple-600 hover:underline dark:text-purple-400">
-        Contact our support team
+      Need help? <a href="mailto:support@lovelyweb.site" class="text-purple-600 hover:underline dark:text-purple-400">
+        Contact us
       </a>
+    </p>
+  </div>
+  <div class="mx-auto mt-8 max-w-screen-sm text-center">
+    <p class="text-gray-600 dark:text-gray-300">
+      Plan limits are arbitrary. They are put in place since I am using free tiers
+      of the services used to power this application. As people purchase paid plans,
+      the limits will be increased. Thank you for supporting this project.
+      <br />
+      To reiterate: LIMITS ARE ARBITRARY AND MAY CHANGE AT ANY TIME.
     </p>
   </div>
 </div>
