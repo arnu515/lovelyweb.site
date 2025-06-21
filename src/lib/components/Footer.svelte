@@ -28,7 +28,7 @@
       { name: 'Status', href: '#' }
     ],
     legal: [
-      { name: 'Privacy', href: '#' },
+      { name: 'Privacy', href: '/privacy' },
       { name: 'Terms', href: '/terms' },
       { name: 'Cookies', href: '#' },
       { name: 'GDPR', href: '#' }
