@@ -12,30 +12,6 @@
 </svelte:head>
 
 <div class="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-purple-900/20 dark:to-blue-900/20">
-  <!-- Header -->
-  <div class="glass dark:glass-dark border-b border-white/20 dark:border-gray-700/50">
-    <div class="container mx-auto px-4 py-6 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center space-x-4">
-          <Button
-            variant="ghost"
-            href="/"
-            class="flex items-center space-x-2 text-gray-600 hover:text-purple-600 dark:text-gray-300 dark:hover:text-purple-400"
-          >
-            <ArrowLeft class="h-4 w-4" />
-            <span>Back to Home</span>
-          </Button>
-        </div>
-        <div class="flex items-center space-x-2">
-          <div class="gradient-primary flex h-8 w-8 items-center justify-center rounded-lg">
-            <Scale class="h-5 w-5 text-white" />
-          </div>
-          <span class="text-gradient text-xl font-bold">lovelyweb.site</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <div class="container mx-auto px-4 py-12 sm:px-6 lg:px-8">
     <div class="mx-auto max-w-4xl">
       <!-- Page Header -->
