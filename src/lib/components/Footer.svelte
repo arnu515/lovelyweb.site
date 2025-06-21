@@ -29,7 +29,7 @@
     ],
     legal: [
       { name: 'Privacy', href: '#' },
-      { name: 'Terms', href: '#' },
+      { name: 'Terms', href: '/terms' },
       { name: 'Cookies', href: '#' },
       { name: 'GDPR', href: '#' }
     ]

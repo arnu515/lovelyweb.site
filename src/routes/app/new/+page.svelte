@@ -427,6 +427,7 @@
   <!-- Help Text -->
   <div class="mt-8 text-center">
     <p class="text-sm text-gray-500 dark:text-gray-400">
+      By creating an organisation, you agree to our <a href="/terms" class="text-purple-600 hover:underline dark:text-purple-400">Terms of Service</a>.
       Need help? <a href="/contact" class="text-purple-600 hover:underline dark:text-purple-400">
         Contact our support team
       </a>
