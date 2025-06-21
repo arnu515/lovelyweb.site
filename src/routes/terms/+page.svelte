@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Button } from '$lib/components/ui/button';
-  import { ArrowLeft, Scale, Shield, CreditCard, Users } from 'lucide-svelte';
+  import { ArrowLeft, Scale, Shield, CreditCard, Users, Coins } from 'lucide-svelte';
 </script>
 
 <svelte:head>
@@ -61,12 +61,19 @@
               Welcome to lovelyweb.site
             </h2>
             <p class="mb-4 text-gray-700 dark:text-gray-300">
-              These Terms of Service ("Terms") govern your use of lovelyweb.site ("we," "us," or "our") 
+              These Terms of Service ("Terms") govern your use of lovelyweb.site ("we", "us", or "our") 
               and the services we provide. By using our platform, you agree to these terms.
             </p>
-            <p class="text-gray-700 dark:text-gray-300">
+            <p class="mb-4 text-gray-700 dark:text-gray-300">
               We've written these terms in plain English to make them easy to understand. 
-              If you have questions, please contact us at support@lovelyweb.site.
+              If you have questions, please contact us at <a href="mailto:support@lovelyweb.site">support@lovelyweb.site</a>.
+            </p>
+            <p class="text-gray-700 dark:text-gray-300">
+              Please note that lovelyweb.site is in its infancy and was built for a <a href="https://hackathon.dev">hackathon</a>.
+              As such, the longevity and future of this service is not guaranteed. It will be shut down after the hackathon's
+              judging period if there are no paying users. If you want to use this service for your organisation for a longer
+              period, please contact me at <a href="mailto:support@lovelyweb.site">support@lovelyweb.site</a> and we can work
+              something out.
             </p>
           </section>
 
@@ -81,11 +88,9 @@
             </p>
             <ul class="mb-4 list-disc pl-6 text-gray-700 dark:text-gray-300">
               <li>Email management and organization</li>
-              <li>Team chat and messaging</li>
-              <li>Video conferencing and meetings</li>
-              <li>Document storage and sharing</li>
+              <li>Team chat and video conferencing</li>
+              <li>Notes, Todos, and Kanbans</li>
               <li>AI-powered features for productivity</li>
-              <li>Integration with third-party services</li>
             </ul>
           </section>
 
@@ -96,12 +101,12 @@
             </h2>
             <div class="space-y-4 text-gray-700 dark:text-gray-300">
               <p>
-                <strong>Account Creation:</strong> You must provide accurate information when creating 
-                your account. You're responsible for keeping your login credentials secure.
+                <strong>Account Creation:</strong> Upon creating an account, you agree to
+                these Terms as presented here.
               </p>
               <p>
-                <strong>Age Requirement:</strong> You must be at least 16 years old to use our service. 
-                If you're under 18, you need parental consent.
+                <strong>Age Requirement:</strong> You must be at least 18 years old, or the age of
+                "majority" in your jurisdiction to use our service. 
               </p>
               <p>
                 <strong>Organisation Accounts:</strong> When you create an organisation, you become 
@@ -120,11 +125,9 @@
             </p>
             <ul class="mb-4 list-disc pl-6 text-gray-700 dark:text-gray-300">
               <li>Organize and manage your team's communications</li>
-              <li>Store and share documents with your team</li>
               <li>Use our AI features to improve productivity</li>
-              <li>Integrate with other business tools</li>
               <li>Invite team members to your organisation</li>
-              <li>Export your data at any time</li>
+              <li>Export your data at any time (coming soon)</li>
             </ul>
           </section>
 
@@ -134,7 +137,7 @@
               What You Cannot Do
             </h2>
             <p class="mb-4 text-gray-700 dark:text-gray-300">
-              To keep our platform safe and legal for everyone, please don't:
+              To keep our platform safe for everyone, you are not allowed to:
             </p>
             <ul class="mb-4 list-disc pl-6 text-gray-700 dark:text-gray-300">
               <li>Use our service for illegal activities or spam</li>
@@ -144,8 +147,13 @@
               <li>Use our service to compete with us directly</li>
               <li>Violate others' privacy or intellectual property rights</li>
               <li>Create fake accounts or impersonate others</li>
-              <li>Use automated tools to scrape our data</li>
+              <li>Attempt to bypass any limits set on your account</li>
             </ul>
+            <p class="mb-4 text-gray-700 dark:text-gray-300">
+              Performing such actions may entail a permanent suspension of your account, including your
+              organisation and its members. Creating another account after your account has already been
+              suspended without our prior permission is not permitted.
+            </p>
           </section>
 
           <!-- Your Data -->
@@ -159,16 +167,11 @@
                 We only use it to provide our services to you.
               </p>
               <p>
-                <strong>Data Security:</strong> We use industry-standard security measures to 
-                protect your data, including encryption and secure data centers.
+                <strong>Data Export:</strong> (coming soon) You can export your data at any time.
+                If you delete your account, we'll remove your data within 30 days.
               </p>
               <p>
-                <strong>Data Export:</strong> You can export your data at any time. If you 
-                delete your account, we'll remove your data within 30 days.
-              </p>
-              <p>
-                <strong>Privacy:</strong> Our Privacy Policy explains how we collect and use 
-                your information. We never sell your personal data.
+                Read our <a href="/privacy">privacy policy</a> to learn more about your Privacy on lovelyweb.site.
               </p>
             </div>
           </section>
@@ -182,26 +185,32 @@
             <div class="space-y-4 text-gray-700 dark:text-gray-300">
               <p>
                 <strong>Free Plan:</strong> Our free plan is available indefinitely with 
-                usage limits. No payment required.
+                usage limits. No payment required. You may only create one organisation
+                on the Free plan.
               </p>
               <p>
-                <strong>Paid Plans:</strong> Paid subscriptions are billed monthly or annually 
-                in advance. Prices are shown in GBP and may vary by region.
+                <strong>Paid Plans:</strong> Paid subscriptions are billed monthly in advance.
+                Prices are shown in USD and may change.
               </p>
               <p>
-                <strong>Auto-Renewal:</strong> Subscriptions automatically renew unless you 
-                cancel before the next billing cycle.
+                <strong>Auto-Renewal:</strong> Subscriptions can be made to automatically renew.
               </p>
               <p>
-                <strong>Price Changes:</strong> We may change our prices with 30 days' notice. 
-                Existing subscriptions continue at the current price until renewal.
+                <strong>Cancellations:</strong> Subscriptions can be cancelled at any time before
+                the renewal date (if auto-renew is enabled). The existing subscription continues
+                until its expiration.
               </p>
+              <p>You may not create another organisation on the free plan if you already have one
+              on the free plan. Additionally, you may not create another organisation on the free
+              plan if you've set your subscription to not auto-renew. To cancel a subscription,
+              you must not have any other organisation on the free plan.</p>
             </div>
           </section>
 
           <!-- Refund Policy -->
           <section class="mb-12">
-            <h2 class="mb-6 text-2xl font-bold text-gray-900 dark:text-white">
+            <h2 class="mb-6 flex items-center text-2xl font-bold text-gray-900 dark:text-white">
+              <Coins class="mr-3 h-6 w-6 text-purple-600" />
               Refund Policy
             </h2>
             <div class="glass-card rounded-xl border-l-4 border-purple-500 bg-purple-50/50 p-6 dark:bg-purple-900/20">
@@ -216,7 +225,7 @@
                 </p>
                 <ul class="list-disc pl-6">
                   <li>Your subscription will not auto-renew</li>
-                  <li>You'll continue to have access until your current billing period ends</li>
+                  <li>You'll continue to have access until your subscription ends</li>
                   <li>Your account will automatically downgrade to the free plan</li>
                   <li>Your data will be preserved according to free plan limits</li>
                 </ul>
@@ -237,11 +246,10 @@
             <div class="space-y-4 text-gray-700 dark:text-gray-300">
               <p>
                 We strive to keep our service available 24/7, but we can't guarantee 100% uptime. 
-                We may need to perform maintenance or updates that temporarily affect service.
               </p>
               <p>
-                We'll notify you in advance of planned maintenance when possible. For unplanned 
-                outages, we'll work to restore service as quickly as possible.
+                <strong>This service may be shut down after the hackathon judging period ends if
+                there are no paid users (since I won't be able to sustain it.)</strong>
               </p>
             </div>
           </section>
@@ -274,13 +282,11 @@
             </h2>
             <div class="space-y-4 text-gray-700 dark:text-gray-300">
               <p>
-                We provide our service "as is" and can't guarantee it will always work perfectly. 
-                We're not liable for any indirect damages or losses from using our service.
+                THIS SERVICE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
               </p>
-              <p>
-                Our total liability to you is limited to the amount you've paid us in the 
-                12 months before the issue occurred.
-              </p>
+              <!-- TODO: <p>
+                The software's source code is additionally licensed under the GNU GPLv3 and is available <a href="https://github.com/arnu515/lovelyweb.site">here</a>. 
+              </p> -->
             </div>
           </section>
 
@@ -312,8 +318,8 @@
                 If you have questions about these terms or our service, please contact us:
               </p>
               <ul class="list-disc pl-6">
-                <li>Email: support@lovelyweb.site</li>
-                <li>Website: <a href="/" class="text-purple-600 hover:underline dark:text-purple-400">lovelyweb.site</a></li>
+                <li>Email: <a href="mailto:support@lovelyweb.site">support@lovelyweb.site</a></li>
+                <li>Website: <a href="/">lovelyweb.site</a></li>
               </ul>
             </div>
           </section>
@@ -341,3 +347,9 @@
     </div>
   </div>
 </div>
+
+<style>
+  a {
+    @apply text-purple-600 hover:underline dark:text-purple-400;
+  }
+</style>
