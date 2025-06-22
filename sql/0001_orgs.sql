@@ -13,6 +13,7 @@ create table organisations (
 create table organisations_users (
   organisation_id text not null references organisations (id) on delete cascade on update cascade,
   user_id uuid not null references users (id) on delete cascade on update cascade,
+  created_at timestamptz not null default now(),
   primary key (user_id, organisation_id)
 );
 
