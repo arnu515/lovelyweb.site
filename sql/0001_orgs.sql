@@ -6,7 +6,8 @@ create table organisations (
   description text,
   link text,
   plan plan_enum not null default 'free'::plan_enum,
-  owner_id uuid not null references users(id)
+  owner_id uuid not null references users(id),
+  created_at timestamptz not null default now()
 );
 
 create table organisations_users (

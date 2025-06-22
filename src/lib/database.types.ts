@@ -11,6 +11,7 @@ export type Database = {
     Tables: {
       organisations: {
         Row: {
+          created_at: string;
           description: string | null;
           id: string;
           link: string | null;
@@ -19,6 +20,7 @@ export type Database = {
           plan: Database['public']['Enums']['plan_enum'];
         };
         Insert: {
+          created_at?: string;
           description?: string | null;
           id: string;
           link?: string | null;
@@ -27,6 +29,7 @@ export type Database = {
           plan?: Database['public']['Enums']['plan_enum'];
         };
         Update: {
+          created_at?: string;
           description?: string | null;
           id?: string;
           link?: string | null;
