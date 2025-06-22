@@ -9,6 +9,7 @@
   import type { Database } from '$lib/database.types';
   import { formatRelative } from 'date-fns';
   import { toast } from 'svelte-sonner';
+  import { goto } from '$app/navigation';
 
   export let invites: any;
 
@@ -17,9 +18,22 @@
     PUBLIC_SUPABASE_ANON_KEY
   );
 
-  function handleAcceptInvite(inviteId: string) {
-    // TODO: Implement accept invite logic
-    console.log('Accepting invite:', inviteId);
+  async function handleAcceptInvite(orgId: string, idx: number) {
+    const invite = invites[idx];
+    if (!invite || invite.org_id !== orgId) return;
+
+    invites = invites.splice(idx, 0);
+    const { error } = await supabase.rpc('accept_invite', {
+      org_id: invite.org_id
+    });
+    if (error) {
+      toast('Could not accept invite', { description: error.message });
+      invites.splice(idx, 0, invite);
+      invites = invites;
+    } else {
+      toast('Accepted invite to ' + invite.organisations.name);
+      goto('/app/' + invite.org_id);
+    }
   }
 
   async function handleRejectInvite(orgId: string, idx: number) {
@@ -152,7 +166,7 @@
             <!-- Action Buttons -->
             <div class="flex gap-3 md:flex-col">
               <Button
-                on:click={() => handleAcceptInvite(invite.id)}
+                on:click={() => handleAcceptInvite(invite.org_id, index)}
                 class="gradient-primary flex-1 gap-2 text-white transition-transform duration-200 hover:scale-105 md:flex-none"
               >
                 <Check class="h-4 w-4" />
