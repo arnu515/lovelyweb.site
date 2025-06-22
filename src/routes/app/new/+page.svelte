@@ -230,6 +230,12 @@
     </form>
   {:else if step === 'plan'}
     <section class="space-y-8">
+      {#if !data.canCreateFreeOrg}
+      <Alert.Root variant="warning" class="mb-6">
+        <Alert.Title>You may not create an organisation on the Free Plan</Alert.Title>
+        <Alert.Description>You either already have an organisation on the free plan, or one of your other paid plan organisations' subscriptions are set to not auto-renew.</Alert.Description>
+      </Alert.Root>
+      {/if}
       <div class={cn("grid grid-cols-1 gap-6", data.canCreateFreeOrg ? 'md:grid-cols-3' : 'md:grid-cols-2')}>
         {#each plans as plan}
           <div class="group relative animate-slide-up">
