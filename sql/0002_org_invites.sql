@@ -32,12 +32,14 @@ using (
   (select private.is_org_owner(org_id, (select auth.uid())))
 );
 
-create policy "Org Owner can invite"
+create policy "Org Owner can invite a user not in the org"
 on org_invites
 for insert
 to authenticated
 with check (
   (select private.is_org_owner(org_id, (select auth.uid())))
+  and invitee not in
+    ( select user_id from organisations_users where organisation_id = org_id)
 );
 
 create policy "Invitee and Org Owner can delete"
