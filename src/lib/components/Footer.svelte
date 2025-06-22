@@ -1,31 +1,29 @@
 <script lang="ts">
-  import {
-    Mail,
-    Twitter,
-    Linkedin,
-    Github,
-    Heart
-  } from 'lucide-svelte';
+  import { Mail, Twitter, Linkedin, Github, Heart } from 'lucide-svelte';
 
   const navigation = {
     product: [
       { name: 'Features', href: '/#features' },
       { name: 'Pricing', href: '/#pricing' },
       { name: 'About', href: '/#about' },
-      { name: 'The Author', href: 'https://aarnavpai.in' },
+      { name: 'The Author', href: 'https://aarnavpai.in' }
     ],
     support: [
       { name: 'Contact', href: 'mailto:support@lovelyweb.site' },
-      { name: 'Source Code', href: 'https://github.com/arnu515/lovelyweb.site' },
+      { name: 'Source Code', href: 'https://github.com/arnu515/lovelyweb.site' }
     ],
     legal: [
       { name: 'Privacy', href: '/privacy' },
-      { name: 'Terms', href: '/terms' },
+      { name: 'Terms', href: '/terms' }
     ]
   };
 
   const social = [
-    { name: 'GitHub', href: 'https://github.com/arnu515/lovelyweb.site', icon: Github }
+    {
+      name: 'GitHub',
+      href: 'https://github.com/arnu515/lovelyweb.site',
+      icon: Github
+    }
   ];
 </script>
 
@@ -121,7 +119,12 @@
         © 2024 lovelyweb.site. All rights reserved.
       </p>
       <p class="mt-4 flex items-center gap-1 text-sm text-gray-400 md:mt-0">
-        Made with <Heart class="h-4 w-4 text-red-500" /> for the <a href="https://hackathon.dev" class="text-purple-600 hover:underline dark:text-purple-400">World's Largest Hackathon</a>
+        Made with <Heart class="h-4 w-4 text-red-500" /> for the
+        <a
+          href="https://hackathon.dev"
+          class="text-purple-600 hover:underline dark:text-purple-400"
+          >World's Largest Hackathon</a
+        >
       </p>
     </div>
   </div>

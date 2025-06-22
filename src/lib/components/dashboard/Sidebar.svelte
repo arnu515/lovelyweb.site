@@ -17,9 +17,7 @@
     Calendar,
     MessageCircle,
     Mail,
-
     LogOut
-
   } from 'lucide-svelte';
   import { Button } from '$lib/components/ui/button';
   import { page } from '$app/stores';

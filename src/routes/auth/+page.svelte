@@ -270,10 +270,17 @@
         <!-- Terms -->
         <p class="text-center text-xs text-gray-500">
           By continuing, you agree to lovelyweb.site's
-          <a href="/terms" class="text-purple-400 hover:text-purple-300 hover:underline"
+          <a
+            href="/terms"
+            class="text-purple-400 hover:text-purple-300 hover:underline"
             >Terms of Service</a
-          > and <a href="/privacy" class="text-purple-400 hover:text-purple-300 hover:underline"
-            >Privacy Policy</a>.
+          >
+          and
+          <a
+            href="/privacy"
+            class="text-purple-400 hover:text-purple-300 hover:underline"
+            >Privacy Policy</a
+          >.
         </p>
       </div>
     </div>
