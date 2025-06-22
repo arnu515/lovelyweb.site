@@ -41,11 +41,16 @@ on organisations
 for select
 to authenticated
 using (
-  id in (
-    select organisation_id from organisations_users
-    where user_id = (select auth.uid())
-  )
+  exists(select 1 from organisations_users as ou
+  where (ou.user_id = (select auth.uid()))
+  and ou.organisation_id = organisations.id)
 );
+
+create policy "Everyone can select"
+on organisations_users
+for select
+to authenticated
+using (true);
 
 create function check_if_org_exists(id text)
 returns boolean
