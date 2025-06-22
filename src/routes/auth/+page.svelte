@@ -116,6 +116,7 @@
 
         <form
           use:enhance={async () => {
+            error = '';
             loading = true;
             return async ({ update }) => {
               loading = false;

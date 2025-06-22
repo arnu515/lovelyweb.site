@@ -99,6 +99,7 @@
     <form
       method="POST"
       use:enhance={() => {
+        error = '';
         loading = true;
         return async ({ update }) => {
           loading = false;
