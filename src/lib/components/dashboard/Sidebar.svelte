@@ -16,7 +16,10 @@
     Kanban,
     Calendar,
     MessageCircle,
-    Mail
+    Mail,
+
+    LogOut
+
   } from 'lucide-svelte';
   import { Button } from '$lib/components/ui/button';
   import { page } from '$app/stores';
@@ -172,6 +175,15 @@
             >
               <Smartphone class="mr-2 h-4 w-4" />
               Get mobile app
+            </Button>
+            <Button
+              href="/auth/logout"
+              data-sveltekit-preload-data="off"
+              variant="ghost"
+              class="h-8 w-full justify-start text-sm hover:bg-white/20 dark:hover:bg-gray-800/50"
+            >
+              <LogOut class="mr-2 h-4 w-4" />
+              Log Out
             </Button>
           </div>
         </div>
