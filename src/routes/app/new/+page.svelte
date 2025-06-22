@@ -225,13 +225,12 @@
             <Loader2 class="h-4 w-4 animate-spin" />
           {/if}
           Create Organisation
-          <ArrowRight class="h-4 w-4" />
         </Button>
       </div>
     </form>
   {:else if step === 'plan'}
     <section class="space-y-8">
-      <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+      <div class={cn("grid grid-cols-1 gap-6", data.canCreateFreeOrg ? 'md:grid-cols-3' : 'md:grid-cols-2')}>
         {#each plans as plan}
           <div class="group relative animate-slide-up">
             {#if selectedPlan === plan.id}
@@ -313,6 +312,7 @@
           class="gradient-primary gap-2 px-8 py-3 text-white transition-transform duration-200 hover:scale-105"
         >
           Create Organisation
+          <ArrowRight class="h-4 w-4" />
         </Button>
       </div>
     </section>
