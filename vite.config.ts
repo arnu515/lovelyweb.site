@@ -7,7 +7,9 @@ export default defineConfig({
     sentrySvelteKit({
       sourceMapsUploadOptions: {
         org: 'lovelywebsite',
-        project: 'website'
+        project: 'website',
+        authToken: process.env.SENTRY_AUTH_TOKEN,
+        telemetry: false,
       }
     }),
     sveltekit()
