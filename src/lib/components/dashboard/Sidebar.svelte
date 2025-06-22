@@ -30,7 +30,7 @@
   export let isOpen = true;
   export let isMobile = false;
   export let orgs: Promise<Org[]>;
-  export let currentOrg: Org;
+  export let currentOrg: Org & { owner_id: string };
 
   let orgDropdownOpen = false;
   // page path without /app (there should hopefully not be a regexp injection bug here since `id`'s value is [a-z0-9\-]+)
@@ -185,10 +185,16 @@
               <Settings class="mr-2 h-4 w-4" />
               Settings
             </Button>
-            <Button variant="ghost" class="org-dropdown-btn">
-              <UserPlus class="mr-2 h-4 w-4" />
-              Invite members
-            </Button>
+            {#if user.id === currentOrg.owner_id}
+              <Button
+                href="/app/{currentOrg.id}/invites"
+                variant="ghost"
+                class="org-dropdown-btn"
+              >
+                <UserPlus class="mr-2 h-4 w-4" />
+                Invite members
+              </Button>
+            {/if}
           </div>
 
           <div
