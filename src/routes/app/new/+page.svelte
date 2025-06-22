@@ -9,7 +9,7 @@
   import { fade } from 'svelte/transition';
   import { PLANS } from '$lib/plans';
   import { enhance } from '$app/forms';
-  import { goto } from "$app/navigation"
+  import { goto } from '$app/navigation';
 
   export let data;
   export let form;
@@ -233,12 +233,23 @@
   {:else if step === 'plan'}
     <section class="space-y-8">
       {#if !data.canCreateFreeOrg}
-      <Alert.Root variant="warning" class="mb-6">
-        <Alert.Title>You may not create an organisation on the Free Plan</Alert.Title>
-        <Alert.Description>You either already have an organisation on the free plan, or one of your other paid plan organisations' subscriptions are set to not auto-renew.</Alert.Description>
-      </Alert.Root>
+        <Alert.Root variant="warning" class="mb-6">
+          <Alert.Title
+            >You may not create an organisation on the Free Plan</Alert.Title
+          >
+          <Alert.Description
+            >You either already have an organisation on the free plan, or one of
+            your other paid plan organisations' subscriptions are set to not
+            auto-renew.</Alert.Description
+          >
+        </Alert.Root>
       {/if}
-      <div class={cn("grid grid-cols-1 gap-6", data.canCreateFreeOrg ? 'md:grid-cols-3' : 'md:grid-cols-2')}>
+      <div
+        class={cn(
+          'grid grid-cols-1 gap-6',
+          data.canCreateFreeOrg ? 'md:grid-cols-3' : 'md:grid-cols-2'
+        )}
+      >
         {#each plans as plan}
           <div class="group relative animate-slide-up">
             {#if selectedPlan === plan.id}
@@ -320,8 +331,8 @@
           variant="ghost"
           class="gap-2"
           on:click={() => {
-            if (document.referrer) goto(document.referrer)
-            else window.history.back()
+            if (document.referrer) goto(document.referrer);
+            else window.history.back();
           }}
         >
           <ArrowLeft class="h-4 w-4" />

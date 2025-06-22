@@ -9,7 +9,7 @@ export default defineConfig({
         org: 'lovelywebsite',
         project: 'website',
         authToken: process.env.SENTRY_AUTH_TOKEN,
-        telemetry: false,
+        telemetry: false
       }
     }),
     sveltekit()
