@@ -38,6 +38,7 @@
     "bits-ui": "^0.19.7",
     "clsx": "^2.0.0",
     "cmdk-sv": "^0.0.15",
+    "date-fns": "^4.1.0",
     "lucide-svelte": "^0.294.0",
     "mode-watcher": "^0.2.2",
     "paneforge": "^0.0.6",
