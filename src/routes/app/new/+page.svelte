@@ -9,6 +9,7 @@
   import { fade } from 'svelte/transition';
   import { PLANS } from '$lib/plans';
   import { enhance } from '$app/forms';
+  import { goto } from "$app/navigation"
 
   export let data;
   export let form;
@@ -313,7 +314,19 @@
       </div>
 
       <!-- Navigation Buttons -->
-      <div class="flex justify-end">
+      <div class="flex items-center justify-between gap-4">
+        <Button
+          type="button"
+          variant="ghost"
+          class="gap-2"
+          on:click={() => {
+            if (document.referrer) goto(document.referrer)
+            else window.history.back()
+          }}
+        >
+          <ArrowLeft class="h-4 w-4" />
+          Back
+        </Button>
         <Button
           on:click={() => (step = 'details')}
           class="gradient-primary gap-2 px-8 py-3 text-white transition-transform duration-200 hover:scale-105"
