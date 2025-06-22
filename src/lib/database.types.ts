@@ -85,17 +85,14 @@ export type Database = {
       };
       organisations_users: {
         Row: {
-          id: number;
           organisation_id: string;
           user_id: string;
         };
         Insert: {
-          id?: never;
           organisation_id: string;
           user_id: string;
         };
         Update: {
-          id?: never;
           organisation_id?: string;
           user_id?: string;
         };
@@ -142,6 +139,10 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      accept_invite: {
+        Args: { org_id: string };
+        Returns: undefined;
+      };
       check_if_org_exists: {
         Args: { id: string };
         Returns: boolean;
