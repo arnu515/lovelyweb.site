@@ -22,10 +22,15 @@
   import { Button } from '$lib/components/ui/button';
   import { page } from '$app/stores';
   import { cn } from '$lib/utils';
+  import { type PLAN, PLANS_BY_ID } from "$lib/plans"
+  import { Skeleton } from '../ui/skeleton';
 
+  type Org = { id: string, name: string, plan: PLAN }
   export let user: NonNullable<App.Locals['auth']['user']>;
   export let isOpen = true;
   export let isMobile = false;
+  export let orgs: Promise<Org[]>
+  export let currentOrg: Org
 
   let orgDropdownOpen = false;
   // page path without /app
@@ -110,9 +115,9 @@
           </div>
           <div class="text-left">
             <div class="text-sm font-semibold text-gray-900 dark:text-white">
-              lovelyweb.site
+              {currentOrg.name}
             </div>
-            <div class="text-xs text-gray-500 dark:text-gray-400">Free Plan</div>
+            <div class="text-xs text-gray-500 dark:text-gray-400">{PLANS_BY_ID[currentOrg.plan].name} Plan</div>
           </div>
         </div>
         <ChevronDown
@@ -126,38 +131,47 @@
         <div
           class="glass dark:glass-dark absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-xl border border-gray-200 shadow-xl dark:border-gray-800/50"
         >
-          <!-- Current Organization -->
-          <div class="border-b border-white/10 p-3 dark:border-gray-700/50">
-            <div class="flex items-center space-x-3 rounded-lg p-2">
-              <div
-                class="gradient-primary flex h-6 w-6 items-center justify-center rounded-md"
-              >
-                <Mail class="h-3 w-3 text-white" />
-              </div>
-              <div class="flex-1">
-                <div class="text-sm font-medium text-gray-900 dark:text-white">
-                  lovelyweb.site
+          {#await orgs}
+            <Skeleton class="w-full h-4" />
+          {:then orgs}
+          <div class="flex flex-col gap-1 p-1">
+            {#each orgs as org}
+              <Button href={org.id === currentOrg.id ? undefined : '/app/' + org.id} on:click={org.id === currentOrg.id ? () => orgDropdownOpen = false : undefined} data-sveltekit-reload variant="ghost" class="flex h-16 w-full justify-start text-left text-sm hover:bg-gray-200 dark:hover:bg-gray-700 border-b border-white/10 p-3 dark:border-gray-700/50">
+                <div class="flex items-center space-x-3 rounded-lg p-2">
+                  <div
+                    class="gradient-primary flex h-6 w-6 items-center justify-center rounded-md"
+                  >
+                    {org.name.charAt(0)}
+                  </div>
+                  <div class="flex-1 justify-start">
+                    <div class="text-sm font-medium text-gray-900 dark:text-white">
+                      {org.name}
+                    </div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">
+                      {PLANS_BY_ID[org.plan].name} Plan
+                    </div>
+                  </div>
                 </div>
-                <div class="text-xs text-gray-500 dark:text-gray-400">
-                  Free Plan • 1 member
-                </div>
-              </div>
-              <div class="h-4 w-4 text-purple-500">✓</div>
-            </div>
+                {#if org.id === currentOrg.id}
+                <div class="h-4 w-4 ml-auto text-purple-500">✓</div>
+                {/if}
+              </Button>
+            {/each}
           </div>
+          {/await}
 
           <!-- Actions -->
           <div class="space-y-1 p-2">
             <Button
               variant="ghost"
-              class="h-8 w-full justify-start text-sm hover:bg-white/20 dark:hover:bg-gray-800/50"
+              class="org-dropdown-btn"
             >
               <Settings class="mr-2 h-4 w-4" />
               Settings
             </Button>
             <Button
               variant="ghost"
-              class="h-8 w-full justify-start text-sm hover:bg-white/20 dark:hover:bg-gray-800/50"
+              class="org-dropdown-btn"
             >
               <UserPlus class="mr-2 h-4 w-4" />
               Invite members
@@ -169,7 +183,7 @@
           >
             <Button
               variant="ghost"
-              class="h-8 w-full justify-start text-sm hover:bg-white/20 dark:hover:bg-gray-800/50"
+              class="org-dropdown-btn"
             >
               <Smartphone class="mr-2 h-4 w-4" />
               Get mobile app
@@ -178,7 +192,7 @@
               href="/auth/logout"
               data-sveltekit-preload-data="off"
               variant="ghost"
-              class="h-8 w-full justify-start text-sm hover:bg-white/20 dark:hover:bg-gray-800/50"
+              class="org-dropdown-btn"
             >
               <LogOut class="mr-2 h-4 w-4" />
               Log Out
@@ -375,5 +389,9 @@
 
   :global(.sb-btn span) {
     @apply text-sm font-medium;
+  }
+
+  :global(.org-dropdown-btn) {
+    @apply h-8 w-full justify-start text-sm hover:bg-gray-200 dark:hover:bg-gray-700;
   }
 </style>

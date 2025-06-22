@@ -5,10 +5,10 @@ import { captureException } from "@sentry/sveltekit";
 export const load: PageLoad = async ({ parent }) => {
   const data = await parent();
 
-  const {count: orgCount, error: orgError} = await data.supabase.from("organisations").select("id", { count: "exact", head: true })
+  const {data: org, error: orgError} = await data.supabase.from("organisations").select("id").limit(1).maybeSingle()
   if (orgError) {
     captureException(orgError, { tags: { supabase: 'organisations' }})
     error(500, { message: orgError.message });
   }
-  if (orgCount !== 0) redirect(303, '/app/0')
+  if (org) redirect(303, '/app/' + org.id)
 }

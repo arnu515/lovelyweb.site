@@ -19,6 +19,8 @@
     checkMobile();
     window.addEventListener('resize', checkMobile);
 
+    data.orgList.then(console.log)
+
     return () => {
       window.removeEventListener('resize', checkMobile);
     };
@@ -28,7 +30,7 @@
 <div
   class="flex h-screen bg-gradient-to-br from-purple-100/80 via-blue-100/80 to-indigo-200/80 dark:from-gray-900 dark:via-purple-900/20 dark:to-blue-900/20"
 >
-  <Sidebar user={data.auth.user} bind:isOpen={sidebarOpen} {isMobile} />
+  <Sidebar currentOrg={data.org} orgs={data.orgList} user={data.auth.user} bind:isOpen={sidebarOpen} {isMobile} />
 
   <main class="flex flex-1 flex-col overflow-hidden">
     <MobileTopNav
