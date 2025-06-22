@@ -8,21 +8,18 @@
   import { cn } from '$lib/utils';
   import { fade } from 'svelte/transition';
   import { PLANS } from '$lib/plans';
+  import { enhance } from '$app/forms';
 
   export let data;
   export let form;
 
   let loading = false;
-  let orgName = '';
-  let orgId = '';
-  let orgLink = '';
-  let orgDescription = '';
   let selectedPlan = 'basic';
 
-  $: step = 'plan';
-  $: error = '';
+  let step = 'plan';
+  $: error = form?.error || '';
 
-  const plans = PLANS;
+  const plans = data.canCreateFreeOrg ? PLANS : PLANS.slice(1);
 </script>
 
 <svelte:head>
@@ -75,9 +72,7 @@
               : 'bg-gray-300 text-gray-600 dark:bg-gray-600 dark:text-gray-400'
           )}
         >
-          {#if step === 'plan' || step === 'details'}2{:else}<Check
-              class="h-4 w-4"
-            />{/if}
+          2
         </div>
         <span
           class={cn(
@@ -90,31 +85,6 @@
           Organisation Details
         </span>
       </div>
-      {#if selectedPlan !== 'free'}
-        <div class="h-px w-12 bg-gray-300 dark:bg-gray-600"></div>
-        <div class="flex items-center">
-          <div
-            class={cn(
-              'flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium transition-colors',
-              step === 'payment'
-                ? 'bg-purple-600 text-white'
-                : 'bg-gray-300 text-gray-600 dark:bg-gray-600 dark:text-gray-400'
-            )}
-          >
-            3
-          </div>
-          <span
-            class={cn(
-              'ml-2 text-sm font-medium transition-colors',
-              step === 'plan'
-                ? 'text-gray-900 dark:text-white'
-                : 'text-gray-500 dark:text-gray-400'
-            )}
-          >
-            Payment Details
-          </span>
-        </div>
-      {/if}
     </div>
   </div>
 
@@ -125,8 +95,19 @@
     </Alert.Root>
   {/if}
 
-  <section class="space-y-8">
-    {#if step === 'details'}
+  {#if step === 'details'}
+    <form
+      method="POST"
+      use:enhance={() => {
+        loading = true;
+        return async ({ update }) => {
+          loading = false;
+          update({ reset: false });
+        };
+      }}
+      class="space-y-8"
+    >
+      <input type="hidden" name="plan" value={selectedPlan || 'free'} />
       <!-- Organisation Details Form -->
       <div class="glass dark:glass-dark rounded-2xl p-6 md:p-8">
         <div class="space-y-6">
@@ -143,43 +124,43 @@
               name="name"
               type="text"
               required
-              bind:value={orgName}
+              minlength={4}
+              maxlength={255}
               class="glass dark:glass-dark w-full border-white/30 dark:border-gray-700/50"
               placeholder="Enter your organisation name"
             />
             {#if selectedPlan === 'free'}
-            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              Your email subdomain will be randomly generated.<br/>
-              Upgrade to a paid plan to choose a subdomain.
-            </p>
+              <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Your email subdomain will be randomly generated.<br />
+                Upgrade to a paid plan to choose a subdomain.
+              </p>
             {/if}
           </div>
 
           {#if selectedPlan !== 'free'}
-          <!-- Organisation ID -->
-          <div>
-            <Label
-              for="id"
-              class="mb-2 block text-sm font-medium text-gray-900 dark:text-white"
-            >
-              Organisation ID *
-            </Label>
-            <Input
-              id="id"
-              name="id"
-              type="text"
-              required
-              bind:value={orgId}
-              pattern="[a-z0-9]+"
-              minlength={4}
-              maxlength={36}
-              class="glass dark:glass-dark w-full border-white/30 dark:border-gray-700/50"
-              placeholder="This ID will be your email subdomain"
-            />
-            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              Only lowercase latin letters, numbers, and hyphens are allowed.
-            </p>
-          </div>
+            <!-- Organisation ID -->
+            <div>
+              <Label
+                for="id"
+                class="mb-2 block text-sm font-medium text-gray-900 dark:text-white"
+              >
+                Organisation ID *
+              </Label>
+              <Input
+                id="id"
+                name="id"
+                type="text"
+                required
+                pattern="[a-z0-9\-]+"
+                minlength={4}
+                maxlength={36}
+                class="glass dark:glass-dark w-full border-white/30 dark:border-gray-700/50"
+                placeholder="This ID will be your email subdomain"
+              />
+              <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Only lowercase latin letters, numbers, and hyphens are allowed.
+              </p>
+            </div>
           {/if}
 
           <!-- Website Link -->
@@ -194,7 +175,6 @@
               id="link"
               name="link"
               type="url"
-              bind:value={orgLink}
               class="glass dark:glass-dark w-full border-white/30 dark:border-gray-700/50"
               placeholder="https://your-website.com"
             />
@@ -214,7 +194,6 @@
             <Textarea
               id="description"
               name="description"
-              bind:value={orgDescription}
               class="glass dark:glass-dark w-full border-white/30 dark:border-gray-700/50"
               placeholder="Describe your organisation..."
               rows={4}
@@ -239,7 +218,7 @@
         </Button>
         <Button
           type="submit"
-          disabled={loading || !orgName.trim()}
+          disabled={loading}
           class="gradient-primary gap-2 px-8 py-3 text-white transition-transform duration-200 hover:scale-105"
         >
           {#if loading}
@@ -249,7 +228,9 @@
           <ArrowRight class="h-4 w-4" />
         </Button>
       </div>
-    {:else if step === 'plan'}
+    </form>
+  {:else if step === 'plan'}
+    <section class="space-y-8">
       <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
         {#each plans as plan}
           <div class="group relative animate-slide-up">
@@ -334,14 +315,21 @@
           Create Organisation
         </Button>
       </div>
-    {/if}
-  </section>
+    </section>
+  {/if}
 
   <!-- Help Text -->
   <div class="mt-8 text-center">
     <p class="text-sm text-gray-500 dark:text-gray-400">
-      By creating an organisation, you agree to our <a href="/terms" class="text-purple-600 hover:underline dark:text-purple-400">Terms of Service</a>.
-      Need help? <a href="mailto:support@lovelyweb.site" class="text-purple-600 hover:underline dark:text-purple-400">
+      By creating an organisation, you agree to our <a
+        href="/terms"
+        class="text-purple-600 hover:underline dark:text-purple-400"
+        >Terms of Service</a
+      >. Need help?
+      <a
+        href="mailto:support@lovelyweb.site"
+        class="text-purple-600 hover:underline dark:text-purple-400"
+      >
         Contact us
       </a>
     </p>
