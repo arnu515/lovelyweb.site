@@ -56,3 +56,21 @@ to authenticated
 using (
   (select invitee from org_invites where org_id = id) = (select auth.uid())
 );
+
+create function accept_invite(org_id text)
+returns void
+as $$
+declare
+  uid uuid;
+begin
+  uid := (select auth.uid());
+  if not exists(select 1 from org_invites i where i.org_id = $1 and invitee = uid) then
+    raise exception 'You are not invited to this organisation';
+  end if;
+
+  delete from org_invites i where i.org_id = $1 and i.invitee = uid;
+  insert into organisations_users (organisation_id, user_id) values
+    (org_id, uid);
+end $$ language plpgsql
+security definer
+set search_path = 'public';
