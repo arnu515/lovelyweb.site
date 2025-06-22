@@ -33,8 +33,8 @@
   export let currentOrg: Org
 
   let orgDropdownOpen = false;
-  // page path without /app
-  $: currentPage = $page.url.pathname.replace(/\/app\/?/, '');
+  // page path without /app (there should hopefully not be a regexp injection bug here since `id`'s value is [a-z0-9\-]+)
+  $: currentPage = $page.url.pathname.replace(new RegExp(`^\/app\/${currentOrg.id}\/?`), '');
 
   // Mock data for recent contacts
   const recentContacts = [
@@ -157,6 +157,14 @@
                 {/if}
               </Button>
             {/each}
+            <Button
+              variant="ghost"
+              href="/app/new"
+              class="org-dropdown-btn"
+            >
+              <Plus class="mr-2 h-4 w-4" />
+              New Organisation
+            </Button>
           </div>
           {/await}
 
@@ -210,7 +218,7 @@
       <Button
         variant="ghost"
         class={cn('sb-btn', currentPage === '' && 'active')}
-        href="/app"
+        href="/app/{currentOrg.id}"
         on:click={handleNavigation}
       >
         <Home class="h-5 w-5" />
@@ -235,7 +243,7 @@
         <Button
           variant="ghost"
           class={cn('sb-btn', currentPage === 'email/inbox' && 'active')}
-          href="/app/email/inbox"
+          href="/app/{currentOrg.id}/email/inbox"
           on:click={handleNavigation}
         >
           <Inbox class="icon" />
@@ -245,7 +253,7 @@
         <Button
           variant="ghost"
           class={cn('sb-btn', currentPage === 'email/sent' && 'active')}
-          href="/app/email/sent"
+          href="/app/{currentOrg.id}/email/sent"
           on:click={handleNavigation}
         >
           <Send class="icon" />
@@ -254,7 +262,7 @@
         <Button
           variant="ghost"
           class={cn('sb-btn', currentPage === 'email/archive' && 'active')}
-          href="/app/email/archive"
+          href="/app/{currentOrg.id}/email/archive"
           on:click={handleNavigation}
         >
           <Archive class="icon" />
@@ -263,7 +271,7 @@
         <Button
           variant="ghost"
           class={cn('sb-btn', currentPage === 'email/spam' && 'active')}
-          href="/app/email/spam"
+          href="/app/{currentOrg.id}/email/spam"
           on:click={handleNavigation}
         >
           <AlertTriangle class="icon" />
@@ -272,7 +280,7 @@
         <Button
           variant="ghost"
           class={cn('sb-btn', currentPage === 'email/trash' && 'active')}
-          href="/app/email/trash"
+          href="/app/{currentOrg.id}/email/trash"
           on:click={handleNavigation}
         >
           <Trash2 class="icon" />
@@ -332,8 +340,6 @@
           {#each recentContacts as contact}
             <Button
               variant="ghost"
-              class={cn('sb-btn', currentPage === 'email' && 'active')}
-              href="/app/email"
               on:click={handleNavigation}
             >
               <div class="relative mr-3">
