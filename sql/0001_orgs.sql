@@ -11,9 +11,9 @@ create table organisations (
 );
 
 create table organisations_users (
-  id bigint primary key generated always as identity,
   organisation_id text not null references organisations (id) on delete cascade on update cascade,
-  user_id uuid not null references users (id) on delete cascade on update cascade
+  user_id uuid not null references users (id) on delete cascade on update cascade,
+  primary key (user_id, organisation_id)
 );
 
 create index idx_organisation_id on organisations_users (organisation_id);
