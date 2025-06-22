@@ -147,6 +147,15 @@ export type Database = {
         Args: { id: string };
         Returns: boolean;
       };
+      get_user_by_email: {
+        Args: { email: string };
+        Returns: {
+          avatar_url: string;
+          id: string;
+          name: string;
+          username: string;
+        }[];
+      };
       get_user_provider: {
         Args: { email: string };
         Returns: string;

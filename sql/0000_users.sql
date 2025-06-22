@@ -69,3 +69,18 @@ as PERMISSIVE
 for SELECT
 to authenticated
 using ( true );
+
+create or replace function get_user_by_email(email text)
+returns setof public.users
+as $$
+declare
+  au record;
+begin
+  select u.id from auth.users u into au where u.email = $1;
+  if not found then
+    return;
+  end if;
+  return query
+    select * from public.users where id = au.id;
+end $$ language plpgsql security definer
+set search_path = 'public';
