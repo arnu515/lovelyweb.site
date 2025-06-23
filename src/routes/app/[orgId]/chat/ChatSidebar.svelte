@@ -201,7 +201,7 @@
   <!-- User Info -->
   <Collapsible.Root
     bind:open={isUserCollapsibleOpen}
-    class="rounded-t-lg border border-transparent dark:bg-gray-900"
+    class="rounded-t-lg border border-transparent bg-white dark:bg-gray-900"
   >
     <Collapsible.Trigger
       class="flex w-full items-center gap-4 rounded-t-lg border border-transparent p-4 transition-colors duration-300 dark:bg-gray-900 dark:hover:bg-gray-800"
