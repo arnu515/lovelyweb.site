@@ -19,8 +19,6 @@
     checkMobile();
     window.addEventListener('resize', checkMobile);
 
-    data.orgList.then(console.log);
-
     return () => {
       window.removeEventListener('resize', checkMobile);
     };
