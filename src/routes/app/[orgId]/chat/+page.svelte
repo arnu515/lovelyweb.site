@@ -7,17 +7,20 @@
   <title>Chat - lovelyweb.site</title>
 </svelte:head>
 
-<div class="hidden md:flex h-full items-center justify-center p-8">
+<div class="hidden h-full items-center justify-center p-8 md:flex">
   <div class="text-center">
     <div class="glass dark:glass-dark mx-auto max-w-md rounded-2xl p-8">
-      <div class="gradient-primary mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl">
+      <div
+        class="gradient-primary mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl"
+      >
         <MessageCircle class="h-8 w-8 text-white" />
       </div>
       <h2 class="mb-4 text-2xl font-bold text-gray-900 dark:text-white">
         Welcome to Chat
       </h2>
       <p class="mb-6 text-gray-600 dark:text-gray-300">
-        Select a conversation from the sidebar to start messaging, or create a new chat.
+        Select a conversation from the sidebar to start messaging, or create a new
+        chat.
       </p>
       <div class="flex flex-col gap-3 sm:flex-row sm:justify-center">
         <Button class="gradient-primary gap-2 text-white">

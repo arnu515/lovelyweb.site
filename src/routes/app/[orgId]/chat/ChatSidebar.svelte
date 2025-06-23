@@ -91,7 +91,10 @@
 </script>
 
 <aside
-  class={cn("glass dark:glass-dark fixed left-0 top-0 z-50 h-screen flex-col border-r border-white/20 transition-transform duration-300 dark:border-gray-700/50 md:relative md:translate-x-0 w-full md:w-80", currentChatId !== undefined ? 'hidden md:flex' : 'flex')}
+  class={cn(
+    'glass dark:glass-dark fixed left-0 top-0 z-50 h-screen w-full flex-col border-r border-white/20 transition-transform duration-300 dark:border-gray-700/50 md:relative md:w-80 md:translate-x-0',
+    currentChatId !== undefined ? 'hidden md:flex' : 'flex'
+  )}
 >
   <!-- Header -->
   <div class="border-b border-white/20 p-4 dark:border-gray-700/50">

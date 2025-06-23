@@ -3,7 +3,21 @@
   import { Button } from '$lib/components/ui/button';
   import { Input } from '$lib/components/ui/input';
   import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-  import { Send, Paperclip, Mic, Phone, Video, MoreVertical, Smile, Image as ImageIcon, FileText, Sparkles, Volume2, FileEdit as Edit3, ArrowLeft } from 'lucide-svelte';
+  import {
+    Send,
+    Paperclip,
+    Mic,
+    Phone,
+    Video,
+    MoreVertical,
+    Smile,
+    Image as ImageIcon,
+    FileText,
+    Sparkles,
+    Volume2,
+    FileEdit as Edit3,
+    ArrowLeft
+  } from 'lucide-svelte';
   import { cn } from '$lib/utils';
   import { page } from '$app/stores';
 
@@ -18,7 +32,8 @@
     id: $page.params.chatId,
     name: 'Sarah Wilson',
     type: 'direct',
-    avatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=64&h=64&fit=crop',
+    avatar:
+      'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=64&h=64&fit=crop',
     isOnline: true,
     lastSeen: 'Active now'
   };
@@ -55,7 +70,7 @@
       id: '4',
       senderId: 'me',
       senderName: 'You',
-      content: 'Sure! It\'s a new communication platform with AI features.',
+      content: "Sure! It's a new communication platform with AI features.",
       timestamp: new Date('2024-01-15T09:07:00'),
       type: 'text',
       status: 'read'
@@ -64,7 +79,8 @@
       id: '5',
       senderId: 'other',
       senderName: 'Sarah Wilson',
-      content: 'https://images.pexels.com/photos/1181533/pexels-photo-1181533.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&fit=crop',
+      content:
+        'https://images.pexels.com/photos/1181533/pexels-photo-1181533.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&fit=crop',
       timestamp: new Date('2024-01-15T09:10:00'),
       type: 'image',
       status: 'delivered'
@@ -81,10 +97,10 @@
   ];
 
   function formatMessageTime(date: Date) {
-    return date.toLocaleTimeString('en-US', { 
-      hour: '2-digit', 
+    return date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
       minute: '2-digit',
-      hour12: false 
+      hour12: false
     });
   }
 
@@ -92,7 +108,7 @@
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
-    
+
     if (date.toDateString() === today.toDateString()) {
       return 'Today';
     } else if (date.toDateString() === yesterday.toDateString()) {
@@ -100,10 +116,10 @@
     } else if (date.getTime() > today.getTime() - 7 * 24 * 60 * 60 * 1000) {
       return date.toLocaleDateString('en-US', { weekday: 'long' });
     } else {
-      return date.toLocaleDateString('en-US', { 
-        day: 'numeric', 
-        month: 'short', 
-        year: 'numeric' 
+      return date.toLocaleDateString('en-US', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
       });
     }
   }
@@ -117,7 +133,7 @@
 
   function sendMessage() {
     if (!messageInput.trim()) return;
-    
+
     // Here you would send the message to your backend
     console.log('Sending message:', messageInput);
     messageInput = '';
@@ -155,10 +171,17 @@
 
 <div class="flex h-full flex-col">
   <!-- Chat Header -->
-  <div class="glass dark:glass-dark border-b border-white/20 p-4 dark:border-gray-700/50">
+  <div
+    class="glass dark:glass-dark border-b border-white/20 p-4 dark:border-gray-700/50"
+  >
     <div class="flex items-center justify-between">
       <div class="flex items-center space-x-3">
-        <Button href="/app/{$page.params.orgId}/chat" variant="ghost" size="icon" class="h-9 w-9 md:hidden">
+        <Button
+          href="/app/{$page.params.orgId}/chat"
+          variant="ghost"
+          size="icon"
+          class="h-9 w-9 md:hidden"
+        >
           <ArrowLeft class="h-6 w-6" />
         </Button>
         <div class="relative">
@@ -168,7 +191,9 @@
             class="h-10 w-10 rounded-full"
           />
           {#if currentChat.isOnline}
-            <div class="absolute -bottom-1 -right-1 h-3 w-3 rounded-full border-2 border-white bg-green-400 dark:border-gray-800"></div>
+            <div
+              class="absolute -bottom-1 -right-1 h-3 w-3 rounded-full border-2 border-white bg-green-400 dark:border-gray-800"
+            ></div>
           {/if}
         </div>
         <div>
@@ -180,12 +205,12 @@
           </p>
         </div>
       </div>
-      
+
       <div class="flex items-center space-x-2">
-        <Button variant="ghost" size="icon" class="h-9 w-9 hidden sm:inline-flex">
+        <Button variant="ghost" size="icon" class="hidden h-9 w-9 sm:inline-flex">
           <Phone class="h-4 w-4" />
         </Button>
-        <Button variant="ghost" size="icon" class="h-9 w-9 hidden sm:inline-flex">
+        <Button variant="ghost" size="icon" class="hidden h-9 w-9 sm:inline-flex">
           <Video class="h-4 w-4" />
         </Button>
         <Button variant="ghost" size="icon" class="h-9 w-9">
@@ -196,55 +221,64 @@
   </div>
 
   <!-- Messages -->
-  <div 
-    bind:this={messagesContainer}
-    class="flex-1 overflow-y-auto p-4 space-y-4"
-  >
+  <div bind:this={messagesContainer} class="flex-1 space-y-4 overflow-y-auto p-4">
     {#each messages as message, index}
       <!-- Date Header -->
       {#if shouldShowDateHeader(message, messages[index - 1])}
         <div class="flex justify-center">
-          <div class="glass dark:glass-dark rounded-full px-3 py-1 text-xs text-gray-600 dark:text-gray-400">
+          <div
+            class="glass dark:glass-dark rounded-full px-3 py-1 text-xs text-gray-600 dark:text-gray-400"
+          >
             {formatDateHeader(message.timestamp)}
           </div>
         </div>
       {/if}
 
       <!-- Message -->
-      <div class={cn(
-        'flex',
-        message.senderId === 'me' ? 'justify-end' : 'justify-start'
-      )}>
-        <div class={cn(
-          'max-w-xs lg:max-w-md xl:max-w-lg',
-          message.senderId === 'me' ? 'order-2' : 'order-1'
-        )}>
-          <div class={cn(
-            'rounded-2xl px-4 py-2 shadow-sm',
-            message.senderId === 'me'
-              ? 'gradient-primary text-white'
-              : 'glass dark:glass-dark text-gray-900 dark:text-white'
-          )}>
+      <div
+        class={cn(
+          'flex',
+          message.senderId === 'me' ? 'justify-end' : 'justify-start'
+        )}
+      >
+        <div
+          class={cn(
+            'max-w-xs lg:max-w-md xl:max-w-lg',
+            message.senderId === 'me' ? 'order-2' : 'order-1'
+          )}
+        >
+          <div
+            class={cn(
+              'rounded-2xl px-4 py-2 shadow-sm',
+              message.senderId === 'me'
+                ? 'gradient-primary text-white'
+                : 'glass dark:glass-dark text-gray-900 dark:text-white'
+            )}
+          >
             {#if message.type === 'text'}
               <p class="text-sm leading-relaxed">{message.content}</p>
             {:else if message.type === 'image'}
-              <img 
-                src={message.content} 
+              <img
+                src={message.content}
                 alt="Shared image"
-                class="rounded-lg max-w-full h-auto"
+                class="h-auto max-w-full rounded-lg"
               />
             {/if}
           </div>
-          <div class={cn(
-            'mt-1 flex items-center space-x-1 text-xs text-gray-500',
-            message.senderId === 'me' ? 'justify-end' : 'justify-start'
-          )}>
+          <div
+            class={cn(
+              'mt-1 flex items-center space-x-1 text-xs text-gray-500',
+              message.senderId === 'me' ? 'justify-end' : 'justify-start'
+            )}
+          >
             <span>{formatMessageTime(message.timestamp)}</span>
             {#if message.senderId === 'me'}
-              <span class={cn(
-                'text-xs',
-                message.status === 'read' ? 'text-blue-500' : 'text-gray-400'
-              )}>
+              <span
+                class={cn(
+                  'text-xs',
+                  message.status === 'read' ? 'text-blue-500' : 'text-gray-400'
+                )}
+              >
                 {message.status === 'read' ? '✓✓' : '✓'}
               </span>
             {/if}
@@ -255,12 +289,14 @@
   </div>
 
   <!-- Message Input -->
-  <div class="glass dark:glass-dark border-t border-white/20 p-4 dark:border-gray-700/50">
+  <div
+    class="glass dark:glass-dark border-t border-white/20 p-4 dark:border-gray-700/50"
+  >
     <div class="flex items-end space-x-2">
       <!-- Attachment Button -->
-      <Button 
-        variant="ghost" 
-        size="icon" 
+      <Button
+        variant="ghost"
+        size="icon"
         class="h-10 w-10 flex-shrink-0"
         on:click={handleFileUpload}
       >
@@ -269,16 +305,18 @@
 
       <!-- Message Input -->
       <div class="flex-1">
-        <div class="glass dark:glass-dark relative rounded-2xl border border-white/30 dark:border-gray-700/50">
+        <div
+          class="glass dark:glass-dark relative rounded-2xl border border-white/30 dark:border-gray-700/50"
+        >
           <Input
             bind:value={messageInput}
             placeholder="Type a message..."
             class="border-0 bg-transparent pr-12 focus:ring-0"
             on:keypress={handleKeyPress}
           />
-          <Button 
-            variant="ghost" 
-            size="icon" 
+          <Button
+            variant="ghost"
+            size="icon"
             class="absolute right-1 top-1/2 h-8 w-8 -translate-y-1/2"
           >
             <Smile class="h-4 w-4" />
@@ -289,16 +327,18 @@
       <!-- AI Dropdown -->
       <DropdownMenu.Root>
         <DropdownMenu.Trigger asChild let:builder>
-          <Button 
+          <Button
             builders={[builder]}
-            variant="ghost" 
-            size="icon" 
-            class="h-10 w-10 flex-shrink-0 gradient-primary text-white"
+            variant="ghost"
+            size="icon"
+            class="gradient-primary h-10 w-10 flex-shrink-0 text-white"
           >
             <Sparkles class="h-4 w-4" />
           </Button>
         </DropdownMenu.Trigger>
-        <DropdownMenu.Content class="glass dark:glass-dark border-white/20 dark:border-gray-700/50">
+        <DropdownMenu.Content
+          class="glass dark:glass-dark border-white/20 dark:border-gray-700/50"
+        >
           <DropdownMenu.Item class="gap-2">
             <ImageIcon class="h-4 w-4" />
             Generate an Image
@@ -316,7 +356,7 @@
 
       <!-- Send/Mic Button -->
       {#if messageInput.trim()}
-        <Button 
+        <Button
           class="gradient-primary h-10 w-10 flex-shrink-0 text-white"
           size="icon"
           on:click={sendMessage}
@@ -324,11 +364,7 @@
           <Send class="h-4 w-4" />
         </Button>
       {:else}
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          class="h-10 w-10 flex-shrink-0"
-        >
+        <Button variant="ghost" size="icon" class="h-10 w-10 flex-shrink-0">
           <Mic class="h-4 w-4" />
         </Button>
       {/if}
