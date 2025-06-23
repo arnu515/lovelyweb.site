@@ -7,7 +7,7 @@
   <title>Chat - lovelyweb.site</title>
 </svelte:head>
 
-<div class="flex h-full items-center justify-center p-8">
+<div class="hidden md:flex h-full items-center justify-center p-8">
   <div class="text-center">
     <div class="glass dark:glass-dark mx-auto max-w-md rounded-2xl p-8">
       <div class="gradient-primary mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl">

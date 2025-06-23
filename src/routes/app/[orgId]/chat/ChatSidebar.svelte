@@ -8,8 +8,6 @@
   import * as Collapsible from '$lib/components/ui/collapsible';
 
   export let user: NonNullable<App.Locals['auth']['user']>;
-  export let isOpen = true;
-  export let isMobile = false;
   $: orgId = $page.params.orgId;
 
   let searchQuery = '';
@@ -88,14 +86,12 @@
   $: currentChatId = $page.params.chatId;
 
   function handleChatClick() {
-    if (isMobile) isOpen = false;
+    isUserCollapsibleOpen = false;
   }
 </script>
 
 <aside
-  class="glass dark:glass-dark fixed left-0 top-0 z-50 flex h-screen w-80 flex-col border-r border-white/20 transition-transform duration-300 dark:border-gray-700/50 md:relative md:translate-x-0 {isOpen
-    ? 'translate-x-0'
-    : '-translate-x-full'}"
+  class={cn("glass dark:glass-dark fixed left-0 top-0 z-50 h-screen flex-col border-r border-white/20 transition-transform duration-300 dark:border-gray-700/50 md:relative md:translate-x-0 w-full md:w-80", currentChatId !== undefined ? 'hidden md:flex' : 'flex')}
 >
   <!-- Header -->
   <div class="border-b border-white/20 p-4 dark:border-gray-700/50">
@@ -225,7 +221,7 @@
         <Home />
         Back to Org Home
       </Button>
-      <Button href="/auth/logout" data-sveltekit-preload-data={false} variant="ghost">
+      <Button href="/auth/logout" data-sveltekit-preload-data="off" variant="ghost">
         <LogOut />
         Log Out
       </Button>

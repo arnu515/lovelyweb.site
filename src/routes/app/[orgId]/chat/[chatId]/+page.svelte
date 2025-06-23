@@ -3,7 +3,7 @@
   import { Button } from '$lib/components/ui/button';
   import { Input } from '$lib/components/ui/input';
   import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-  import { Send, Paperclip, Mic, Phone, Video, MoreVertical, Smile, Image as ImageIcon, FileText, Sparkles, Volume2, FileEdit as Edit3 } from 'lucide-svelte';
+  import { Send, Paperclip, Mic, Phone, Video, MoreVertical, Smile, Image as ImageIcon, FileText, Sparkles, Volume2, FileEdit as Edit3, ArrowLeft } from 'lucide-svelte';
   import { cn } from '$lib/utils';
   import { page } from '$app/stores';
 
@@ -158,6 +158,9 @@
   <div class="glass dark:glass-dark border-b border-white/20 p-4 dark:border-gray-700/50">
     <div class="flex items-center justify-between">
       <div class="flex items-center space-x-3">
+        <Button href="/app/{$page.params.orgId}/chat" variant="ghost" size="icon" class="h-9 w-9 md:hidden">
+          <ArrowLeft class="h-6 w-6" />
+        </Button>
         <div class="relative">
           <img
             src={currentChat.avatar}
@@ -179,10 +182,10 @@
       </div>
       
       <div class="flex items-center space-x-2">
-        <Button variant="ghost" size="icon" class="h-9 w-9">
+        <Button variant="ghost" size="icon" class="h-9 w-9 hidden sm:inline-flex">
           <Phone class="h-4 w-4" />
         </Button>
-        <Button variant="ghost" size="icon" class="h-9 w-9">
+        <Button variant="ghost" size="icon" class="h-9 w-9 hidden sm:inline-flex">
           <Video class="h-4 w-4" />
         </Button>
         <Button variant="ghost" size="icon" class="h-9 w-9">
