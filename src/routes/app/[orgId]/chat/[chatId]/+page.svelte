@@ -3,20 +3,7 @@
   import { Button } from '$lib/components/ui/button';
   import { Input } from '$lib/components/ui/input';
   import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-  import { 
-    Send, 
-    Paperclip, 
-    Mic, 
-    Phone, 
-    Video, 
-    MoreVertical,
-    Smile,
-    Image as ImageIcon,
-    FileText,
-    Sparkles,
-    Volume2,
-    Edit3
-  } from 'lucide-svelte';
+  import { Send, Paperclip, Mic, Phone, Video, MoreVertical, Smile, Image as ImageIcon, FileText, Sparkles, Volume2, FileEdit as Edit3 } from 'lucide-svelte';
   import { cn } from '$lib/utils';
   import { page } from '$app/stores';
 
