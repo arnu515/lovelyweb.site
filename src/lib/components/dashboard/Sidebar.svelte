@@ -337,7 +337,7 @@
         </h3>
       </div>
       <div class="space-y-1">
-        <Button variant="ghost" class="sb-btn" on:click={handleNavigation}>
+        <Button href="/app/{currentOrg.id}/chat" variant="ghost" class="sb-btn" on:click={handleNavigation}>
           <MessageCircle class="icon" />
           <span>Direct Messages</span>
           <span class="badge">2</span>
