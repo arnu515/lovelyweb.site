@@ -1,7 +1,7 @@
 create table users (
   id uuid primary key references auth.users(id) on update cascade on delete cascade,
   name text not null,
-  username text not null,
+  username text not null unique,
   avatar_url text not null
 );
 
