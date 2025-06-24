@@ -25,7 +25,7 @@
 </script>
 
 <ModeWatcher />
-<Toaster />
+<Toaster richColors />
 <main>
   <slot />
 </main>
