@@ -6,87 +6,34 @@
   import { cn } from '$lib/utils';
   import { page } from '$app/stores';
   import * as Collapsible from '$lib/components/ui/collapsible';
+  import { chatOverview } from "$lib/stores/chat"
+  import Skeleton from '$lib/components/ui/skeleton/skeleton.svelte';
+  import { formatRelative } from 'date-fns';
+  import { createBrowserClient } from '@supabase/ssr';
+  import { PUBLIC_SUPABASE_ANON_KEY, PUBLIC_SUPABASE_URL } from '$env/static/public';
 
+  const supabase = createBrowserClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY)
   export let user: NonNullable<App.Locals['auth']['user']>;
   $: orgId = $page.params.orgId;
 
   let searchQuery = '';
   let isUserCollapsibleOpen = false;
 
-  // Mock chat data
-  const chats = [
-    {
-      id: '1',
-      name: 'Sarah Wilson',
-      type: 'direct',
-      avatar:
-        'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=64&h=64&fit=crop',
-      lastMessage: 'Thanks for the update! The project looks great.',
-      timestamp: '2 min ago',
-      unreadCount: 2,
-      isOnline: true,
-      isTyping: false
-    },
-    {
-      id: '2',
-      name: 'Design Team',
-      type: 'group',
-      avatar:
-        'https://images.pexels.com/photos/1181533/pexels-photo-1181533.jpeg?auto=compress&cs=tinysrgb&w=64&h=64&fit=crop',
-      lastMessage: 'Mike: The new mockups are ready for review',
-      timestamp: '15 min ago',
-      unreadCount: 5,
-      isOnline: false,
-      isTyping: true,
-      memberCount: 8
-    },
-    {
-      id: '3',
-      name: 'Emma Davis',
-      type: 'direct',
-      avatar:
-        'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=64&h=64&fit=crop',
-      lastMessage: "Let's schedule a meeting for tomorrow",
-      timestamp: '1 hour ago',
-      unreadCount: 0,
-      isOnline: true,
-      isTyping: false
-    },
-    {
-      id: '4',
-      name: 'Project Alpha',
-      type: 'group',
-      avatar:
-        'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=64&h=64&fit=crop',
-      lastMessage: 'Alex: Deployment completed successfully',
-      timestamp: 'Yesterday',
-      unreadCount: 1,
-      isOnline: false,
-      isTyping: false,
-      memberCount: 12
-    },
-    {
-      id: '5',
-      name: 'Lisa Park',
-      type: 'direct',
-      avatar:
-        'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=64&h=64&fit=crop',
-      lastMessage: 'Welcome to the team! 🎉',
-      timestamp: '2 days ago',
-      unreadCount: 0,
-      isOnline: false,
-      isTyping: false
-    }
-  ];
-
-  $: filteredChats = chats.filter(chat =>
-    chat.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  $: chats = $chatOverview
+  $: filteredChats = chats ? chats.filter(chat => {
+    const q = searchQuery.toLowerCase()
+    return chat.name.toLowerCase().includes(q) || chat.slug.toLowerCase().includes(q)
+  }) : null;
 
   $: currentChatId = $page.params.chatId;
 
   function handleChatClick() {
     isUserCollapsibleOpen = false;
+  }
+
+  function getGroupAvatarUrl(gid: string, avatar_type: string) {
+    if (avatar_type !== 'svg' && avatar_type !== 'webp') return null
+    return supabase.storage.from("avatars").getPublicUrl(`/org/${orgId}/group/${gid}.${avatar_type}`).data.publicUrl;
   }
 </script>
 
@@ -126,10 +73,22 @@
   <!-- Chat List -->
   <div class="flex-1 overflow-y-auto">
     <div class="space-y-1 p-2">
+      {#if filteredChats === null}
+        <Skeleton class="w-full h-12" />
+        <Skeleton class="w-full h-12" />
+        <Skeleton class="w-full h-12" />
+        <Skeleton class="w-full h-12" />
+      {:else if filteredChats.length === 0}
+        <div class="px-2 py-4 border border-gray-200 dark:border-gray-900 rounded-sm">
+          <p>You have no chats yet.</p>
+          <Button size="sm" href="/app/{orgId}/chat/new">New Chat</Button>
+        </div>
+      {:else}
       {#each filteredChats as chat (chat.id)}
+        {@const avatar = chat.is_group ? getGroupAvatarUrl(chat.id, chat.avatar_url) : chat.avatar_url}
         <Button
           variant="ghost"
-          href="/app/{$page.params.orgId}/chat/{chat.id}"
+          href="/app/{orgId}/chat/{chat.slug}"
           on:click={handleChatClick}
           class={cn(
             'h-auto w-full justify-start p-3 transition-all duration-200',
@@ -141,18 +100,23 @@
           <div class="flex w-full items-center space-x-3">
             <!-- Avatar -->
             <div class="relative flex-shrink-0">
-              <img
-                src={chat.avatar}
-                alt={chat.name}
-                class="h-12 w-12 rounded-full"
-              />
-              {#if chat.type === 'group'}
+              {#if avatar}
+                <img
+                  src={avatar}
+                  alt={chat.name}
+                  class="h-12 w-12 rounded-full border border-gray-400 dark:border-gray-700"
+                />
+              {:else}
+                <div class="h-12 w-12 rounded-full flex text-xl items-center justify-center glass dark:glass-dark shadow-none border border-gray-400 dark:border-gray-700 uppercase">{chat.name.charAt(0)}</div>
+              {/if}
+              {#if chat.is_group}
                 <div
                   class="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-blue-500 text-xs font-bold text-white"
                 >
                   <Users class="h-3 w-3" />
                 </div>
-              {:else if chat.isOnline}
+              <!-- TODO: Online -->
+              {:else if true}
                 <div
                   class="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-white bg-green-400 dark:border-gray-800"
                 ></div>
@@ -165,37 +129,47 @@
                 <h3
                   class={cn(
                     'truncate text-sm font-medium',
-                    chat.unreadCount > 0 ? 'font-bold' : 'font-normal'
+                    // TODO: unread count
+                    0 > 0 ? 'font-bold' : 'font-normal'
                   )}
                 >
                   {chat.name}
-                  {#if chat.type === 'group' && chat.memberCount}
-                    <span class="text-xs text-gray-500">({chat.memberCount})</span>
-                  {/if}
                 </h3>
                 <div class="flex items-center space-x-1">
-                  {#if chat.unreadCount > 0}
+                  <!-- TODO: unread count -->
+                  {#if 0 > 0}
                     <Badge
                       variant="default"
                       class="h-5 min-w-[20px] px-1.5 text-xs"
                     >
-                      {chat.unreadCount}
+                      <!-- TODO: unread count -->
+                      0
                     </Badge>
                   {/if}
-                  <span class="text-xs text-gray-500">{chat.timestamp}</span>
+                  {#if chat.msg_edited_at || chat.msg_created_at}
+                  <span class="text-xs text-gray-500">{formatRelative(chat.msg_edited_at || chat.msg_created_at, new Date())}</span>
+                  {/if}
                 </div>
               </div>
               <div class="flex items-center justify-between">
                 <p
                   class={cn(
                     'truncate text-sm text-gray-600 dark:text-gray-400',
-                    chat.unreadCount > 0 ? 'font-medium' : 'font-normal'
+                    // TODO: unread count
+                    0 > 0 ? 'font-medium' : 'font-normal'
                   )}
                 >
-                  {#if chat.isTyping}
+                  <!-- TODO: Typing -->
+                  {#if false}
                     <span class="text-green-500">Typing...</span>
-                  {:else}
-                    {chat.lastMessage}
+                  {:else if !chat.typ}
+                    <em class="text-muted-foreground">No message yet</em>
+                  {:else if chat.typ === 'text'}
+                    {chat.data}
+                  {:else if chat.typ === 'attachment'}
+                    TODO: attachment
+                  {:else if chat.typ === 'voice'}
+                    TODO: voice message
                   {/if}
                 </p>
               </div>
@@ -203,6 +177,7 @@
           </div>
         </Button>
       {/each}
+      {/if}
     </div>
   </div>
 
