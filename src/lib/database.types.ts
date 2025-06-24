@@ -341,10 +341,27 @@ export type Database = {
         Args: { id: string };
         Returns: boolean;
       };
+      get_chat_overview: {
+        Args: { org_id: string };
+        Returns: {
+          is_group: boolean;
+          id: string;
+          name: string;
+          slug: string;
+          avatar_url: string;
+          unread_count: number;
+          typ: Database['public']['Enums']['msg_type'];
+          data: Json;
+          msg_created_at: string;
+          msg_edited_at: string;
+          msg_read_at: string;
+        }[];
+      };
       get_user_by_email: {
         Args: { email: string };
         Returns: {
           avatar_url: string;
+          created_at: string;
           id: string;
           name: string;
           username: string;
@@ -356,6 +373,7 @@ export type Database = {
       };
     };
     Enums: {
+      group_avatar_type: 'webp' | 'svg';
       msg_type: 'text' | 'attachment' | 'voice';
       plan_enum: 'free' | 'basic' | 'pro';
     };
@@ -473,6 +491,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      group_avatar_type: ['webp', 'svg'],
       msg_type: ['text', 'attachment', 'voice'],
       plan_enum: ['free', 'basic', 'pro']
     }
