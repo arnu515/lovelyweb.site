@@ -18,10 +18,10 @@
   });
 
   const navigation = [
-    { name: 'Features', href: '#features' },
-    { name: 'Pricing', href: '#pricing' },
-    { name: 'About', href: '#about' },
-    { name: 'Contact', href: '#contact' }
+    { name: 'Features', href: '/#features' },
+    { name: 'Pricing', href: '/#pricing' },
+    { name: 'About', href: '/#about' },
+    { name: 'Contact', href: 'mailto:support@lovelyweb.site' }
   ];
 </script>
 
