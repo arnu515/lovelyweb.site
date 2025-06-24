@@ -93,14 +93,19 @@
 <aside
   class={cn(
     'glass dark:glass-dark fixed left-0 top-0 z-50 h-screen w-full flex-col border-r border-white/20 transition-transform duration-300 dark:border-gray-700/50 md:relative md:w-80 md:translate-x-0',
-    currentChatId !== undefined ? 'hidden md:flex' : 'flex'
+    !/chat\/?$/.test($page.url.pathname) ? 'hidden md:flex' : 'flex'
   )}
 >
   <!-- Header -->
   <div class="border-b border-white/20 p-4 dark:border-gray-700/50">
     <div class="mb-4 flex items-center justify-between">
       <h2 class="text-xl font-bold text-gray-900 dark:text-white">Messages</h2>
-      <Button href="/app/{orgId}/chat/new" variant="ghost" size="icon" class="h-8 w-8">
+      <Button
+        href="/app/{orgId}/chat/new"
+        variant="ghost"
+        size="icon"
+        class="h-8 w-8"
+      >
         <MessageCircle class="h-4 w-4" />
       </Button>
     </div>
