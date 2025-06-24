@@ -2,7 +2,7 @@ create table chat_groups (
   id text primary key,
   name text not null,
   description text,
-  avatar_url text,
+  has_avatar boolean not null default false,
   org_id text not null references organisations(id),
   owner_id uuid not null references users(id)
 );

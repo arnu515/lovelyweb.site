@@ -44,24 +44,24 @@ export type Database = {
       };
       chat_groups: {
         Row: {
-          avatar_url: string | null;
           description: string | null;
+          has_avatar: boolean;
           id: string;
           name: string;
           org_id: string;
           owner_id: string;
         };
         Insert: {
-          avatar_url?: string | null;
           description?: string | null;
+          has_avatar?: boolean;
           id: string;
           name: string;
           org_id: string;
           owner_id: string;
         };
         Update: {
-          avatar_url?: string | null;
           description?: string | null;
+          has_avatar?: boolean;
           id?: string;
           name?: string;
           org_id?: string;
