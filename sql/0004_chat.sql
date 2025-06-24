@@ -27,6 +27,7 @@ create table group_messages (
 create index idx_group_messages on group_messages (group_id, org_id);
 
 alter table messages enable row level security;
+alter table group_messages enable row level security;
 
 create policy "Participants can see their messages"
 on messages
