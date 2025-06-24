@@ -14,7 +14,7 @@
   };
   export let users: User<T>[];
   export let showRefreshButton: boolean = false;
-  export let genHref: (user: User<T>) => string;
+  export let genHref: ((user: User<T>) => string) | undefined;
 
   const d = createEventDispatcher();
   let username = '';
@@ -57,9 +57,9 @@
   {:else}
     {#each usersInEffect as user}
       <Button
-        href={genHref?.(user)}
-        type="button"
-        on:click={() => d('select', user.id)}
+        href={genHref ? genHref(user) : undefined}
+        type={genHref ? undefined : 'button'}
+        on:click={() => d('select', { id: user.id, checked: user.checked })}
         variant="ghost"
         class="flex w-full gap-4 rounded-none py-6 text-left transition-colors duration-200 dark:hover:bg-gray-900"
       >
