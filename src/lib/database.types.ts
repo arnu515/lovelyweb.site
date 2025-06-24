@@ -9,6 +9,191 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      chat_group_members: {
+        Row: {
+          created_at: string;
+          group_id: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          group_id: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          group_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'chat_group_members_group_id_fkey';
+            columns: ['group_id'];
+            isOneToOne: false;
+            referencedRelation: 'chat_groups';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'chat_group_members_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          }
+        ];
+      };
+      chat_groups: {
+        Row: {
+          avatar_url: string | null;
+          description: string | null;
+          id: string;
+          name: string;
+          org_id: string;
+          owner_id: string;
+        };
+        Insert: {
+          avatar_url?: string | null;
+          description?: string | null;
+          id: string;
+          name: string;
+          org_id: string;
+          owner_id: string;
+        };
+        Update: {
+          avatar_url?: string | null;
+          description?: string | null;
+          id?: string;
+          name?: string;
+          org_id?: string;
+          owner_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'chat_groups_org_id_fkey';
+            columns: ['org_id'];
+            isOneToOne: false;
+            referencedRelation: 'organisations';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'chat_groups_owner_id_fkey';
+            columns: ['owner_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          }
+        ];
+      };
+      group_messages: {
+        Row: {
+          by_id: string;
+          created_at: string;
+          data: Json;
+          edited_at: string | null;
+          group_id: string;
+          id: string;
+          org_id: string;
+          typ: Database['public']['Enums']['msg_type'];
+        };
+        Insert: {
+          by_id: string;
+          created_at?: string;
+          data: Json;
+          edited_at?: string | null;
+          group_id: string;
+          id: string;
+          org_id: string;
+          typ: Database['public']['Enums']['msg_type'];
+        };
+        Update: {
+          by_id?: string;
+          created_at?: string;
+          data?: Json;
+          edited_at?: string | null;
+          group_id?: string;
+          id?: string;
+          org_id?: string;
+          typ?: Database['public']['Enums']['msg_type'];
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'group_messages_by_id_fkey';
+            columns: ['by_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'group_messages_group_id_fkey';
+            columns: ['group_id'];
+            isOneToOne: false;
+            referencedRelation: 'chat_groups';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'group_messages_org_id_fkey';
+            columns: ['org_id'];
+            isOneToOne: false;
+            referencedRelation: 'organisations';
+            referencedColumns: ['id'];
+          }
+        ];
+      };
+      messages: {
+        Row: {
+          created_at: string;
+          data: Json;
+          edited_at: string | null;
+          from_id: string;
+          id: string;
+          org_id: string;
+          to_id: string;
+          typ: Database['public']['Enums']['msg_type'];
+        };
+        Insert: {
+          created_at?: string;
+          data: Json;
+          edited_at?: string | null;
+          from_id: string;
+          id: string;
+          org_id: string;
+          to_id: string;
+          typ: Database['public']['Enums']['msg_type'];
+        };
+        Update: {
+          created_at?: string;
+          data?: Json;
+          edited_at?: string | null;
+          from_id?: string;
+          id?: string;
+          org_id?: string;
+          to_id?: string;
+          typ?: Database['public']['Enums']['msg_type'];
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'messages_from_id_fkey';
+            columns: ['from_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'messages_org_id_fkey';
+            columns: ['org_id'];
+            isOneToOne: false;
+            referencedRelation: 'organisations';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'messages_to_id_fkey';
+            columns: ['to_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          }
+        ];
+      };
       org_invites: {
         Row: {
           created_at: string;
@@ -165,6 +350,7 @@ export type Database = {
       };
     };
     Enums: {
+      msg_type: 'text' | 'attachment' | 'voice';
       plan_enum: 'free' | 'basic' | 'pro';
     };
     CompositeTypes: {
@@ -281,6 +467,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      msg_type: ['text', 'attachment', 'voice'],
       plan_enum: ['free', 'basic', 'pro']
     }
   }
