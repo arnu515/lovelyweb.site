@@ -2,7 +2,8 @@ create table users (
   id uuid primary key references auth.users(id) on update cascade on delete cascade,
   name text not null,
   username text not null unique,
-  avatar_url text not null
+  avatar_url text not null,
+  created_at timestamptz not null default now()
 );
 
 alter table users enable row level security;

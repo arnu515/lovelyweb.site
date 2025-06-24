@@ -4,7 +4,8 @@ create table chat_groups (
   description text,
   has_avatar boolean not null default false,
   org_id text not null references organisations(id),
-  owner_id uuid not null references users(id)
+  owner_id uuid not null references users(id),
+  created_at timestamptz not null default now()
 );
 
 create table chat_group_members (
