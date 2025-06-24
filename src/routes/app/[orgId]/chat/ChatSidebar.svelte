@@ -100,7 +100,7 @@
   <div class="border-b border-white/20 p-4 dark:border-gray-700/50">
     <div class="mb-4 flex items-center justify-between">
       <h2 class="text-xl font-bold text-gray-900 dark:text-white">Messages</h2>
-      <Button href="/app/${orgId}/chat/new" variant="ghost" size="icon" class="h-8 w-8">
+      <Button href="/app/{orgId}/chat/new" variant="ghost" size="icon" class="h-8 w-8">
         <MessageCircle class="h-4 w-4" />
       </Button>
     </div>
