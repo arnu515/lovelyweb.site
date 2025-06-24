@@ -1,8 +1,10 @@
+create type group_avatar_type as enum ('webp', 'svg');
+
 create table chat_groups (
   id text primary key,
   name text not null,
   description text,
-  has_avatar boolean not null default false,
+  avatar_type group_avatar_type,
   org_id text not null references organisations(id),
   owner_id uuid not null references users(id),
   created_at timestamptz not null default now()

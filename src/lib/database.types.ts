@@ -44,24 +44,27 @@ export type Database = {
       };
       chat_groups: {
         Row: {
+          avatar_type: Database['public']['Enums']['group_avatar_type'] | null;
+          created_at: string;
           description: string | null;
-          has_avatar: boolean;
           id: string;
           name: string;
           org_id: string;
           owner_id: string;
         };
         Insert: {
+          avatar_type?: Database['public']['Enums']['group_avatar_type'] | null;
+          created_at?: string;
           description?: string | null;
-          has_avatar?: boolean;
           id: string;
           name: string;
           org_id: string;
           owner_id: string;
         };
         Update: {
+          avatar_type?: Database['public']['Enums']['group_avatar_type'] | null;
+          created_at?: string;
           description?: string | null;
-          has_avatar?: boolean;
           id?: string;
           name?: string;
           org_id?: string;
@@ -304,18 +307,21 @@ export type Database = {
       users: {
         Row: {
           avatar_url: string;
+          created_at: string;
           id: string;
           name: string;
           username: string;
         };
         Insert: {
           avatar_url: string;
+          created_at?: string;
           id: string;
           name: string;
           username: string;
         };
         Update: {
           avatar_url?: string;
+          created_at?: string;
           id?: string;
           name?: string;
           username?: string;
