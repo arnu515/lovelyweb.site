@@ -68,3 +68,25 @@ to authenticated
 using (
   (select private.is_user_part_of_group(group_id, (select auth.uid())))
 );
+
+create policy "Group owner can add members"
+on chat_group_members
+for insert
+to authenticated
+with check (
+  exists(select 1 from chat_groups g where
+    g.owner_id = (select auth.uid()) and
+    g.id = chat_group_members.group_id and
+    g.org_id = (select organisation_id
+      from organisations_users o
+      where o.user_id = chat_group_members.user_id)
+  )
+);
+
+create policy "Group owner can remove members"
+on chat_group_members
+for delete
+to authenticated
+using (
+  (select auth.uid()) = (select owner_id from chat_groups where id = group_id)
+);
