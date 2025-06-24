@@ -23,11 +23,11 @@
         chat.
       </p>
       <div class="flex flex-col gap-3 sm:flex-row sm:justify-center">
-        <Button class="gradient-primary gap-2 text-white">
+        <Button href="./chat/new?mode=cht" class="gradient-primary gap-2 text-white">
           <Plus class="h-4 w-4" />
           New Chat
         </Button>
-        <Button variant="outline" class="gap-2">
+        <Button href="./chat/new?mode=grp" variant="outline" class="gap-2">
           <Users class="h-4 w-4" />
           Create Group
         </Button>
