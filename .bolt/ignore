@@ -1,0 +1,3 @@
+mail-server
+src/lib/assets/*
+src/lib/components/ui/*
