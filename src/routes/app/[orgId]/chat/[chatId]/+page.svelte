@@ -16,8 +16,12 @@
     Volume2,
     FileEdit as Edit3,
     ArrowLeft,
+    CheckCheck,
 
-    CheckCheck
+    Loader2,
+
+    MessageCircle
+
 
   } from 'lucide-svelte';
   import { cn } from '$lib/utils';
@@ -129,11 +133,11 @@
   <title>{$currentChat?.name || "Loading..."} - Chat - lovelyweb.site</title>
 </svelte:head>
 
-{#if $currentChat === undefined || typeof messages === 'undefined'}
+{#if $currentChat === undefined || typeof messages === 'undefined' || typeof $messages === 'string'}
   <div class="mx-auto my-10 flex max-w-screen-md p-4">
     <div class="glass dark:glass-dark rounded-2xl p-8">
       <h1 class="mb-4 text-xl">{$currentChat === undefined || typeof messages === 'string' ? '404 Page Not Found' : 'Could not fetch messages'}</h1>
-      <p class="font-mono text-lg text-red-500">{$currentChat === undefined || typeof messages === 'string' ? 'A chat/group with the given ID could not be found' : 'An error occured'}</p>
+      <p class="font-mono text-lg text-red-500">{$currentChat === undefined || typeof messages === 'string' ? 'A chat/group with the given ID could not be found' : $messages}</p>
       <p class="my-4 flex items-center justify-center">
         <Button href=".">Chat Home</Button>
       </p>
@@ -192,8 +196,13 @@
             {chat.name}
           </h3>
           <p class="text-sm text-gray-500 dark:text-gray-400">
-            <!-- TODO: Last Seen -->
-            A few days ago
+            {#if !chat.is_group}
+              <!-- TODO: Last Seen -->
+              A few days ago
+            {:else}
+              <!-- TODO: Group members -->
+              Group Chat
+            {/if}
           </p>
         </div>
         {/if}
@@ -220,7 +229,29 @@
   {#if typeof messages !== 'string'}
     {@const msgs = $messages}
     {#if typeof msgs === 'undefined'}
+      <div class="relative h-full">
+        <div class="absolute bottom-10 flex items-center justify-center w-full">
+          <Loader2 class="w-16 h-16 animate-spin text-purple-500" />
+        </div>
+      </div>
     {:else if typeof msgs === 'string'}
+      An error occured
+    {:else if msgs.length === 0}
+      <div class="h-full items-center justify-center p-8 md:flex">
+        <div class="glass dark:glass-dark mx-auto max-w-md rounded-2xl p-8 text-center">
+          <div
+            class="hidden sm:flex dark:bg-gray-600 bg-gray-300 mx-auto mb-6 h-16 w-16 items-center justify-center rounded-2xl"
+          >
+            <MessageCircle class="h-8 w-8 text-black dark:text-white" />
+          </div>
+          <h2 class="mb-4 text-xl font-semibold text-gray-900 dark:text-white">
+            No Messages Yet
+          </h2>
+          <p class="text-gray-600 dark:text-gray-300">
+            Start the conversation by sending a message.
+          </p>
+        </div>
+      </div>
     {:else}
     {#each msgs as message, index}
       <!-- Date Header -->
