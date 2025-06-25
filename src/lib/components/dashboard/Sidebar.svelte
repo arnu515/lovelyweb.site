@@ -16,7 +16,6 @@
     Kanban,
     Calendar,
     MessageCircle,
-    Mail,
     LogOut,
     Users
   } from 'lucide-svelte';
@@ -112,7 +111,7 @@
           <div
             class="gradient-primary flex h-8 w-8 items-center justify-center rounded-lg"
           >
-            <Mail class="h-4 w-4 text-white" />
+            {currentOrg.name.charAt(0)}
           </div>
           <div class="text-left">
             <div class="text-sm font-semibold text-gray-900 dark:text-white">
