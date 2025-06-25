@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, afterUpdate } from 'svelte';
+  import { afterUpdate } from 'svelte';
   import { Button } from '$lib/components/ui/button';
   import { Input } from '$lib/components/ui/input';
   import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
@@ -12,7 +12,6 @@
     MoreVertical,
     Smile,
     Image as ImageIcon,
-    FileText,
     Sparkles,
     Volume2,
     FileEdit as Edit3,
@@ -20,23 +19,26 @@
   } from 'lucide-svelte';
   import { cn } from '$lib/utils';
   import { page } from '$app/stores';
+  import { chatOverview } from '$lib/stores/chat.js';
+  import { derived } from "svelte/store"
+  import { Skeleton } from '$lib/components/ui/skeleton/index.js';
+  import {
+    PUBLIC_SUPABASE_ANON_KEY,
+    PUBLIC_SUPABASE_URL
+  } from '$env/static/public';
+  import { createBrowserClient } from '@supabase/ssr';
 
-  export let data;
+  const supabase = createBrowserClient(
+    PUBLIC_SUPABASE_URL,
+    PUBLIC_SUPABASE_ANON_KEY
+  );
 
   let messageInput = '';
   let messagesContainer: HTMLElement;
   let fileInput: HTMLInputElement;
 
-  // Mock chat data
-  const currentChat = {
-    id: $page.params.chatId,
-    name: 'Sarah Wilson',
-    type: 'direct',
-    avatar:
-      'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=64&h=64&fit=crop',
-    isOnline: true,
-    lastSeen: 'Active now'
-  };
+  const currentChat = derived([ page, chatOverview ], ([{params: { chatId }}, co]) => co ? co.dataMap[chatId] : null)
+  $: orgId = $page.params.orgId;
 
   const messages = [
     {
@@ -163,10 +165,17 @@
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
   });
+
+  function getGroupAvatarUrl(gid: string, avatar_type: string) {
+    if (avatar_type !== 'svg' && avatar_type !== 'webp') return null;
+    return supabase.storage
+      .from('avatars')
+      .getPublicUrl(`/org/${orgId}/group/${gid}.${avatar_type}`).data.publicUrl;
+  }
 </script>
 
 <svelte:head>
-  <title>{currentChat.name} - Chat - lovelyweb.site</title>
+  <title>{$currentChat?.name || "Loading..."} - Chat - lovelyweb.site</title>
 </svelte:head>
 
 <div class="flex h-full flex-col">
@@ -184,13 +193,22 @@
         >
           <ArrowLeft class="h-6 w-6" />
         </Button>
+        {#if $currentChat === null}
+          <Skeleton class="h-10 w-10 rounded-full" />
+          <div>
+            <Skeleton class="h-6 w-32" />
+            <Skeleton class="h-4 w-32" />
+          </div>
+        {:else}
+        {@const chat = $currentChat}
         <div class="relative">
           <img
-            src={currentChat.avatar}
-            alt={currentChat.name}
+            src={chat.is_group ? getGroupAvatarUrl(chat.id, chat.avatar_url) : chat.avatar_url}
+            alt="{chat.name}'s Avatar"
             class="h-10 w-10 rounded-full"
           />
-          {#if currentChat.isOnline}
+          <!-- TODO: ONLINE -->
+          {#if true}
             <div
               class="absolute -bottom-1 -right-1 h-3 w-3 rounded-full border-2 border-white bg-green-400 dark:border-gray-800"
             ></div>
@@ -198,15 +216,18 @@
         </div>
         <div>
           <h3 class="font-semibold text-gray-900 dark:text-white">
-            {currentChat.name}
+            {chat.name}
           </h3>
           <p class="text-sm text-gray-500 dark:text-gray-400">
-            {currentChat.lastSeen}
+            <!-- TODO: Last Seen -->
+            A few days ago
           </p>
         </div>
+        {/if}
       </div>
 
       <div class="flex items-center space-x-2">
+        {#if $currentChat !== null}
         <Button variant="ghost" size="icon" class="hidden h-9 w-9 sm:inline-flex">
           <Phone class="h-4 w-4" />
         </Button>
@@ -216,6 +237,7 @@
         <Button variant="ghost" size="icon" class="h-9 w-9">
           <MoreVertical class="h-4 w-4" />
         </Button>
+        {/if}
       </div>
     </div>
   </div>
