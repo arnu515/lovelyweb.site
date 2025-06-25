@@ -93,3 +93,38 @@ returns table (
     ) as m on true)
   ) as a order by a.created_at desc
 $$ language sql security invoker;
+
+create function get_messages(slug text)
+returns table (
+  id text,
+  from_id text,
+  to_id text,
+  org_id text,
+  typ msg_type,
+  data jsonb,
+  created_at timestamptz,
+  edited_at timestamptz
+) as $$
+declare
+  uid uuid;
+  xid uuid := null::uuid;
+  prefix text := substring(slug, 1, 1);
+begin
+  uid := (select auth.uid());
+  if prefix = '@' then
+    xid := (select users.id from users where username = substring(slug, 2));
+    if xid is not null then
+      return query (
+        select m.id, m.from_id::text, m.to_id::text, m.org_id, m.typ, m.data, m.created_at, m.edited_at
+        from messages m where m.from_id = uid and m.to_id = xid or m.from_id = xid and m.to_id = uid
+      );
+    end if;
+  elsif prefix = '-' then
+    return query (
+      select g.id, by_id::text, group_id, g.org_id, g.typ, g.data, g.created_at, g.edited_at
+      from group_messages g where group_id = substring(slug, 2)
+    );
+  else
+    return;
+  end if;
+end $$ language plpgsql security invoker;

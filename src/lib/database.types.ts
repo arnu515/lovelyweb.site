@@ -357,6 +357,19 @@ export type Database = {
           msg_read_at: string;
         }[];
       };
+      get_messages: {
+        Args: { slug: string };
+        Returns: {
+          id: string;
+          from_id: string;
+          to_id: string;
+          org_id: string;
+          typ: Database['public']['Enums']['msg_type'];
+          data: Json;
+          created_at: string;
+          edited_at: string;
+        }[];
+      };
       get_user_by_email: {
         Args: { email: string };
         Returns: {
