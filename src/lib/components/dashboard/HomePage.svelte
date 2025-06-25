@@ -7,7 +7,10 @@
     FileText,
     Calendar,
     CheckSquare,
-    Kanban
+    Kanban,
+
+    Users
+
   } from 'lucide-svelte';
   import { Input } from '$lib/components/ui/input';
   import { Button } from '$lib/components/ui/button';
@@ -95,49 +98,46 @@
     }
   ];
 
-  // Mock data for recent chats
-  const recentChats = [
-    {
-      name: 'Sarah Wilson',
-      message: 'Thanks for the update!',
-      time: '5 min ago',
-      avatar:
-        'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=64&h=64&fit=crop',
+  import { chatOverview } from '$lib/stores/chat';
+  import { page } from '$app/stores';
+  import { createBrowserClient } from '@supabase/ssr';
+  import {
+    PUBLIC_SUPABASE_ANON_KEY,
+    PUBLIC_SUPABASE_URL
+  } from '$env/static/public';
+  import { formatRelative } from 'date-fns';
+
+  // Helper to get group avatar url (copied from ChatSidebar)
+  const supabase = createBrowserClient(
+    PUBLIC_SUPABASE_URL,
+    PUBLIC_SUPABASE_ANON_KEY
+  );
+  $: orgId = $page.params.orgId;
+  function getGroupAvatarUrl(gid: string, avatar_type: string) {
+    if (avatar_type !== 'svg' && avatar_type !== 'webp') return null;
+    return supabase.storage
+      .from('avatars')
+      .getPublicUrl(`/org/${orgId}/group/${gid}.${avatar_type}`).data.publicUrl;
+  }
+
+  // Use chatOverview store for recent chats
+  // Use .name, get avatar like ChatSidebar, and use latest message logic
+  $: recentChats =
+    $chatOverview?.data?.map(chat => ({
+      name: chat.name,
+      data: chat.data,
+      slug: chat.slug,
+      typ: chat.typ,
+      time: chat.msg_created_at ? formatRelative(new Date(chat.msg_edited_at || chat.msg_created_at), new Date()) : '',
+      is_group: chat.is_group,
+      // todo: online
+      online: true,
+      avatar: chat.is_group
+      ? getGroupAvatarUrl(chat.id, chat.avatar_url)
+      : chat.avatar_url,
+      // TODO: unread count
       unread: 2
-    },
-    {
-      name: 'Design Team',
-      message: 'Mike: The mockups look great',
-      time: '1 hour ago',
-      avatar:
-        'https://images.pexels.com/photos/1181533/pexels-photo-1181533.jpeg?auto=compress&cs=tinysrgb&w=64&h=64&fit=crop',
-      unread: 0
-    },
-    {
-      name: 'Emma Davis',
-      message: "Let's sync up tomorrow",
-      time: '2 hours ago',
-      avatar:
-        'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=64&h=64&fit=crop',
-      unread: 0
-    },
-    {
-      name: 'Project Alpha',
-      message: 'Alex: Deployment successful',
-      time: 'Yesterday',
-      avatar:
-        'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=64&h=64&fit=crop',
-      unread: 1
-    },
-    {
-      name: 'Lisa Park',
-      message: 'Welcome to the team! 🎉',
-      time: '2 days ago',
-      avatar:
-        'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=64&h=64&fit=crop',
-      unread: 0
-    }
-  ];
+    })) ?? [];
 
   let searchQuery = '';
 </script>
@@ -267,21 +267,35 @@
       </div>
       <div class="glass dark:glass-dark space-y-4 rounded-2xl p-6">
         {#each recentChats as chat}
-          <div
-            class="flex cursor-pointer items-center space-x-4 rounded-xl p-3 transition-all duration-200 hover:bg-white/20 dark:hover:bg-gray-800/20"
+          <Button
+            variant="ghost"
+            href="/app/{orgId}/chat/{chat.slug}"
+            class="flex !py-8 cursor-pointer items-center gap-4 rounded-xl p-3 transition-all duration-200 hover:bg-gray-200/50 dark:hover:bg-gray-900/50"
           >
             <div class="relative">
-              <img
-                src={chat.avatar}
-                alt={chat.name}
-                class="h-10 w-10 rounded-full"
-              />
-              {#if chat.unread > 0}
+              {#if chat.avatar}
+                <img
+                  src={chat.avatar}
+                  alt={chat.name}
+                  class="h-10 w-10 rounded-full border border-gray-400 dark:border-gray-700"
+                />
+              {:else}
                 <div
-                  class="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-xs font-bold text-white"
+                  class="glass dark:glass-dark flex h-10 w-10 items-center justify-center rounded-full border border-gray-400 text-lg uppercase shadow-none dark:border-gray-700"
                 >
-                  {chat.unread}
+                  {chat.name.charAt(0)}
                 </div>
+              {/if}
+              {#if chat.is_group}
+                <div
+                  class="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-blue-500 text-xs font-bold border border-gray-200 dark:border-gray-800 text-white"
+                >
+                  <Users class="h-3 w-3" />
+                </div>
+              {:else if chat.online}
+                <div
+                  class="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border border-gray-200 dark:border-gray-800 bg-green-400 dark:border-gray-1000"
+                ></div>
               {/if}
             </div>
             <div class="min-w-0 flex-1">
@@ -296,16 +310,20 @@
                   >{chat.time}</span
                 >
               </div>
-              <p
-                class="truncate text-sm text-gray-600 dark:text-gray-400 {chat.unread >
-                0
-                  ? 'font-medium'
-                  : ''}"
-              >
-                {chat.message}
-              </p>
+              <!-- TODO: typing -->
+              {#if false}
+                <span class="text-green-500">Typing...</span>
+              {:else if !chat.typ}
+                <em class="text-muted-foreground">No message yet</em>
+              {:else if chat.typ === 'text'}
+                {chat.data}
+              {:else if chat.typ === 'attachment'}
+                TODO: attachment
+              {:else if chat.typ === 'voice'}
+                TODO: voice message
+              {/if}
             </div>
-          </div>
+          </Button>
         {/each}
       </div>
     </div>

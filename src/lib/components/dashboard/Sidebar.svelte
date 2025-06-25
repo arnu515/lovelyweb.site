@@ -17,13 +17,20 @@
     Calendar,
     MessageCircle,
     Mail,
-    LogOut
+    LogOut,
+    Users
   } from 'lucide-svelte';
   import { Button } from '$lib/components/ui/button';
   import { page } from '$app/stores';
   import { cn } from '$lib/utils';
   import { type PLAN, PLANS_BY_ID } from '$lib/plans';
   import { Skeleton } from '../ui/skeleton';
+  import { chatOverview } from '$lib/stores/chat';
+  import { createBrowserClient } from '@supabase/ssr';
+  import {
+    PUBLIC_SUPABASE_ANON_KEY,
+    PUBLIC_SUPABASE_URL
+  } from '$env/static/public';
 
   type Org = { id: string; name: string; plan: PLAN };
   export let user: NonNullable<App.Locals['auth']['user']>;
@@ -39,39 +46,30 @@
     ''
   );
 
-  // Mock data for recent contacts
-  const recentContacts = [
-    {
-      name: 'Sarah Wilson',
-      avatar:
-        'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=64&h=64&fit=crop',
-      status: 'online'
-    },
-    {
-      name: 'Mike Chen',
-      avatar:
-        'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=64&h=64&fit=crop',
-      status: 'away'
-    },
-    {
-      name: 'Emma Davis',
-      avatar:
-        'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=64&h=64&fit=crop',
-      status: 'online'
-    },
-    {
-      name: 'Alex Johnson',
-      avatar:
-        'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=64&h=64&fit=crop',
-      status: 'offline'
-    },
-    {
-      name: 'Lisa Park',
-      avatar:
-        'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=64&h=64&fit=crop',
-      status: 'online'
-    }
-  ];
+  const supabase = createBrowserClient(
+    PUBLIC_SUPABASE_URL,
+    PUBLIC_SUPABASE_ANON_KEY
+  );
+  $: orgId = $page.params.orgId;
+
+  function getGroupAvatarUrl(gid: string, avatar_type: string) {
+    if (avatar_type !== 'svg' && avatar_type !== 'webp') return null;
+    return supabase.storage
+      .from('avatars')
+      .getPublicUrl(`/org/${orgId}/group/${gid}.${avatar_type}`).data.publicUrl;
+  }
+
+  $: recentChats =
+    $chatOverview?.data?.map(chat => ({
+      name: chat.name,
+      avatar: chat.is_group
+        ? getGroupAvatarUrl(chat.id, chat.avatar_url)
+        : chat.avatar_url,
+      slug: chat.slug,
+      is_group: chat.is_group,
+      // TODO: online
+      online: true
+    })) ?? [];
 
   function toggleOrgDropdown() {
     orgDropdownOpen = !orgDropdownOpen;
@@ -350,25 +348,36 @@
 
         <!-- Recent Contacts -->
         <div class="space-y-1 pt-2">
-          {#each recentContacts as contact}
-            <Button variant="ghost" on:click={handleNavigation}>
+          {#each recentChats as chat}
+            <Button variant="ghost" class="w-full justify-start text-left" href="/app/{currentOrg.id}/chat/{chat.slug}" on:click={handleNavigation}>
               <div class="relative mr-3">
-                <img
-                  src={contact.avatar}
-                  alt={contact.name}
-                  class="h-6 w-6 rounded-full"
-                />
-                <div
-                  class="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white dark:border-gray-800 {contact.status ===
-                  'online'
-                    ? 'bg-green-400'
-                    : contact.status === 'away'
-                      ? 'bg-yellow-400'
-                      : 'bg-gray-400'}"
-                ></div>
+                {#if chat.avatar}
+                  <img
+                    src={chat.avatar}
+                    alt={chat.name}
+                    class="h-8 w-8 rounded-full border border-gray-400 dark:border-gray-700"
+                  />
+                {:else}
+                  <div
+                    class="glass dark:glass-dark flex h-8 w-8 items-center justify-center rounded-full border border-gray-400 text-lg uppercase shadow-none dark:border-gray-700"
+                  >
+                    {chat.name.charAt(0)}
+                  </div>
+                {/if}
+                {#if chat.is_group}
+                  <div
+                    class="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-blue-500 text-xs font-bold text-white"
+                  >
+                    <Users class="h-2 w-2" />
+                  </div>
+                {:else if chat.online}
+                  <div
+                    class="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border border-white bg-green-400 dark:border-gray-800"
+                  ></div>
+                {/if}
               </div>
               <span class="truncate text-sm text-gray-900 dark:text-white"
-                >{contact.name}</span
+                >{chat.name}</span
               >
             </Button>
           {/each}
