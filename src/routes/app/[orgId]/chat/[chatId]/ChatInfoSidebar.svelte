@@ -224,6 +224,34 @@
       .getPublicUrl(`/org/${orgId}/group/${gid}.${avatar_type}`).data.publicUrl;
   }
 
+  let leavingGroup = false;
+  async function leaveGroup() {
+    if (!chat?.is_group || groupOwnerId === currentUserId || leavingGroup) return;
+    leavingGroup = true;
+    try {
+      const { error } = await supabase
+        .from('chat_group_members')
+        .delete()
+        .eq('group_id', chat.id.toString())
+        .eq('user_id', currentUserId);
+
+      if (error) {
+        captureException(error, { tags: { supabase: 'chat_group_members' } });
+        throw error;
+      }
+
+      toast.success('You have left the group');
+      // TODO: auto-update in realtime
+      window.location.assign(`/app/${orgId}/chat`);
+    } catch (error: any) {
+      toast.error('Failed to leave group', {
+        description: error.message
+      });
+    } finally {
+      leavingGroup = false;
+    }
+  }
+
   $: if (isOpen && chat?.is_group) {
     fetchGroupMembers();
     fetchAllOrgUsers();
@@ -490,4 +518,16 @@
       {/if}
     {/if}
   </div>
+  {#if chat?.is_group && groupOwnerId !== currentUserId}
+    <div class="border-t border-white/20 p-4 dark:border-gray-700/50">
+      <Button
+        variant="destructive"
+        class="w-full"
+        on:click={leaveGroup}
+        disabled={leavingGroup}
+      >
+        Leave Group
+      </Button>
+    </div>
+  {/if}
 </div>

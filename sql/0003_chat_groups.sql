@@ -86,10 +86,12 @@ with check (
   )
 );
 
-create policy "Group owner can remove members"
+create policy "Group owner can remove member and member can remove themself"
 on chat_group_members
 for delete
 to authenticated
 using (
+  (select auth.uid()) = user_id or
   (select auth.uid()) = (select owner_id from chat_groups where id = group_id)
 );
+
