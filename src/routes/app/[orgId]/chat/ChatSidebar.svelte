@@ -51,7 +51,7 @@
 
 <aside
   class={cn(
-    'glass dark:glass-dark fixed left-0 top-0 z-50 h-screen w-full flex-col border-r border-white/20 transition-transform duration-300 dark:border-gray-700/50 md:relative md:w-80 md:translate-x-0',
+    'glass dark:glass-dark fixed left-0 top-0 h-screen w-full flex-col border-r border-white/20 transition-transform duration-300 dark:border-gray-700/50 md:relative md:w-80 md:translate-x-0',
     !/chat\/?$/.test($page.url.pathname) ? 'hidden md:flex' : 'flex'
   )}
 >
