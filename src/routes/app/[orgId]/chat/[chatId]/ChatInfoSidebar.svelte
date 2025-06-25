@@ -13,10 +13,11 @@
   import { toast } from 'svelte-sonner';
   import { cn } from '$lib/utils';
   import { page } from '$app/stores';
+  import { captureException } from '@sentry/sveltekit';
 
   export let isOpen = false;
   export let chat: any;
-  export let currentUser: any;
+  export let currentUserId: string;
 
   const dispatch = createEventDispatcher<{ close: void }>();
   const supabase = createBrowserClient<Database>(
@@ -30,10 +31,29 @@
   let membersLoading = false;
   let membersError = '';
 
+  let allOrgUsers: any[] = [];
+  let allOrgUsersLoaded = false;
+  let allOrgUsersError = '';
+  let addableUsers: any[] = [];
+
+  let groupOwnerId: string | null = null;
   let searchQuery = '';
   let searchResults: any[] = [];
   let searchLoading = false;
   let addingMember = false;
+
+  async function fetchGroupOwner() {
+    const { data, error } = await supabase
+      .from('chat_groups')
+      .select('owner_id')
+      .eq('id', chat.id.toString())
+      .single();
+    if (error) {
+      captureException(error, { tags: { supabase: 'chat_groups' } });
+      throw error;
+    }
+    groupOwnerId = data.owner_id;
+  }
 
   // Fetch group members if it's a group chat
   async function fetchGroupMembers() {
@@ -43,9 +63,11 @@
     membersError = '';
 
     try {
+      const promise = fetchGroupOwner();
       const { data, error } = await supabase
         .from('chat_group_members')
-        .select(`
+        .select(
+          `
           user_id,
           created_at,
           users (
@@ -54,11 +76,16 @@
             username,
             avatar_url
           )
-        `)
+        `
+        )
         .eq('group_id', chat.id.toString());
 
-      if (error) throw error;
+      if (error) {
+        captureException(error, { tags: { supabase: 'chat_group_members' } });
+        throw error;
+      }
 
+      await promise;
       members = data.map(member => ({
         ...member.users,
         joined_at: member.created_at
@@ -73,36 +100,54 @@
     }
   }
 
-  // Search for users to add to group
-  async function searchUsers() {
-    if (!searchQuery.trim() || !chat?.is_group) return;
-
-    searchLoading = true;
+  async function fetchAllOrgUsers() {
+    if (!chat?.is_group || allOrgUsersLoaded) return;
+    allOrgUsersError = '';
     try {
       const { data, error } = await supabase
         .from('organisations_users')
-        .select(`
+        .select(
+          `
           users (
             id,
             name,
             username,
             avatar_url
           )
-        `)
-        .eq('organisation_id', orgId)
-        .or(`users.name.ilike.%${searchQuery}%,users.username.ilike.%${searchQuery}%`);
+        `
+        )
+        .eq('organisation_id', orgId);
 
-      if (error) throw error;
-
-      // Filter out users who are already members
+      if (error) {
+        captureException(error, { tags: { supabase: 'organisations_users' } });
+        throw error;
+      }
+      allOrgUsers = data.map(item => item.users).filter(Boolean);
+      allOrgUsersLoaded = true;
+      // Filter out members here
       const memberIds = new Set(members.map(m => m.id));
-      searchResults = data
-        .map(item => item.users)
-        .filter(user => user && !memberIds.has(user.id));
+      addableUsers = allOrgUsers.filter(user => !memberIds.has(user.id));
     } catch (error: any) {
-      toast.error('Failed to search users', {
+      allOrgUsersError = error.message;
+      toast.error('Failed to load users', {
         description: error.message
       });
+    }
+  }
+
+  function searchUsers() {
+    if (!searchQuery.trim() || !chat?.is_group || !allOrgUsersLoaded) {
+      searchResults = [];
+      return;
+    }
+    searchLoading = true;
+    try {
+      const q = searchQuery.trim().toLowerCase();
+      searchResults = addableUsers.filter(
+        user =>
+          user.name?.toLowerCase().includes(q) ||
+          user.username?.toLowerCase().includes(q)
+      );
     } finally {
       searchLoading = false;
     }
@@ -114,19 +159,25 @@
 
     addingMember = true;
     try {
-      const { error } = await supabase
-        .from('chat_group_members')
-        .insert({
-          group_id: chat.id.toString(),
-          user_id: userId
-        });
+      const { error } = await supabase.from('chat_group_members').insert({
+        group_id: chat.id.toString(),
+        user_id: userId
+      });
 
-      if (error) throw error;
+      if (error) {
+        captureException(error, { tags: { supabase: 'chat_group_members' } });
+        throw error;
+      }
 
       toast.success('Member added successfully');
       searchQuery = '';
       searchResults = [];
       await fetchGroupMembers();
+      const addedUser = addableUsers.find(u => u.id === userId);
+      if (addedUser) {
+        members = [...members, addedUser];
+        addableUsers = addableUsers.filter(u => u.id !== userId);
+      }
     } catch (error: any) {
       toast.error('Failed to add member', {
         description: error.message
@@ -138,7 +189,7 @@
 
   // Remove member from group
   async function removeMember(userId: string) {
-    if (!chat?.is_group || userId === currentUser.id) return;
+    if (!chat?.is_group || userId === currentUserId) return;
 
     try {
       const { error } = await supabase
@@ -147,10 +198,18 @@
         .eq('group_id', chat.id.toString())
         .eq('user_id', userId);
 
-      if (error) throw error;
+      if (error) {
+        captureException(error, { tags: { supabase: 'chat_group_members' } });
+        throw error;
+      }
 
       toast.success('Member removed successfully');
       await fetchGroupMembers();
+      const removedUser = members.find(m => m.id === userId);
+      if (removedUser) {
+        members = members.filter(m => m.id !== userId);
+        addableUsers = [...addableUsers, removedUser];
+      }
     } catch (error: any) {
       toast.error('Failed to remove member', {
         description: error.message
@@ -165,27 +224,28 @@
       .getPublicUrl(`/org/${orgId}/group/${gid}.${avatar_type}`).data.publicUrl;
   }
 
-  // Check if current user is group owner
-  $: isGroupOwner = chat?.is_group && chat?.owner_id === currentUser.id;
-
-  // Reactive fetch when sidebar opens
   $: if (isOpen && chat?.is_group) {
     fetchGroupMembers();
+    fetchAllOrgUsers();
   }
 
-  // Search when query changes
-  $: if (searchQuery.trim()) {
-    const timeoutId = setTimeout(searchUsers, 300);
-    return () => clearTimeout(timeoutId);
-  } else {
-    searchResults = [];
+  $: if (allOrgUsersLoaded && chat?.is_group) {
+    const memberIds = new Set(members.map(m => m.id));
+    addableUsers = allOrgUsers.filter(user => !memberIds.has(user.id));
   }
+
+  $: if (searchQuery.trim()) searchUsers();
+  else searchResults = [];
 </script>
+
+<svelte:window
+  on:keydown={e => isOpen && e.key === 'Escape' && dispatch('close')}
+/>
 
 <!-- Mobile overlay -->
 {#if isOpen}
   <div
-    class="fixed inset-0 z-40 bg-black/50 md:hidden"
+    class="fixed inset-0 z-40 bg-black/50"
     on:click={() => dispatch('close')}
     on:keydown={e => e.key === 'Escape' && dispatch('close')}
     role="button"
@@ -203,9 +263,7 @@
   <!-- Header -->
   <div class="border-b border-white/20 p-4 dark:border-gray-700/50">
     <div class="flex items-center justify-between">
-      <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
-        Chat Info
-      </h2>
+      <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Chat Info</h2>
       <Button
         variant="ghost"
         size="icon"
@@ -226,12 +284,11 @@
         <Skeleton class="h-4 w-24" />
       </div>
     {:else}
+      {@const avatar = chat.is_group
+        ? getGroupAvatarUrl(chat.id, chat.avatar_url)
+        : chat.avatar_url}
       <!-- Chat Avatar and Info -->
       <div class="mb-6 text-center">
-        {@const avatar = chat.is_group
-          ? getGroupAvatarUrl(chat.id, chat.avatar_url)
-          : chat.avatar_url}
-        
         <div class="relative mx-auto mb-4 w-fit">
           {#if avatar}
             <img
@@ -246,7 +303,7 @@
               {chat.name.charAt(0)}
             </div>
           {/if}
-          
+
           {#if chat.is_group}
             <div
               class="absolute -bottom-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-white"
@@ -259,15 +316,13 @@
         <h3 class="text-xl font-bold text-gray-900 dark:text-white">
           {chat.name}
         </h3>
-        
+
         {#if !chat.is_group}
           <p class="text-sm text-gray-500 dark:text-gray-400">
             @{chat.slug.substring(1)}
           </p>
         {:else}
-          <p class="text-sm text-gray-500 dark:text-gray-400">
-            Group Chat
-          </p>
+          <p class="text-sm text-gray-500 dark:text-gray-400">Group Chat</p>
         {/if}
       </div>
 
@@ -299,7 +354,9 @@
               {/each}
             </div>
           {:else if membersError}
-            <div class="rounded-lg bg-red-50 p-3 text-red-700 dark:bg-red-900/20 dark:text-red-300">
+            <div
+              class="rounded-lg bg-red-50 p-3 text-red-700 dark:bg-red-900/20 dark:text-red-300"
+            >
               <p class="text-sm">{membersError}</p>
             </div>
           {:else}
@@ -319,8 +376,10 @@
                         <p class="font-medium text-gray-900 dark:text-white">
                           {member.name}
                         </p>
-                        {#if member.id === chat.owner_id}
-                          <Crown class="h-4 w-4 text-yellow-500" title="Group Owner" />
+                        {#if member.id === groupOwnerId}
+                          <span title="Group Owner"
+                            ><Crown class="h-4 w-4 text-yellow-500" /></span
+                          >
                         {/if}
                       </div>
                       <p class="text-sm text-gray-500 dark:text-gray-400">
@@ -328,8 +387,8 @@
                       </p>
                     </div>
                   </div>
-                  
-                  {#if isGroupOwner && member.id !== currentUser.id}
+
+                  {#if groupOwnerId === currentUserId && groupOwnerId !== member.id}
                     <Button
                       variant="ghost"
                       size="icon"
@@ -346,19 +405,28 @@
           {/if}
 
           <!-- Add Member Section (only for group owner) -->
-          {#if isGroupOwner}
+          {#if groupOwnerId === currentUserId}
             <div class="border-t border-white/20 pt-4 dark:border-gray-700/50">
               <h5 class="mb-3 font-medium text-gray-900 dark:text-white">
                 Add Member
               </h5>
-              
+
               <div class="space-y-3">
+                {#if allOrgUsersError}
+                  <div
+                    class="mb-2 rounded-lg border border-red-200 bg-red-50 p-3 text-red-700 dark:border-red-700 dark:bg-red-900/30 dark:text-red-200"
+                  >
+                    <p class="text-sm">{allOrgUsersError}</p>
+                  </div>
+                {/if}
                 <div class="relative">
-                  <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                   <Input
                     bind:value={searchQuery}
                     placeholder="Search by name or username..."
                     class="glass dark:glass-dark border-white/30 pl-10 dark:border-gray-700/50"
+                  />
+                  <Search
+                    class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
                   />
                 </div>
 
@@ -387,7 +455,9 @@
                             class="h-8 w-8 rounded-full"
                           />
                           <div>
-                            <p class="text-sm font-medium text-gray-900 dark:text-white">
+                            <p
+                              class="text-sm font-medium text-gray-900 dark:text-white"
+                            >
                               {user.name}
                             </p>
                             <p class="text-xs text-gray-500 dark:text-gray-400">
@@ -408,7 +478,7 @@
                       </div>
                     {/each}
                   </div>
-                {:else if searchQuery.trim()}
+                {:else if searchQuery.trim() && !searchLoading}
                   <p class="text-sm text-gray-500 dark:text-gray-400">
                     No users found matching "{searchQuery}"
                   </p>

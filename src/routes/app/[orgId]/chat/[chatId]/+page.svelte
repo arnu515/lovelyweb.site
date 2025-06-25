@@ -497,7 +497,7 @@
   <ChatInfoSidebar
     bind:isOpen={showChatInfo}
     chat={$currentChat}
-    currentUser={user}
+    currentUserId={user.id}
     on:close={() => (showChatInfo = false)}
   />
 {/if}
