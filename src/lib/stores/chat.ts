@@ -43,3 +43,88 @@ export const chatOverview = (() => {
   return { subscribe }
 })()
 
+type Message = Database['public']['Tables']['messages']['Row'][]
+export const messages = {
+  _data: new Map<string, Writable<Message | undefined | string>>(),
+  _orgId: null as (string | null),
+  _alwaysUndefinedStore: readable(undefined),
+  removeItem(slug: string) {
+    const store = this._data.get(slug)
+    store?.set(undefined)
+    this._data.delete(slug)
+  },
+  removeAllData() {
+    for (const [_, store] of this._data)
+      store.set(undefined);
+    this._data.clear()
+  },
+  fetch(slug: string) {
+    const delim = slug.charCodeAt(0)
+    if (delim === 64 /* @ */) return this.fetchUser(slug.substring(1))
+    if (delim === 45 /* - */) return this.fetchGroup(slug.substring(1))
+    else return undefined
+  },
+  fetchUser(oid: string): Readable<Message | undefined | string> {
+    if (!isBrowser()) return this._alwaysUndefinedStore
+    const newOrgId = get(page).params.orgId
+    if (this._orgId !== newOrgId) {
+      this._orgId = newOrgId
+      this.removeAllData()
+    }
+    const slug = '@'+oid
+    const store = this._data.get(slug) ?? writable<Message | undefined | string>(undefined)
+    const val = get(store)
+    if (typeof val !== 'undefined' && typeof val !== 'string') return { subscribe: store.subscribe }
+    store.set(undefined)
+    supabase.from("messages")
+      .select("*")
+      .or(`from_id.eq.'${oid}',to_id.eq.'${oid}'`)
+      .eq('org_id', newOrgId)
+      .then(({ data, error }) => {
+        if (error) {
+          captureException(error, { tags: { supabase: 'messages' } })
+          store.set(error.message)
+        } else {
+          this._data.set(slug, store)
+          store.set(data)
+        }
+      })
+    return { subscribe: store.subscribe }
+  },
+  fetchGroup(gid: string): Readable<Message | undefined | string> {
+    if (!isBrowser()) return this._alwaysUndefinedStore
+    const newOrgId = get(page).params.orgId
+    if (this._orgId !== newOrgId) {
+      this._orgId = newOrgId
+      this.removeAllData()
+    }
+    const slug = '-'+gid
+    const store = this._data.get(slug) ?? writable<Message | undefined | string>(undefined)
+    const val = get(store)
+    if (typeof val !== 'undefined' && typeof val !== 'string') return { subscribe: store.subscribe }
+    store.set(undefined)
+    supabase.from("group_messages")
+      .select("*")
+      .eq('group_id', gid)
+      .eq('org_id', newOrgId)
+      .then(({ data, error }) => {
+        if (error) {
+          captureException(error, { tags: { supabase: 'messages' } })
+          store.set(error.message)
+        } else {
+          this._data.set(slug, store)
+          store.set(data.map(i => ({
+            created_at: i.created_at,
+            data: i.data,
+            edited_at: i.edited_at,
+            from_id: i.by_id,
+            to_id: i.group_id,
+            id: i.id,
+            org_id: i.org_id,
+            typ: i.typ
+          })))
+        }
+      })
+    return { subscribe: store.subscribe }
+  },
+}

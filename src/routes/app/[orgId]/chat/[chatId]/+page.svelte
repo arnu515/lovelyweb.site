@@ -15,11 +15,14 @@
     Sparkles,
     Volume2,
     FileEdit as Edit3,
-    ArrowLeft
+    ArrowLeft,
+
+    CheckCheck
+
   } from 'lucide-svelte';
   import { cn } from '$lib/utils';
   import { page } from '$app/stores';
-  import { chatOverview } from '$lib/stores/chat.js';
+  import { chatOverview, messages as msgStore } from '$lib/stores/chat.js';
   import { derived } from "svelte/store"
   import { Skeleton } from '$lib/components/ui/skeleton/index.js';
   import {
@@ -27,6 +30,9 @@
     PUBLIC_SUPABASE_URL
   } from '$env/static/public';
   import { createBrowserClient } from '@supabase/ssr';
+
+  export let data
+  const user = data.auth.user!
 
   const supabase = createBrowserClient(
     PUBLIC_SUPABASE_URL,
@@ -40,63 +46,8 @@
   const currentChat = derived([ page, chatOverview ], ([{params: { chatId }}, co]) => co ? co.dataMap[chatId] : null)
   $: orgId = $page.params.orgId;
 
-  const messages = [
-    {
-      id: '1',
-      senderId: 'other',
-      senderName: 'Sarah Wilson',
-      content: 'Hey! How are you doing?',
-      timestamp: new Date('2024-01-15T09:00:00'),
-      type: 'text',
-      status: 'delivered'
-    },
-    {
-      id: '2',
-      senderId: 'me',
-      senderName: 'You',
-      content: "I'm doing great! Just working on the new project.",
-      timestamp: new Date('2024-01-15T09:02:00'),
-      type: 'text',
-      status: 'read'
-    },
-    {
-      id: '3',
-      senderId: 'other',
-      senderName: 'Sarah Wilson',
-      content: 'That sounds exciting! Can you share some details?',
-      timestamp: new Date('2024-01-15T09:05:00'),
-      type: 'text',
-      status: 'delivered'
-    },
-    {
-      id: '4',
-      senderId: 'me',
-      senderName: 'You',
-      content: "Sure! It's a new communication platform with AI features.",
-      timestamp: new Date('2024-01-15T09:07:00'),
-      type: 'text',
-      status: 'read'
-    },
-    {
-      id: '5',
-      senderId: 'other',
-      senderName: 'Sarah Wilson',
-      content:
-        'https://images.pexels.com/photos/1181533/pexels-photo-1181533.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&fit=crop',
-      timestamp: new Date('2024-01-15T09:10:00'),
-      type: 'image',
-      status: 'delivered'
-    },
-    {
-      id: '6',
-      senderId: 'me',
-      senderName: 'You',
-      content: 'Nice! That looks really professional.',
-      timestamp: new Date('2024-01-15T09:12:00'),
-      type: 'text',
-      status: 'read'
-    }
-  ];
+  $: messages = msgStore.fetch($page.params.chatId)
+  $: if (messages) console.log($messages)
 
   function formatMessageTime(date: Date) {
     return date.toLocaleTimeString('en-US', {
@@ -178,6 +129,17 @@
   <title>{$currentChat?.name || "Loading..."} - Chat - lovelyweb.site</title>
 </svelte:head>
 
+{#if $currentChat === undefined || typeof messages === 'undefined'}
+  <div class="mx-auto my-10 flex max-w-screen-md p-4">
+    <div class="glass dark:glass-dark rounded-2xl p-8">
+      <h1 class="mb-4 text-xl">{$currentChat === undefined || typeof messages === 'string' ? '404 Page Not Found' : 'Could not fetch messages'}</h1>
+      <p class="font-mono text-lg text-red-500">{$currentChat === undefined || typeof messages === 'string' ? 'A chat/group with the given ID could not be found' : 'An error occured'}</p>
+      <p class="my-4 flex items-center justify-center">
+        <Button href=".">Chat Home</Button>
+      </p>
+    </div>
+  </div>
+{:else}
 <div class="flex h-full flex-col">
   <!-- Chat Header -->
   <div
@@ -201,12 +163,23 @@
           </div>
         {:else}
         {@const chat = $currentChat}
+        {@const avatar = chat.is_group
+          ? getGroupAvatarUrl(chat.id, chat.avatar_url)
+          : chat.avatar_url}
         <div class="relative">
+          {#if avatar}
           <img
-            src={chat.is_group ? getGroupAvatarUrl(chat.id, chat.avatar_url) : chat.avatar_url}
+            src={avatar}
             alt="{chat.name}'s Avatar"
             class="h-10 w-10 rounded-full"
           />
+          {:else}
+          <div
+            class="glass dark:glass-dark flex h-10 w-10 items-center justify-center rounded-full border border-gray-400 text-xl uppercase shadow-none dark:border-gray-700"
+          >
+            {chat.name.charAt(0)}
+          </div>
+          {/if}
           <!-- TODO: ONLINE -->
           {#if true}
             <div
@@ -244,14 +217,19 @@
 
   <!-- Messages -->
   <div bind:this={messagesContainer} class="flex-1 space-y-4 overflow-y-auto p-4">
-    {#each messages as message, index}
+  {#if typeof messages !== 'string'}
+    {@const msgs = $messages}
+    {#if typeof msgs === 'undefined'}
+    {:else if typeof msgs === 'string'}
+    {:else}
+    {#each msgs as message, index}
       <!-- Date Header -->
-      {#if shouldShowDateHeader(message, messages[index - 1])}
+      {#if shouldShowDateHeader(message, msgs[index - 1])}
         <div class="flex justify-center">
           <div
             class="glass dark:glass-dark rounded-full px-3 py-1 text-xs text-gray-600 dark:text-gray-400"
           >
-            {formatDateHeader(message.timestamp)}
+            {formatDateHeader(new Date(message.created_at))}
           </div>
         </div>
       {/if}
@@ -260,54 +238,53 @@
       <div
         class={cn(
           'flex',
-          message.senderId === 'me' ? 'justify-end' : 'justify-start'
+          message.from_id === user.id ? 'justify-end' : 'justify-start'
         )}
       >
         <div
           class={cn(
             'max-w-xs lg:max-w-md xl:max-w-lg',
-            message.senderId === 'me' ? 'order-2' : 'order-1'
+            message.from_id === user.id ? 'order-2' : 'order-1'
           )}
         >
           <div
             class={cn(
               'rounded-2xl px-4 py-2 shadow-sm',
-              message.senderId === 'me'
+              message.from_id === user.id
                 ? 'gradient-primary text-white'
                 : 'glass dark:glass-dark text-gray-900 dark:text-white'
             )}
           >
-            {#if message.type === 'text'}
-              <p class="text-sm leading-relaxed">{message.content}</p>
-            {:else if message.type === 'image'}
-              <img
-                src={message.content}
-                alt="Shared image"
-                class="h-auto max-w-full rounded-lg"
-              />
+            {#if message.typ === 'text'}
+              <p class="text-sm leading-relaxed">{message.data}</p>
+            {:else if message.typ === 'attachment'}
+              <!-- TODO: attachment -->
+            {:else if message.typ === 'voice'}
+              <!-- TODO: voice message -->
             {/if}
           </div>
           <div
             class={cn(
               'mt-1 flex items-center space-x-1 text-xs text-gray-500',
-              message.senderId === 'me' ? 'justify-end' : 'justify-start'
+              message.from_id === user.id ? 'justify-end' : 'justify-start'
             )}
           >
-            <span>{formatMessageTime(message.timestamp)}</span>
-            {#if message.senderId === 'me'}
-              <span
-                class={cn(
-                  'text-xs',
-                  message.status === 'read' ? 'text-blue-500' : 'text-gray-400'
-                )}
-              >
-                {message.status === 'read' ? '✓✓' : '✓'}
-              </span>
+            <!-- TODO: edit time -->
+            <span>{formatMessageTime(new Date(message.created_at))}</span>
+            <!-- TODO: edit indicator -->
+            {#if true}
+              <em class="text-xs text-gray-500">edited</em>
+            {/if}
+            <!-- TODO: read indicator -->
+            {#if message.from_id === user.id && true}
+              <span class="text-xs text-blue-500"><CheckCheck /></span>
             {/if}
           </div>
         </div>
       </div>
     {/each}
+  {/if}
+  {/if}
   </div>
 
   <!-- Message Input -->
@@ -403,3 +380,4 @@
   class="hidden"
   on:change={handleFileSelected}
 />
+{/if}
