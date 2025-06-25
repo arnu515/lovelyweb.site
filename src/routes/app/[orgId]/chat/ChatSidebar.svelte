@@ -25,7 +25,7 @@
   let searchQuery = '';
   let isUserCollapsibleOpen = false;
 
-  $: chats = $chatOverview;
+  $: chats = $chatOverview?.data;
   $: filteredChats = chats
     ? chats.filter(chat => {
         const q = searchQuery.toLowerCase();
