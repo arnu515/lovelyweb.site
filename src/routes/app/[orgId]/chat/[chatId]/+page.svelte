@@ -3,6 +3,7 @@
   import { Button } from '$lib/components/ui/button';
   import { Input } from '$lib/components/ui/input';
   import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
+  import ChatInfoSidebar from './ChatInfoSidebar.svelte';
   import {
     Send,
     Paperclip,
@@ -18,7 +19,8 @@
     ArrowLeft,
     CheckCheck,
     Loader2,
-    MessageCircle
+    MessageCircle,
+    Info
   } from 'lucide-svelte';
   import { cn } from '$lib/utils';
   import { page } from '$app/stores';
@@ -44,6 +46,7 @@
   let messageInput = '';
   let messagesContainer: HTMLElement;
   let fileInput: HTMLInputElement;
+  let showChatInfo = false;
 
   const currentChat = derived(
     [page, chatOverview],
@@ -256,9 +259,29 @@
             >
               <Video class="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" class="h-9 w-9">
-              <MoreVertical class="h-4 w-4" />
-            </Button>
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger asChild let:builder>
+                <Button
+                  builders={[builder]}
+                  variant="ghost"
+                  size="icon"
+                  class="h-9 w-9"
+                >
+                  <MoreVertical class="h-4 w-4" />
+                </Button>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Content
+                class="glass dark:glass-dark border-white/20 dark:border-gray-700/50"
+              >
+                <DropdownMenu.Item
+                  class="gap-2 cursor-pointer"
+                  on:click={() => (showChatInfo = true)}
+                >
+                  <Info class="h-4 w-4" />
+                  View Info
+                </DropdownMenu.Item>
+              </DropdownMenu.Content>
+            </DropdownMenu.Root>
           {/if}
         </div>
       </div>
@@ -468,5 +491,13 @@
     accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt"
     class="hidden"
     on:change={handleFileSelected}
+  />
+
+  <!-- Chat Info Sidebar -->
+  <ChatInfoSidebar
+    bind:isOpen={showChatInfo}
+    chat={$currentChat}
+    currentUser={user}
+    on:close={() => (showChatInfo = false)}
   />
 {/if}
