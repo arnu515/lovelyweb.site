@@ -17,12 +17,8 @@
     FileEdit as Edit3,
     ArrowLeft,
     CheckCheck,
-
     Loader2,
-
-    MessageCircle
-
-
+    MessageCircle,
   } from 'lucide-svelte';
   import { cn } from '$lib/utils';
   import { page } from '$app/stores';
@@ -34,11 +30,13 @@
     PUBLIC_SUPABASE_URL
   } from '$env/static/public';
   import { createBrowserClient } from '@supabase/ssr';
+  import type { Database } from '$lib/database.types.js';
+  import { toast } from 'svelte-sonner';
 
   export let data
   const user = data.auth.user!
 
-  const supabase = createBrowserClient(
+  const supabase = createBrowserClient<Database>(
     PUBLIC_SUPABASE_URL,
     PUBLIC_SUPABASE_ANON_KEY
   );
@@ -52,6 +50,8 @@
 
   $: messages = msgStore.fetch($page.params.chatId)
   $: if (messages) console.log($messages)
+
+  let msgQueue: [number, string][] = []
 
   function formatMessageTime(date: Date) {
     return date.toLocaleTimeString('en-US', {
@@ -83,17 +83,31 @@
 
   function shouldShowDateHeader(currentMsg: any, prevMsg: any) {
     if (!prevMsg) return true;
-    const currentDate = new Date(currentMsg.timestamp).toDateString();
-    const prevDate = new Date(prevMsg.timestamp).toDateString();
+    const currentDate = new Date(currentMsg.created_at).toDateString();
+    const prevDate = new Date(prevMsg.created_at).toDateString();
     return currentDate !== prevDate;
   }
 
-  function sendMessage() {
+  async function sendMessage() {
     if (!messageInput.trim()) return;
+    let id = Math.random()
 
-    // Here you would send the message to your backend
-    console.log('Sending message:', messageInput);
+    const content = messageInput
     messageInput = '';
+    msgQueue = [...msgQueue, [id, content]]
+
+    try {     
+      const res = await fetch("?", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "text", content }),
+        credentials: "include" 
+      })
+      if (!res.ok) throw new Error((await res.json()).error)
+    } catch(e) {
+      toast.error("Could not send messge", { description: (e as any)?.message || "An unknown error occured" })
+    }
+    msgQueue = msgQueue.filter(([_id]) => _id !== id)
   }
 
   function handleKeyPress(event: KeyboardEvent) {
@@ -236,7 +250,7 @@
       </div>
     {:else if typeof msgs === 'string'}
       An error occured
-    {:else if msgs.length === 0}
+    {:else if msgs.length === 0 && msgQueue.length === 0}
       <div class="h-full items-center justify-center p-8 md:flex">
         <div class="glass dark:glass-dark mx-auto max-w-md rounded-2xl p-8 text-center">
           <div
@@ -314,6 +328,20 @@
         </div>
       </div>
     {/each}
+    {#each msgQueue as msg, idx (msg[0])}
+      <div class="flex justify-end">
+        <div class="max-w-xs lg:max-w-md xl:max-w-lg order-2">
+          <div class="rounded-2xl px-4 py-2 shadow-sm dark:bg-gray-600 bg-gray-300 dark:text-white text-black">
+            <p class="text-sm leading-relaxed">{msg[1]}</p>
+          </div>
+          {#if idx === msgQueue.length - 1}
+            <div class="mt-1 flex items-center space-x-1 text-xs text-gray-500 justify-end">
+              <em class="text-xs text-gray-500">sending your message...</em>
+            </div>
+          {/if}
+        </div>
+      </div>
+    {/each}
   {/if}
   {/if}
   </div>
@@ -361,7 +389,7 @@
             builders={[builder]}
             variant="ghost"
             size="icon"
-            class="gradient-primary h-10 w-10 flex-shrink-0 text-white"
+            class="gradient-secondary h-10 w-10 flex-shrink-0 text-white"
           >
             <Sparkles class="h-4 w-4" />
           </Button>
@@ -385,19 +413,17 @@
       </DropdownMenu.Root>
 
       <!-- Send/Mic Button -->
-      {#if messageInput.trim()}
         <Button
           class="gradient-primary h-10 w-10 flex-shrink-0 text-white"
           size="icon"
-          on:click={sendMessage}
+          on:click={messageInput.trim() ? sendMessage : undefined}
         >
+      {#if messageInput.trim()}
           <Send class="h-4 w-4" />
-        </Button>
       {:else}
-        <Button variant="ghost" size="icon" class="h-10 w-10 flex-shrink-0">
           <Mic class="h-4 w-4" />
-        </Button>
       {/if}
+        </Button>
     </div>
   </div>
 </div>
