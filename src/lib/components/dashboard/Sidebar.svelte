@@ -313,10 +313,6 @@
           <span>Tasks</span>
           <span class="badge">3</span>
         </Button>
-        <Button variant="ghost" class="sb-btn" on:click={handleNavigation}>
-          <Kanban class="icon" />
-          <span>Kanban</span>
-        </Button>
         <Button 
           href="/app/{currentOrg.id}/kanban"
           variant="ghost" 
