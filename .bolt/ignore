@@ -1,4 +1,5 @@
 mail-server
 src/lib/assets/*
 static/*
+src/lib/components/ui/*
 sql/*
