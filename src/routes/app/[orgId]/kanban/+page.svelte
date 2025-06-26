@@ -10,21 +10,7 @@
   import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
   import { Badge } from '$lib/components/ui/badge';
   import { Skeleton } from '$lib/components/ui/skeleton';
-  import {
-    Plus,
-    MoreVertical,
-    Users,
-    Settings,
-    Trash2,
-    Move,
-    Sparkles,
-    Edit,
-    X,
-    UserPlus,
-    UserMinus,
-    Calendar,
-    Tag
-  } from 'lucide-svelte';
+  import { Plus, MoreVertical, Users, Settings, Trash2, Move, Sparkles, FileEdit as Edit, X, UserPlus, UserMinus, Calendar, Tag } from 'lucide-svelte';
   import { cn } from '$lib/utils';
   import { toast } from 'svelte-sonner';
 
