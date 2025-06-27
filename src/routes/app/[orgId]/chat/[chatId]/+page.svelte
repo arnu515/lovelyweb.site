@@ -274,7 +274,7 @@
                 class="glass dark:glass-dark border-white/20 dark:border-gray-700/50"
               >
                 <DropdownMenu.Item
-                  class="gap-2 cursor-pointer"
+                  class="cursor-pointer gap-2"
                   on:click={() => (showChatInfo = true)}
                 >
                   <Info class="h-4 w-4" />

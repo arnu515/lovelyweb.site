@@ -313,9 +313,9 @@
           <span>Tasks</span>
           <span class="badge">3</span>
         </Button>
-        <Button 
+        <Button
           href="/app/{currentOrg.id}/kanban"
-          variant="ghost" 
+          variant="ghost"
           class={cn('sb-btn', currentPage === 'kanban' && 'active')}
           on:click={handleNavigation}
         >
@@ -353,7 +353,12 @@
         <!-- Recent Contacts -->
         <div class="space-y-1 pt-2">
           {#each recentChats as chat}
-            <Button variant="ghost" class="w-full justify-start text-left" href="/app/{currentOrg.id}/chat/{chat.slug}" on:click={handleNavigation}>
+            <Button
+              variant="ghost"
+              class="w-full justify-start text-left"
+              href="/app/{currentOrg.id}/chat/{chat.slug}"
+              on:click={handleNavigation}
+            >
               <div class="relative mr-3">
                 {#if chat.avatar}
                   <img

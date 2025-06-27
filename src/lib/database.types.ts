@@ -142,6 +142,180 @@ export type Database = {
           }
         ];
       };
+      kanban_board_members: {
+        Row: {
+          board_id: string;
+          created_at: string;
+          user_id: string;
+        };
+        Insert: {
+          board_id: string;
+          created_at?: string;
+          user_id: string;
+        };
+        Update: {
+          board_id?: string;
+          created_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'kanban_board_members_board_id_fkey';
+            columns: ['board_id'];
+            isOneToOne: false;
+            referencedRelation: 'kanban_boards';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'kanban_board_members_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          }
+        ];
+      };
+      kanban_boards: {
+        Row: {
+          created_at: string;
+          id: string;
+          name: string;
+          org_id: string;
+          owner_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          id: string;
+          name: string;
+          org_id: string;
+          owner_id: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          name?: string;
+          org_id?: string;
+          owner_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'kanban_boards_org_id_fkey';
+            columns: ['org_id'];
+            isOneToOne: false;
+            referencedRelation: 'organisations';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'kanban_boards_owner_id_fkey';
+            columns: ['owner_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          }
+        ];
+      };
+      kanban_cards: {
+        Row: {
+          board_id: string;
+          category_id: string;
+          created_at: string;
+          created_by: string;
+          description: string | null;
+          due_date: string | null;
+          id: string;
+          position: number;
+          priority: Database['public']['Enums']['kanban_priority'] | null;
+          tags: string[];
+          title: string;
+          updated_at: string | null;
+        };
+        Insert: {
+          board_id: string;
+          category_id: string;
+          created_at?: string;
+          created_by: string;
+          description?: string | null;
+          due_date?: string | null;
+          id: string;
+          position: number;
+          priority?: Database['public']['Enums']['kanban_priority'] | null;
+          tags?: string[];
+          title: string;
+          updated_at?: string | null;
+        };
+        Update: {
+          board_id?: string;
+          category_id?: string;
+          created_at?: string;
+          created_by?: string;
+          description?: string | null;
+          due_date?: string | null;
+          id?: string;
+          position?: number;
+          priority?: Database['public']['Enums']['kanban_priority'] | null;
+          tags?: string[];
+          title?: string;
+          updated_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'kanban_cards_board_id_fkey';
+            columns: ['board_id'];
+            isOneToOne: false;
+            referencedRelation: 'kanban_boards';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'kanban_cards_category_id_fkey';
+            columns: ['category_id'];
+            isOneToOne: false;
+            referencedRelation: 'kanban_categories';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'kanban_cards_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          }
+        ];
+      };
+      kanban_categories: {
+        Row: {
+          board_id: string;
+          color: string;
+          created_at: string;
+          id: string;
+          name: string;
+          position: number;
+        };
+        Insert: {
+          board_id: string;
+          color: string;
+          created_at?: string;
+          id: string;
+          name: string;
+          position: number;
+        };
+        Update: {
+          board_id?: string;
+          color?: string;
+          created_at?: string;
+          id?: string;
+          name?: string;
+          position?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'kanban_categories_board_id_fkey';
+            columns: ['board_id'];
+            isOneToOne: false;
+            referencedRelation: 'kanban_boards';
+            referencedColumns: ['id'];
+          }
+        ];
+      };
       messages: {
         Row: {
           created_at: string;
@@ -341,6 +515,10 @@ export type Database = {
         Args: { id: string };
         Returns: boolean;
       };
+      create_board: {
+        Args: { id: string; board_name: string; org_id: string };
+        Returns: undefined;
+      };
       get_chat_overview: {
         Args: { org_id: string };
         Returns: {
@@ -387,6 +565,7 @@ export type Database = {
     };
     Enums: {
       group_avatar_type: 'webp' | 'svg';
+      kanban_priority: 'low' | 'medium' | 'high';
       msg_type: 'text' | 'attachment' | 'voice';
       plan_enum: 'free' | 'basic' | 'pro';
     };
@@ -505,6 +684,7 @@ export const Constants = {
   public: {
     Enums: {
       group_avatar_type: ['webp', 'svg'],
+      kanban_priority: ['low', 'medium', 'high'],
       msg_type: ['text', 'attachment', 'voice'],
       plan_enum: ['free', 'basic', 'pro']
     }

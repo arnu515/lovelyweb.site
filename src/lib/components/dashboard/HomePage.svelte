@@ -8,9 +8,7 @@
     Calendar,
     CheckSquare,
     Kanban,
-
     Users
-
   } from 'lucide-svelte';
   import { Input } from '$lib/components/ui/input';
   import { Button } from '$lib/components/ui/button';
@@ -128,13 +126,18 @@
       data: chat.data,
       slug: chat.slug,
       typ: chat.typ,
-      time: chat.msg_created_at ? formatRelative(new Date(chat.msg_edited_at || chat.msg_created_at), new Date()) : '',
+      time: chat.msg_created_at
+        ? formatRelative(
+            new Date(chat.msg_edited_at || chat.msg_created_at),
+            new Date()
+          )
+        : '',
       is_group: chat.is_group,
       // todo: online
       online: true,
       avatar: chat.is_group
-      ? getGroupAvatarUrl(chat.id, chat.avatar_url)
-      : chat.avatar_url,
+        ? getGroupAvatarUrl(chat.id, chat.avatar_url)
+        : chat.avatar_url,
       // TODO: unread count
       unread: 2
     })) ?? [];
@@ -270,7 +273,7 @@
           <Button
             variant="ghost"
             href="/app/{orgId}/chat/{chat.slug}"
-            class="flex !py-8 cursor-pointer items-center gap-4 rounded-xl p-3 transition-all duration-200 hover:bg-gray-200/50 dark:hover:bg-gray-900/50"
+            class="flex cursor-pointer items-center gap-4 rounded-xl p-3 !py-8 transition-all duration-200 hover:bg-gray-200/50 dark:hover:bg-gray-900/50"
           >
             <div class="relative">
               {#if chat.avatar}
@@ -288,13 +291,13 @@
               {/if}
               {#if chat.is_group}
                 <div
-                  class="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-blue-500 text-xs font-bold border border-gray-200 dark:border-gray-800 text-white"
+                  class="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border border-gray-200 bg-blue-500 text-xs font-bold text-white dark:border-gray-800"
                 >
                   <Users class="h-3 w-3" />
                 </div>
               {:else if chat.online}
                 <div
-                  class="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border border-gray-200 dark:border-gray-800 bg-green-400 dark:border-gray-1000"
+                  class="dark:border-gray-1000 absolute -bottom-1 -right-1 h-4 w-4 rounded-full border border-gray-200 bg-green-400 dark:border-gray-800"
                 ></div>
               {/if}
             </div>
