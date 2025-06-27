@@ -472,7 +472,6 @@ function createKanbanStore() {
       oldCardIdx = oldCategory.cards.findIndex(c => c.id === cardId);
       oldCard = { ...oldCategory.cards[oldCardIdx] };
 
-      console.log(d);
       if (
         ((updates.category_id && updates.category_id !== categoryId) ||
           (updates.board_id && updates.board_id !== boardId)) &&
@@ -494,7 +493,6 @@ function createKanbanStore() {
       } else if (oldCardIdx !== -1) {
         Object.assign(oldCategory.cards[oldCardIdx], updates);
       }
-      console.log(d);
       return d;
     });
 
@@ -550,13 +548,14 @@ function createKanbanStore() {
     if (error) {
       captureException(error, { tags: { supabase: 'kanban_add_member' } });
       toast.error('Could not add member', { description: error.message });
-      return;
+      return false;
     }
     update(d => {
       d.boards[boardId].members.push(data.users);
       return d;
     });
     toast.success('Member added');
+    return true;
   }
 
   async function removeMember(boardId: string, userId: string) {
@@ -568,7 +567,7 @@ function createKanbanStore() {
     if (error) {
       captureException(error, { tags: { supabase: 'kanban_add_member' } });
       toast.error('Could not add member', { description: error.message });
-      return;
+      return false;
     }
     update(d => {
       d.boards[boardId].members = d.boards[boardId].members.filter(
@@ -577,6 +576,7 @@ function createKanbanStore() {
       return d;
     });
     toast.success('Member added');
+    return true;
   }
 
   // --- Expose store API ---

@@ -31,13 +31,26 @@
   import { toast } from 'svelte-sonner';
   import * as Switch from '$lib/components/ui/switch';
 
-  import { kanban, type Card } from '$lib/stores/kanban';
+  import { kanban, type Card, type Member } from '$lib/stores/kanban';
   import { get } from 'svelte/store';
   import { onMount } from 'svelte';
   import { page } from '$app/stores';
   import * as Skeleton from '$lib/components/ui/skeleton';
+  import { captureException } from '@sentry/sveltekit';
+  import { createBrowserClient } from '@supabase/ssr';
+  import {
+    PUBLIC_SUPABASE_URL,
+    PUBLIC_SUPABASE_ANON_KEY
+  } from '$env/static/public';
+  import type { Database } from '$lib/database.types.js';
+  import MobileTopNav from '$lib/components/dashboard/MobileTopNav.svelte';
 
   export let data;
+
+  const supabase = createBrowserClient<Database>(
+    PUBLIC_SUPABASE_URL,
+    PUBLIC_SUPABASE_ANON_KEY
+  );
 
   let activeBoard = '';
   let draggedCard: Card | null = null;
@@ -49,7 +62,13 @@
   let showNewCardDialog = false;
   let showCardDetailDialog = false;
   let showBoardSettingsDialog = false;
-  let showMembersDialog = false;
+
+  // Add Member state for board settings
+  let memberSearchQuery = '';
+  let memberSearchResults: (Member & { username: string })[] = [];
+  let memberIds: Set<string> = new Set();
+  let allOrgUsersError: string = '';
+  let allOrgUsers: (Member & { username: string })[] = [];
 
   // Form states
   let newBoardForm = { name: '', useOnboardingTemplate: true };
@@ -87,21 +106,68 @@
     createCard: false,
     updateCard: false,
     moveCardToBoard: false,
-    deleteCard: false
+    deleteCard: false,
+    addMember: false,
+    removeMember: false
   };
   $: orgId = $page.params.orgId;
   $: error = $kanban?.error ?? null;
   $: currentBoard = $kanban.boards[activeBoard];
 
   onMount(() => {
+    fetchAllOrgUsers();
     activeBoard = Object.keys($kanban.boards)[0] ?? null;
-    if (activeBoard) return;
+    if (activeBoard) {
+      loading.all = false;
+      return;
+    }
     loading.all = true;
     kanban.fetchAll(orgId).then(() => {
       if (!activeBoard) activeBoard = Object.keys($kanban.boards)[0] ?? null;
+      memberIds = new Set($kanban.boards[activeBoard].members.map(u => u.id));
       loading.all = false;
     });
   });
+
+  async function fetchAllOrgUsers() {
+    const { data: users, error } = await supabase
+      .from('organisations_users')
+      .select('users (id, name, username, avatar_url)')
+      .eq('organisation_id', orgId);
+    if (error) {
+      captureException(error, { tags: { supabase: 'organisations_users' } });
+      allOrgUsersError = error.message;
+    } else {
+      allOrgUsers = users.map(u => u.users);
+    }
+  }
+
+  $: if (memberSearchQuery.trim()) {
+    const q = memberSearchQuery.trim().toLowerCase();
+    memberSearchResults = allOrgUsers.filter(
+      u =>
+        (u.name.toLowerCase().includes(q) ||
+          u.username.toLowerCase().includes(q)) &&
+        !memberIds.has(u.id)
+    );
+  } else {
+    memberSearchResults = [];
+  }
+
+  async function handleAddBoardMember(userId: string) {
+    loading.addMember = true;
+    if (await kanban.addMember(currentBoard.id, userId)) memberIds.add(userId);
+    loading.addMember = false;
+    memberSearchQuery = '';
+    memberSearchResults = [];
+  }
+
+  async function handleRemoveBoardMember(userId: string) {
+    loading.removeMember = true;
+    if (await kanban.removeMember(currentBoard.id, userId))
+      memberIds.delete(userId);
+    loading.removeMember = false;
+  }
 
   function handleDragStart(event: DragEvent, card: any, categoryId: string) {
     if (event.dataTransfer) {
@@ -186,7 +252,7 @@
       priority: ['low', 'medium', 'high'].includes(newCardForm.priority)
         ? (newCardForm.priority as any)
         : null,
-      due_date: newCardForm.dueDate,
+      due_date: newCardForm.dueDate || undefined,
       tags: newCardForm.tags
         .split(',')
         .map(t => t.trim())
@@ -244,7 +310,7 @@
         priority: ['low', 'medium', 'high'].includes(selectedCard.priority as any)
           ? (selectedCard.priority as any)
           : null,
-        due_date: selectedCard.due_date,
+        due_date: selectedCard.due_date || null,
         tags: selectedCard.tags
           .split(',')
           .map(t => t.trim())
@@ -370,7 +436,16 @@
           size="sm"
           on:click={() => {
             loading.all = true;
-            kanban.fetchAll(orgId).then(() => (loading.all = false));
+            kanban.fetchAll(orgId).then(() => {
+              if (!$kanban.boards[activeBoard])
+                activeBoard = Object.keys($kanban.boards)[0];
+              if (activeBoard)
+                memberIds = new Set(
+                  $kanban.boards[activeBoard].members.map(u => u.id)
+                );
+              loading.all = false;
+            });
+            fetchAllOrgUsers();
           }}
           class="ml-auto gap-2 hover:bg-white/20 dark:hover:bg-gray-700/60"
         >
@@ -1035,7 +1110,27 @@
       </div>
     {/if}
 
-    <Dialog.Footer>
+    <Dialog.Footer class="gap-y-2">
+      {#if selectedCard}
+        {@const member = $kanban.boards[activeBoard].members.find(
+          i => i.id === selectedCard?.created_by
+        )}
+        {#if member && member.id !== data.auth.user.id}
+          <p
+            class="flex items-center justify-center gap-2 md:mr-auto md:justify-start"
+          >
+            Created by:
+            <img
+              src={member.avatar_url}
+              alt={member.name}
+              class="h-6 w-6 rounded-full"
+            />
+            <span class="truncate font-medium text-gray-900 dark:text-white">
+              {member.name}
+            </span>
+          </p>
+        {/if}
+      {/if}
       <Button
         variant="outline"
         on:click={() => (showCardDetailDialog = false)}
@@ -1114,6 +1209,9 @@
                     variant="ghost"
                     size="icon"
                     class="h-8 w-8 text-red-600 hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-900/30"
+                    on:click={() => handleRemoveBoardMember(member.id)}
+                    disabled={loading.removeMember || loading.addMember}
+                    title="Remove member"
                   >
                     <UserMinus class="h-4 w-4" />
                   </Button>
@@ -1123,10 +1221,76 @@
               </div>
             {/each}
           </div>
-          <Button variant="outline" class="w-full gap-2">
-            <UserPlus class="h-4 w-4" />
-            Add Member
-          </Button>
+          <div class="mt-4 space-y-2">
+            <div class="relative">
+              <Input
+                bind:value={memberSearchQuery}
+                placeholder="Search users to add..."
+                class="glass dark:glass-dark border-white/30 pl-10 dark:border-gray-700/50"
+              />
+              <UserPlus
+                class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+              />
+            </div>
+            {#if allOrgUsers.length === 0}
+              <div class="space-y-2">
+                {#each Array(2) as _}
+                  <div class="flex items-center space-x-3 rounded-lg p-2">
+                    <Skeleton.Skeleton class="h-8 w-8 rounded-full" />
+                    <div class="flex-1">
+                      <Skeleton.Skeleton class="h-4 w-20" />
+                      <Skeleton.Skeleton class="h-3 w-16" />
+                    </div>
+                  </div>
+                {/each}
+              </div>
+            {:else if memberSearchResults.length > 0}
+              <div class="max-h-40 space-y-1 overflow-y-auto">
+                {#each memberSearchResults as user (user.id)}
+                  <div
+                    class="flex items-center justify-between rounded-lg bg-white/40 p-2 dark:bg-gray-800/40"
+                  >
+                    <div class="flex items-center space-x-2">
+                      <img
+                        src={user.avatar_url}
+                        alt="{user.name}'s Avatar"
+                        class="h-8 w-8 rounded-full"
+                      />
+                      <div>
+                        <p
+                          class="text-sm font-medium text-gray-900 dark:text-white"
+                        >
+                          {user.name}
+                        </p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">
+                          @{user.username}
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      class="h-8 w-8 text-green-600 hover:bg-green-100 hover:text-green-700 dark:text-green-400 dark:hover:bg-green-900/30"
+                      on:click={() => handleAddBoardMember(user.id)}
+                      disabled={loading.addMember || loading.removeMember}
+                      title="Add member"
+                    >
+                      <UserPlus class="h-4 w-4" />
+                    </Button>
+                  </div>
+                {/each}
+              </div>
+            {:else if memberSearchQuery.trim()}
+              <p class="text-sm text-gray-500 dark:text-gray-400">
+                No users found matching "{memberSearchQuery}"
+              </p>
+            {/if}
+            {#if allOrgUsersError}
+              <div class="text-sm text-red-500">
+                Could not load members: {allOrgUsersError}
+              </div>
+            {/if}
+          </div>
         </div>
       </div>
     {/if}
