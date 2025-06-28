@@ -267,9 +267,11 @@ function createKanbanStore() {
     name: string;
     color: string;
   }) {
+    const t = toast.loading('Creating category')
     const categoryId = crypto.randomUUID();
     const board = await fetchBoard(board_id);
     if (!board) {
+      toast.dismiss(t)
       toast.error('Could not create category', { description: 'Board not found' });
       return;
     }
@@ -282,33 +284,19 @@ function createKanbanStore() {
       color,
       position: maxPos + 1
     });
+    toast.dismiss(t)
     if (error) {
       captureException(error, { tags: { supabase: 'kanban_categories' } });
       toast.error('Could not create category', { description: error.message });
       return;
     }
-    update(d => {
-      d.boards[board.id].categories = [
-        ...board.categories,
-        {
-          id: categoryId,
-          board_id,
-          name,
-          color,
-          position: maxPos + 1,
-          created_at: new Date().toISOString(),
-          cards: []
-        }
-      ];
-      return d;
-    });
     toast.success(`Created category "${name}"`);
   }
 
   /**
    * If the updates.board_id is not the same as oldBoardId, then the cards under this category are also moved.
    */
-  async function updateCategory(
+  /*async function updateCategory(
     categoryId: string,
     oldBoardId: string,
     updates: Partial<Database['public']['Tables']['kanban_categories']['Update']>
@@ -362,25 +350,20 @@ function createKanbanStore() {
       return d;
     });
     toast.success('Category updated');
-  }
+  }*/
 
-  async function deleteCategory(categoryId: string, boardId: string) {
+  async function deleteCategory(categoryId: string) {
+    const t = toast.loading('Deleting category')
     const { error } = await supabase
       .from('kanban_categories')
       .delete()
       .eq('id', categoryId);
+    toast.dismiss(t)
     if (error) {
       captureException(error, { tags: { supabase: 'kanban_categories' } });
       toast.error('Could not delete category', { description: error.message });
       return;
     }
-    update(d => {
-      d.boards[boardId].categories.splice(
-        d.boards[boardId].categories.findIndex(c => c.id === categoryId),
-        1
-      );
-      return d;
-    });
     toast.success('Category deleted');
   }
 
@@ -576,6 +559,56 @@ function createKanbanStore() {
     return true;
   }
 
+  function categoryUpdateRealtime(evt: string, payload: any) {
+    type Cat = Database['public']['Tables']['kanban_categories']['Row'];
+    if (typeof payload !== 'object' || payload === null) return;
+    switch (evt) {
+      case 'INSERT':
+        {
+          if (
+            payload.operation !== 'INSERT' ||
+            typeof payload.record !== 'object' ||
+            payload.record === null ||
+            payload.table !== 'kanban_categories'
+          )
+            return;
+          const cat = payload.record as Cat;
+          update(d => {
+            const b = d.boards[cat.board_id]
+            const newCat: Category = {
+              ...cat,
+              cards: []
+            }
+            if (b && b.categories.length > newCat.position) b.categories.splice(newCat.position, 0, {...newCat})
+            else b?.categories.push(newCat)
+            return d;
+          });
+        }
+        break;
+      case 'DELETE':
+        {
+          if (
+            payload.operation !== 'DELETE' ||
+            typeof payload.old_record !== 'object' ||
+            payload.old_record === null ||
+            payload.table !== 'kanban_categories'
+          )
+            return;
+          const cat = payload.old_record as Category;
+          update(d => {
+            const b = d.boards[cat.board_id]
+            if (!b) return d;
+            const ci = b.categories.findIndex(c => c.id === cat.id)
+            if (ci !== -1) b.categories.splice(ci, 1)
+            return d;
+          });
+        }
+        break;
+      default:
+        break;
+    }
+  }
+
   function cardUpdateRealtime(evt: string, payload: any) {
     if (typeof payload !== 'object' || payload === null) return;
     switch (evt) {
@@ -683,7 +716,7 @@ function createKanbanStore() {
     updateBoard,
     deleteBoard,
     createCategory,
-    updateCategory,
+    // updateCategory,
     deleteCategory,
     createCard,
     updateCard,
@@ -691,6 +724,7 @@ function createKanbanStore() {
     addMember,
     removeMember,
     realtime: {
+      category: categoryUpdateRealtime,
       card: cardUpdateRealtime
     }
   };

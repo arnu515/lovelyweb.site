@@ -286,7 +286,7 @@
     selectedCategoryForNewCard = '';
   }
 
-  async function deleteCard(cardId: string, categoryId: string) {
+  async function deleteCard(cardId: string) {
     if (!activeBoard) return;
     loading.deleteCard = true;
     await kanban.deleteCard(cardId);
@@ -296,7 +296,7 @@
   async function deleteCategory(categoryId: string) {
     if (!activeBoard) return;
     loading.deleteCategory = true;
-    await kanban.deleteCategory(categoryId, activeBoard);
+    await kanban.deleteCategory(categoryId);
     loading.deleteCategory = false;
   }
 
@@ -737,7 +737,7 @@
                     />
                     <ContextMenu.Item
                       class="flex h-9 w-full items-center gap-2 rounded-md p-2 text-left text-sm text-red-600 hover:bg-gray-200/60 dark:text-red-400 dark:hover:bg-gray-700/60"
-                      on:click={() => deleteCard(card.id, category.id)}
+                      on:click={() => deleteCard(card.id)}
                       disabled={loading.deleteCard}
                     >
                       {#if loading.deleteCard}

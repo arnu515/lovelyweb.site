@@ -21,7 +21,9 @@ export function kanbanBoard(boardId: string) {
     .channel(`kanban-cat:${boardId}`, {
       config: { private: true }
     })
-    .on('broadcast', { event: '*' }, console.log)
+    .on('broadcast', { event: '*' }, e =>
+      kanban.realtime.category(e.event, e.payload)
+    )
     .subscribe();
   const cards = supabase
     .channel(`kanban-cards:${boardId}`, {
