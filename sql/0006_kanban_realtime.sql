@@ -3,8 +3,7 @@ returns trigger
 as $$
 begin
   perform realtime.broadcast_changes(
-    'kanban-board-membership:' || org_id || ':'
-      || coalesce(new.user_id || old.user_id),
+    'kanban-board-membership:' || coalesce(new.user_id, old.user_id),
     TG_OP,
     TG_OP,
     'kanban_board_members',
@@ -25,10 +24,7 @@ on realtime.messages
 for select to authenticated
 using (
   split_part((select realtime.topic()), ':', '1') = 'kanban-board-membership' and
-  split_part((select realtime.topic()), ':', '3')::uuid = (select auth.uid())
-  and exists(select 1 from organisations_users o where
-    o.user_id = (select auth.uid()) and
-    o.organisation_id = split_part((select realtime.topic()), ':', '2'))
+  split_part((select realtime.topic()), ':', '2')::uuid = (select auth.uid())
 );
 
 create function rt_kanban_categories()
