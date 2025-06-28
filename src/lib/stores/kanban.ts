@@ -229,26 +229,16 @@ function createKanbanStore() {
     return boardId;
   }
 
-  async function updateBoard(
-    boardId: string,
-    updates: Partial<Database['public']['Tables']['kanban_boards']['Update']>
-  ) {
-    const { error } = await supabase
-      .from('kanban_boards')
-      .update(updates)
-      .eq('id', boardId);
+  async function updateBoardName(board_id: string, new_name: string) {
+    const { error } = await supabase.rpc('update_board_name', {
+      board_id,
+      new_name
+    });
     if (error) {
-      captureException(error, { tags: { supabase: 'kanban_boards' } });
+      captureException(error, { tags: { supabase: 'update_board_name' } });
       toast.error('Could not update board', { description: error.message });
       return;
     }
-    update(d => {
-      d.boards[boardId] = {
-        ...d.boards[boardId],
-        ...updates
-      };
-      return d;
-    });
     toast.success('Board updated');
   }
 
@@ -260,13 +250,14 @@ function createKanbanStore() {
     if (error) {
       captureException(error, { tags: { supabase: 'kanban_boards' } });
       toast.error('Could not delete board', { description: error.message });
-      return;
+      return false;
     }
     update(d => {
       delete d.boards[boardId];
       return d;
     });
     toast.success('Board deleted');
+    return true;
   }
 
   async function createCategory({
@@ -575,8 +566,8 @@ function createKanbanStore() {
     if (
       typeof payload !== 'object' ||
       payload === null ||
-      evt === 'UPDATE' ||
-      payload.operation !== 'INSERT' ||
+      evt !== 'UPDATE' ||
+      payload.operation !== 'UPDATE' ||
       typeof payload.old_record !== 'object' ||
       payload.old_record === null ||
       typeof payload.record !== 'object' ||
@@ -759,7 +750,7 @@ function createKanbanStore() {
     fetchCategory,
     fetchAll,
     createBoard,
-    updateBoard,
+    updateBoardName,
     deleteBoard,
     createCategory,
     // updateCategory,

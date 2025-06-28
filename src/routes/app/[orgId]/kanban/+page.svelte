@@ -78,6 +78,7 @@
   };
   let selectedCard: (Card & { tags: string }) | null = null;
   let selectedCategoryForNewCard = '';
+  let editBoardName = '';
 
   // Available colors for categories
   const categoryColors = [
@@ -103,7 +104,8 @@
     moveCardToBoard: false,
     deleteCard: false,
     addMember: false,
-    removeMember: false
+    removeMember: false,
+    updateBoardName: false
   };
   $: orgId = $page.params.orgId;
   $: error = $kanban?.error ?? null;
@@ -419,7 +421,7 @@
           Lovely Kanban
         </h1>
 
-        {#if activeBoard}
+        {#if Object.keys($kanban.boards).length}
           <div class="relative">
             <DropdownMenu.Root>
               <DropdownMenu.Trigger
@@ -504,7 +506,10 @@
           <Button
             variant="ghost"
             size="icon"
-            on:click={() => (showBoardSettingsDialog = true)}
+            on:click={() => {
+              editBoardName = currentBoard.name;
+              showBoardSettingsDialog = true;
+            }}
             class="h-9 w-9 hover:bg-white/20 dark:hover:bg-gray-700/60"
           >
             <Settings class="h-4 w-4" />
@@ -1226,11 +1231,52 @@
         <!-- Board Settings Section -->
         <div class="space-y-2">
           <Label for="settings-board-name">Board Name</Label>
-          <Input
-            id="settings-board-name"
-            bind:value={currentBoard.name}
-            class="glass dark:glass-dark"
-          />
+          <div class="flex items-center gap-2">
+            <Input
+              id="settings-board-name"
+              bind:value={editBoardName}
+              placeholder={currentBoard.name}
+              class="glass dark:glass-dark"
+            />
+            {#if editBoardName.trim() && currentBoard && editBoardName.trim() !== currentBoard.name}
+              <Button
+                size="sm"
+                class="ml-1"
+                on:click={async () => {
+                  loading.updateBoardName = true;
+                  await kanban.updateBoardName(
+                    currentBoard.id,
+                    editBoardName.trim()
+                  );
+                  loading.updateBoardName = false;
+                }}
+                disabled={loading.updateBoardName}
+                variant="default"
+                title="Save board name"
+              >
+                {#if loading.updateBoardName}
+                  <span class="mr-2 animate-spin">
+                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24">
+                      <circle
+                        class="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        stroke-width="4"
+                      />
+                      <path
+                        class="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8v8z"
+                      />
+                    </svg>
+                  </span>
+                {/if}
+                Save
+              </Button>
+            {/if}
+          </div>
         </div>
         <!-- Members Section -->
         <div class="space-y-2">
@@ -1339,6 +1385,52 @@
           </div>
         </div>
       </div>
+      <!-- Delete Board Section -->
+      {#if currentBoard}
+        <div class="mt-8">
+          <div class="flex flex-col gap-2">
+            <Button
+              variant="destructive"
+              class="w-full"
+              disabled={currentBoard.members.length !== 1 || loading.deleteBoard}
+              on:click={async () => {
+                loading.deleteBoard = true;
+                if (await kanban.deleteBoard(currentBoard.id)) {
+                  activeBoard = '';
+                  showBoardSettingsDialog = false;
+                }
+                loading.deleteBoard = false;
+              }}
+            >
+              {#if loading.deleteBoard}
+                <span class="mr-2 animate-spin">
+                  <svg width="16" height="16" fill="none" viewBox="0 0 24 24">
+                    <circle
+                      class="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      stroke-width="4"
+                    />
+                    <path
+                      class="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v8z"
+                    />
+                  </svg>
+                </span>
+              {/if}
+              <Trash2 class="mr-2 h-4 w-4" />
+              Delete Board
+            </Button>
+            <p class="text-xs text-gray-500 dark:text-gray-400">
+              You can only delete the board if you are the only member. Remove all
+              other members first.
+            </p>
+          </div>
+        </div>
+      {/if}
     {/if}
   </Dialog.Content>
 </Dialog.Root>

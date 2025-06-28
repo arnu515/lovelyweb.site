@@ -1,3 +1,34 @@
+create function rt_kanban_boards()
+returns trigger
+as $$
+begin
+  perform realtime.broadcast_changes(
+    'kanban-board:' || coalesce(new.id, old.id),
+    TG_OP,
+    TG_OP,
+    'kanban_boards',
+    'public',
+    new,
+    old
+  );
+  return new;
+end $$ language plpgsql security definer;
+
+create trigger rt_kanban_boards
+after update on kanban_boards
+for each row
+execute function rt_kanban_boards();
+
+create policy "Kanban Boards"
+on realtime.messages
+for select to authenticated
+using (
+  split_part((select realtime.topic()), ':', '1') = 'kanban-boards'
+  and exists(select 1 from kanban_board_members b where
+    b.user_id = (select auth.uid()) and
+    b.board_id = split_part((select realtime.topic()), ':', '2'))
+);
+
 create function rt_kanban_board_membership()
 returns trigger
 as $$
