@@ -15,7 +15,7 @@ export function kanbanBoardMemberships(orgId: string, userId: string) {
   return () => supabase.removeChannel(memberships);
 }
 
-export function kanbanBoard(boardId: string, userId: string) {
+export function kanbanBoard(boardId: string) {
   if (!isBrowser()) return;
   const cat = supabase
     .channel(`kanban-cat:${boardId}`, {
@@ -28,7 +28,7 @@ export function kanbanBoard(boardId: string, userId: string) {
       config: { private: true }
     })
     .on('broadcast', { event: '*' }, e =>
-      kanban.realtime.card(e.event, e.payload, userId)
+      kanban.realtime.card(e.event, e.payload)
     )
     .subscribe();
 

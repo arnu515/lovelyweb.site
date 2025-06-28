@@ -403,7 +403,8 @@ function createKanbanStore() {
     tags?: string[];
     created_by: string;
   }) {
-    const cardId = crypto.randomUUID();
+    const t = toast.loading("Creating card", { dismissable: false })
+    const cardId = nanoid();
     const board = await fetchBoard(board_id);
     if (!board) {
       toast.error('Could not create card', {
@@ -430,19 +431,16 @@ function createKanbanStore() {
       position: maxPos + 1
     };
     const { error } = await supabase.from('kanban_cards').insert(newCard);
+    toast.dismiss(t);
     if (error) {
       captureException(error, { tags: { supabase: 'kanban_create_card' } });
       toast.error('Could not create card', { description: error.message });
       return;
     }
-    update(d => {
-      d.boards[board.id].categories
-        .find(i => i.id === category_id)
-        ?.cards.push(newCard);
-      return d;
-    });
     toast.success(`Created card "${title}"`);
   }
+
+  const cardsOptimisticallyUpdated: Set<string> = new Set();
 
   async function updateCard(
     cardId: string,
@@ -459,6 +457,7 @@ function createKanbanStore() {
 
     const updated_at = new Date().toISOString();
 
+    cardsOptimisticallyUpdated.add(cardId)
     update(d => {
       const oldBoard = d.boards[boardId];
       if (!oldBoard) return d;
@@ -505,6 +504,7 @@ function createKanbanStore() {
       .eq('id', cardId);
 
     if (error) {
+      cardsOptimisticallyUpdated.delete(cardId)
       update(d => {
         if (newCategory !== undefined && newCardIdx) {
           newCategory.cards.splice(newCardIdx, 1);
@@ -524,20 +524,14 @@ function createKanbanStore() {
     return true;
   }
 
-  async function deleteCard(cardId: string, categoryId: string, boardId: string) {
+  async function deleteCard(cardId: string) {
+    const t = toast.loading("Deleting card", { dismissable: false })
     const { error } = await supabase.from('kanban_cards').delete().eq('id', cardId);
+    toast.dismiss(t)
     if (error) {
       captureException(error, { tags: { supabase: 'kanban_delete_card' } });
       toast.error('Could not delete card', { description: error.message });
     }
-    update(d => {
-      const cat = d.boards[boardId].categories.find(c => c.id === categoryId);
-      if (!cat) return d;
-      const cardIndex = cat.cards.findIndex(card => card.id === cardId);
-      if (cardIndex === -1) return d;
-      cat.cards.splice(cardIndex, 1);
-      return d;
-    });
     toast.success('Card deleted');
   }
 
@@ -582,7 +576,7 @@ function createKanbanStore() {
     return true;
   }
 
-  function cardUpdateRealtime(evt: string, payload: any, userId: string) {
+  function cardUpdateRealtime(evt: string, payload: any) {
     if (typeof payload !== 'object' || payload === null) return;
     switch (evt) {
       case 'INSERT':
@@ -595,7 +589,6 @@ function createKanbanStore() {
           )
             return;
           const newCard = payload.record as Card;
-          if (newCard.created_by === userId) return;
           update(d => {
             const cat = d.boards[newCard.board_id].categories.find(
               i => i.id === newCard.category_id
@@ -620,7 +613,10 @@ function createKanbanStore() {
             return;
           const oldCard = payload.old_record as Card;
           const newCard = payload.record as Card;
-          if (newCard.created_by === userId) return;
+          if (cardsOptimisticallyUpdated.has(oldCard.id)) {
+            cardsOptimisticallyUpdated.delete(oldCard.id)
+            return
+          }
           update(d => {
             if (
               oldCard.category_id === newCard.category_id &&
@@ -661,7 +657,6 @@ function createKanbanStore() {
           )
             return;
           const oldCard = payload.old_record as Card;
-          if (oldCard.created_by === userId) return;
           update(d => {
             const cat = d.boards[oldCard.board_id].categories.find(
               i => i.id === oldCard.category_id

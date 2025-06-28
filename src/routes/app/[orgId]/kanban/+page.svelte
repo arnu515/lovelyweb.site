@@ -116,7 +116,7 @@
     if (activeBoard) {
       loading.all = false;
       Object.keys(boards).forEach(k => {
-        realtimeSubscriptions[k] = realtime.kanbanBoard(k, data.auth.user.id);
+        realtimeSubscriptions[k] = realtime.kanbanBoard(k);
       });
       return;
     }
@@ -125,7 +125,7 @@
       const { boards } = get(kanban);
       if (!activeBoard) activeBoard = Object.keys(boards)[0] ?? null;
       Object.keys(boards).forEach(k => {
-        realtimeSubscriptions[k] = realtime.kanbanBoard(k, data.auth.user.id);
+        realtimeSubscriptions[k] = realtime.kanbanBoard(k);
       });
       memberIds = new Set(boards[activeBoard].members.map(u => u.id));
       loading.all = false;
@@ -289,7 +289,7 @@
   async function deleteCard(cardId: string, categoryId: string) {
     if (!activeBoard) return;
     loading.deleteCard = true;
-    await kanban.deleteCard(cardId, categoryId, activeBoard);
+    await kanban.deleteCard(cardId);
     loading.deleteCard = false;
   }
 
