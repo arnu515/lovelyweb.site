@@ -1,18 +1,13 @@
 import {
   get,
   writable,
-  type Writable,
-  type Updater,
-  type Readable
 } from 'svelte/store';
-import { page } from '$app/stores';
 import { createBrowserClient, isBrowser } from '@supabase/ssr';
 import { PUBLIC_SUPABASE_ANON_KEY, PUBLIC_SUPABASE_URL } from '$env/static/public';
 import type { Database } from '$lib/database.types';
 import { captureException } from '@sentry/sveltekit';
 import { toast } from 'svelte-sonner';
 import { nanoid } from 'nanoid';
-import type { lv } from 'date-fns/locale';
 
 const supabase = createBrowserClient<Database>(
   PUBLIC_SUPABASE_URL,
@@ -456,6 +451,7 @@ function createKanbanStore() {
     cardId: string,
     categoryId: string,
     boardId: string,
+    userId: string,
     updates: Partial<Database['public']['Tables']['kanban_cards']['Update']>
   ): Promise<boolean> {
     let oldCard: Card | undefined = undefined;
@@ -463,6 +459,8 @@ function createKanbanStore() {
       newCardIdx: number = -1;
     let oldCategory: Category | undefined = undefined,
       newCategory: Category | undefined = undefined;
+
+    const updated_at = new Date().toISOString()
 
     update(d => {
       const oldBoard = d.boards[boardId];
@@ -485,20 +483,28 @@ function createKanbanStore() {
         if (newCategory) {
           newCategory.cards.push({
             ...oldCard,
-            ...updates
+            ...updates,
+            created_by: userId,
+            updated_at
           });
           newCardIdx = newCategory.cards.length - 1;
         }
         oldCategory.cards.splice(oldCardIdx, 1);
       } else if (oldCardIdx !== -1) {
         Object.assign(oldCategory.cards[oldCardIdx], updates);
+        oldCategory.cards[oldCardIdx].created_by = userId
+        oldCategory.cards[oldCardIdx].updated_at = updated_at
       }
       return d;
     });
 
     const { error } = await supabase
       .from('kanban_cards')
-      .update(updates)
+      .update({
+        ...updates,
+        created_by: userId,
+        updated_at
+      })
       .eq('id', cardId);
 
     if (error) {
@@ -579,6 +585,66 @@ function createKanbanStore() {
     return true;
   }
 
+  function cardUpdateRealtime(evt: string, payload: any, userId: string) {
+    if (typeof payload !== 'object' || payload === null) return
+    switch(evt) {
+    case "INSERT": {
+      if (payload.operation !== "INSERT" || typeof payload.record !== 'object' || payload.record === null || payload.table !== 'kanban_cards') return;
+      const newCard = payload.record as Card
+      if (newCard.created_by === userId) return;
+      update(d => {
+        const cat = d.boards[newCard.board_id].categories
+          .find(i => i.id === newCard.category_id)
+        if (cat && cat.cards.length > newCard.position) cat.cards.splice(newCard.position, 0, { ...newCard })
+        else cat?.cards.push({ ...newCard })
+        return d;
+      });
+    } break;
+    case "UPDATE": {
+      if (payload.operation !== "UPDATE" || typeof payload.old_record !== 'object' || payload.old_record === null || typeof payload.record !== 'object' || payload.record === null || payload.table !== 'kanban_cards') return;
+      const oldCard = payload.old_record as Card
+      const newCard = payload.record as Card
+      if (newCard.created_by === userId) return;
+      update(d => {
+        if (oldCard.category_id === newCard.category_id && oldCard.position === newCard.position) {
+          const cat = d.boards[oldCard.board_id].categories
+            .find(i => i.id === oldCard.category_id)
+          if (!cat) return d;
+          const cI = cat.cards.findIndex((c) => c.id === oldCard.id)
+          if (cI !== -1) Object.assign(cat.cards[cI], newCard)
+        } else {
+          const oldCat = d.boards[oldCard.board_id].categories
+            .find(i => i.id === oldCard.category_id)
+          if (oldCat) {
+            const ci = oldCat.cards.findIndex(c => c.id === oldCard.id)
+            if (ci !== -1) oldCat.cards.splice(ci, 1)
+          }
+          const newCat = d.boards[newCard.board_id].categories
+            .find(i => i.id === newCard.category_id)
+          if (newCat && newCat.cards.length > newCard.position) newCat.cards.splice(newCard.position, 0, { ...newCard })
+          else newCat?.cards.push({ ...newCard })
+        }
+        return d;
+      });
+    } break;
+    case "DELETE": {
+      if (payload.operation !== "DELETE" || typeof payload.old_record !== 'object' || payload.old_record === null || payload.table !== 'kanban_cards') return;
+      const oldCard = payload.old_record as Card
+      if (oldCard.created_by === userId) return;
+      update(d => {
+        const cat = d.boards[oldCard.board_id].categories
+          .find(i => i.id === oldCard.category_id)
+        if (!cat) return d;
+        const cI = cat.cards.findIndex((c) => c.id === oldCard.id)
+        if (cI !== -1) cat.cards.splice(cI, 1)
+        return d;
+      });
+    } break;
+    default:
+      break
+    }
+  }
+
   // --- Expose store API ---
   return {
     subscribe,
@@ -595,7 +661,10 @@ function createKanbanStore() {
     updateCard,
     deleteCard,
     addMember,
-    removeMember
+    removeMember,
+    realtime: {
+      card: cardUpdateRealtime
+    }
   };
 }
 

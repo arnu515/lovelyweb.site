@@ -6,23 +6,18 @@
   import * as Dialog from '$lib/components/ui/dialog';
   import * as ContextMenu from '$lib/components/ui/context-menu';
   import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-  import * as Select from '$lib/components/ui/select';
   import { Badge } from '$lib/components/ui/badge';
   import {
     Plus,
     MoreVertical,
-    Users,
     Settings,
     Trash2,
     Move,
     Sparkles,
     FileEdit as Edit,
-    X,
     UserPlus,
     UserMinus,
     Calendar,
-    Tag,
-    ChevronDown,
     Kanban,
     ChevronsUpDown,
     RefreshCw
@@ -30,10 +25,8 @@
   import { cn } from '$lib/utils';
   import { toast } from 'svelte-sonner';
   import * as Switch from '$lib/components/ui/switch';
-
   import { kanban, type Card, type Member } from '$lib/stores/kanban';
-  import { get } from 'svelte/store';
-  import { onMount } from 'svelte';
+  import { onDestroy, onMount } from 'svelte';
   import { page } from '$app/stores';
   import * as Skeleton from '$lib/components/ui/skeleton';
   import { captureException } from '@sentry/sveltekit';
@@ -43,7 +36,8 @@
     PUBLIC_SUPABASE_ANON_KEY
   } from '$env/static/public';
   import type { Database } from '$lib/database.types.js';
-  import MobileTopNav from '$lib/components/dashboard/MobileTopNav.svelte';
+  import * as realtime from '$lib/realtime';
+  import { get } from 'svelte/store';
 
   export let data;
 
@@ -53,6 +47,7 @@
   );
 
   let activeBoard = '';
+  let realtimeSubscriptions: Record<string, (() => unknown) | undefined> = {};
   let draggedCard: Card | null = null;
   let draggedFromCategory: string | null = null;
 
@@ -116,17 +111,30 @@
 
   onMount(() => {
     fetchAllOrgUsers();
-    activeBoard = Object.keys($kanban.boards)[0] ?? null;
+    const { boards } = get(kanban)
+    activeBoard = Object.keys(boards)[0] ?? null;
     if (activeBoard) {
       loading.all = false;
+      Object.keys(boards).forEach(k => {
+         realtimeSubscriptions[k] = realtime.kanbanBoard(k, data.auth.user.id);
+      })
       return;
     }
     loading.all = true;
     kanban.fetchAll(orgId).then(() => {
-      if (!activeBoard) activeBoard = Object.keys($kanban.boards)[0] ?? null;
-      memberIds = new Set($kanban.boards[activeBoard].members.map(u => u.id));
+      const { boards } = get(kanban)
+      if (!activeBoard) activeBoard = Object.keys(boards)[0] ?? null;
+      Object.keys(boards).forEach(k => {
+         realtimeSubscriptions[k] = realtime.kanbanBoard(k, data.auth.user.id);
+      })
+      memberIds = new Set(boards[activeBoard].members.map(u => u.id));
       loading.all = false;
     });
+  });
+
+  onDestroy(() => {
+    Object.values(realtimeSubscriptions).forEach(i => i?.());
+    realtimeSubscriptions = {};
   });
 
   async function fetchAllOrgUsers() {
@@ -208,7 +216,7 @@
       c => c.id === toCategoryId
     );
     if (!newCat) return;
-    await kanban.updateCard(cardId, fromCategoryId, activeBoard, {
+    await kanban.updateCard(cardId, fromCategoryId, activeBoard, data.auth.user.id, {
       position: newCat.cards.length,
       category_id: newCat.id
     });
@@ -304,6 +312,7 @@
       selectedCard.id,
       selectedCard.category_id,
       activeBoard,
+      data.auth.user.id,
       {
         title: selectedCard.title,
         description: selectedCard.description,
@@ -354,7 +363,7 @@
       });
       return;
     }
-    await kanban.updateCard(card.id, card.category_id, targetBoardId, {
+    await kanban.updateCard(card.id, card.category_id, targetBoardId, data.auth.user.id, {
       board_id: board.id,
       category_id: board.categories[0].id,
       position: board.categories[0].cards.length
@@ -477,7 +486,7 @@
   <div class="flex-1 overflow-hidden">
     {#if loading.all}
       <div class="flex h-full space-x-4 overflow-x-auto p-2 sm:p-4">
-        {#each Array(3) as _, i}
+        {#each Array(3) as _}
           <div
             class="flex w-full min-w-80 max-w-xs flex-col sm:min-w-80 sm:max-w-xs"
           >
@@ -485,7 +494,7 @@
             <div
               class="flex-1 space-y-3 overflow-y-auto rounded-lg bg-gray-100/50 p-3 dark:bg-gray-800/50"
             >
-              {#each Array(2) as _, j}
+              {#each Array(2) as _}
                 <Skeleton.Skeleton class="h-20 rounded-lg" />
               {/each}
             </div>

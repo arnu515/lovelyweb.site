@@ -3,6 +3,7 @@
   import MobileTopNav from '$lib/components/dashboard/MobileTopNav.svelte';
   import type { LayoutData } from './$types';
   import { onMount } from 'svelte';
+  import * as realtime from '$lib/realtime';
 
   export let data: LayoutData;
 
@@ -19,8 +20,14 @@
     checkMobile();
     window.addEventListener('resize', checkMobile);
 
+    const boardMembershipsUnsub = realtime.kanbanBoardMemberships(
+      data.org.id,
+      data.auth.user.id
+    );
+
     return () => {
       window.removeEventListener('resize', checkMobile);
+      boardMembershipsUnsub?.();
     };
   });
 </script>
