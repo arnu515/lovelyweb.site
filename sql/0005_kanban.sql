@@ -192,11 +192,9 @@ on kanban_cards
 for update
 to authenticated
 using (
-  (created_by = (select auth.uid())) and
   exists(select 1 from kanban_categories c where c.id = category_id and c.board_id = kanban_cards.board_id) and
   (select private.is_kanban_board_member(board_id, (select auth.uid())))
 ) with check (
-  (created_by = (select auth.uid())) and
   exists(select 1 from kanban_categories c where c.id = category_id and c.board_id = kanban_cards.board_id) and
   (select private.is_kanban_board_member(board_id, (select auth.uid())))
 );
