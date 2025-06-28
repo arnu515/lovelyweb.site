@@ -5,7 +5,7 @@ import { kanban } from './stores/kanban';
 const supabase = createBrowserClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY);
 
 export function kanbanBoardMemberships(orgId: string, userId: string) {
-  if (!isBrowser()) return
+  if (!isBrowser()) return;
   const memberships = supabase
     .channel(`kanban-board-membership:${orgId}:${userId}`, {
       config: { private: true }
@@ -16,7 +16,7 @@ export function kanbanBoardMemberships(orgId: string, userId: string) {
 }
 
 export function kanbanBoard(boardId: string, userId: string) {
-  if (!isBrowser()) return
+  if (!isBrowser()) return;
   const cat = supabase
     .channel(`kanban-cat:${boardId}`, {
       config: { private: true }
@@ -27,7 +27,9 @@ export function kanbanBoard(boardId: string, userId: string) {
     .channel(`kanban-cards:${boardId}`, {
       config: { private: true }
     })
-    .on('broadcast', { event: '*' }, (e) => kanban.realtime.card(e.event, e.payload, userId))
+    .on('broadcast', { event: '*' }, e =>
+      kanban.realtime.card(e.event, e.payload, userId)
+    )
     .subscribe();
 
   return () => {

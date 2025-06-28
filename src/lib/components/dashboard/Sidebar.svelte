@@ -35,7 +35,7 @@
   export let user: NonNullable<App.Locals['auth']['user']>;
   export let isOpen = true;
   export let isMobile = false;
-  export let orgs: Promise<Org[]>;
+  export let orgs: PromiseLike<Org[]>;
   export let currentOrg: Org & { owner_id: string };
 
   let orgDropdownOpen = false;

@@ -111,22 +111,22 @@
 
   onMount(() => {
     fetchAllOrgUsers();
-    const { boards } = get(kanban)
+    const { boards } = get(kanban);
     activeBoard = Object.keys(boards)[0] ?? null;
     if (activeBoard) {
       loading.all = false;
       Object.keys(boards).forEach(k => {
-         realtimeSubscriptions[k] = realtime.kanbanBoard(k, data.auth.user.id);
-      })
+        realtimeSubscriptions[k] = realtime.kanbanBoard(k, data.auth.user.id);
+      });
       return;
     }
     loading.all = true;
     kanban.fetchAll(orgId).then(() => {
-      const { boards } = get(kanban)
+      const { boards } = get(kanban);
       if (!activeBoard) activeBoard = Object.keys(boards)[0] ?? null;
       Object.keys(boards).forEach(k => {
-         realtimeSubscriptions[k] = realtime.kanbanBoard(k, data.auth.user.id);
-      })
+        realtimeSubscriptions[k] = realtime.kanbanBoard(k, data.auth.user.id);
+      });
       memberIds = new Set(boards[activeBoard].members.map(u => u.id));
       loading.all = false;
     });
@@ -216,10 +216,16 @@
       c => c.id === toCategoryId
     );
     if (!newCat) return;
-    await kanban.updateCard(cardId, fromCategoryId, activeBoard, data.auth.user.id, {
-      position: newCat.cards.length,
-      category_id: newCat.id
-    });
+    await kanban.updateCard(
+      cardId,
+      fromCategoryId,
+      activeBoard,
+      data.auth.user.id,
+      {
+        position: newCat.cards.length,
+        category_id: newCat.id
+      }
+    );
   }
 
   async function createBoard() {
@@ -363,11 +369,17 @@
       });
       return;
     }
-    await kanban.updateCard(card.id, card.category_id, targetBoardId, data.auth.user.id, {
-      board_id: board.id,
-      category_id: board.categories[0].id,
-      position: board.categories[0].cards.length
-    });
+    await kanban.updateCard(
+      card.id,
+      card.category_id,
+      targetBoardId,
+      data.auth.user.id,
+      {
+        board_id: board.id,
+        category_id: board.categories[0].id,
+        position: board.categories[0].cards.length
+      }
+    );
     loading.moveCardToBoard = false;
   }
 </script>
