@@ -50,7 +50,7 @@ begin
       new,
       null
     );
-  else 
+  else
     perform realtime.broadcast_changes(
       'kanban-cat:' || coalesce(new.board_id, old.board_id),
       TG_OP,
@@ -102,7 +102,7 @@ begin
       new,
       null
     );
-  else 
+  else
     perform realtime.broadcast_changes(
       'kanban-cards:' || coalesce(new.board_id, old.board_id),
       TG_OP,
@@ -121,18 +121,10 @@ after insert or update or delete on kanban_cards
 for each row
 execute function rt_kanban_cards();
 
-create function aaa(topic text, user_id uuid) returns boolean
-language plpgsql security definer as $$
-begin
-  raise exception 'REALTIME (%, %)', topic, user_id;
-  return true;
-end $$;
-
 create policy "Kanban Cards"
 on realtime.messages
 for select to authenticated
 using (
-  aaa((select realtime.topic()), (select auth.uid())) and
   split_part((select realtime.topic()), ':', '1') = 'kanban-cards'
   and exists(select 1 from kanban_board_members b where
     b.user_id = (select auth.uid()) and

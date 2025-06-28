@@ -110,12 +110,23 @@
   $: currentBoard = $kanban.boards[activeBoard];
 
   onMount(() => {
+    loading.all = false;
     fetchAllOrgUsers();
+    kanban.setAddedToBoardHandler((b: string) => {
+      realtimeSubscriptions[b]?.()
+      realtimeSubscriptions[b] = realtime.kanbanBoard(b)
+      toast.success("You were added to a board");
+    })
+    kanban.setRemovedFromBoardHandler((b: string) => {
+      toast.warning("You were removed from a board");
+      realtimeSubscriptions[b]?.()
+      delete realtimeSubscriptions[b]
+    })
     const { boards } = get(kanban);
     activeBoard = Object.keys(boards)[0] ?? null;
     if (activeBoard) {
-      loading.all = false;
       Object.keys(boards).forEach(k => {
+        realtimeSubscriptions[k]?.()
         realtimeSubscriptions[k] = realtime.kanbanBoard(k);
       });
       return;
@@ -124,6 +135,10 @@
     kanban.fetchAll(orgId).then(() => {
       const { boards } = get(kanban);
       if (!activeBoard) activeBoard = Object.keys(boards)[0] ?? null;
+      if (!activeBoard) {
+        loading.all = false;
+        return
+      }
       Object.keys(boards).forEach(k => {
         realtimeSubscriptions[k] = realtime.kanbanBoard(k);
       });
@@ -135,6 +150,8 @@
   onDestroy(() => {
     Object.values(realtimeSubscriptions).forEach(i => i?.());
     realtimeSubscriptions = {};
+    kanban.setAddedToBoardHandler(null)
+    kanban.setRemovedFromBoardHandler(null)
   });
 
   async function fetchAllOrgUsers() {
@@ -231,7 +248,7 @@
   async function createBoard() {
     if (!newBoardForm.name.trim()) return;
     loading.createBoard = true;
-    await kanban.createBoard({
+    const boardId = await kanban.createBoard(orgId, {
       name: newBoardForm.name,
       owner_id: data.auth.user.id,
       useOnboardingTemplate: newBoardForm.useOnboardingTemplate
@@ -239,6 +256,7 @@
     loading.createBoard = false;
     showNewBoardDialog = false;
     newBoardForm = { name: '', useOnboardingTemplate: true };
+    if (boardId) activeBoard = boardId
   }
 
   async function createCategory() {
@@ -482,6 +500,7 @@
           <Plus class="h-4 w-4" />
           <span class="hidden sm:inline">Add Category</span>
         </Button>
+        {#if activeBoard && $kanban.boards[activeBoard].owner_id === data.auth.user.id}
         <Button
           variant="ghost"
           size="icon"
@@ -490,6 +509,7 @@
         >
           <Settings class="h-4 w-4" />
         </Button>
+        {/if}
       {/if}
     </div>
   </div>
@@ -798,14 +818,16 @@
         </div>
       </div>
     {:else}
+    {@const noBoards = Object.keys($kanban.boards).length === 0}
       <div class="flex h-full items-center justify-center">
         <div class="text-center">
           <h2 class="mb-4 text-2xl font-bold text-gray-900 dark:text-white">
-            No Boards Found
+            {noBoards ? 'No Boards Found' : 'No Board Selected'}
           </h2>
           <p class="mb-6 text-gray-600 dark:text-gray-300">
-            Create your first board to get started with Kanban
+            {noBoards ? 'Create your first board to get started with Kanban' : 'Select a board from the top header bar'}
           </p>
+          {#if noBoards}
           <Button
             on:click={() => (showNewBoardDialog = true)}
             class="gradient-primary gap-2 text-white"
@@ -813,6 +835,7 @@
             <Plus class="h-4 w-4" />
             Create Board
           </Button>
+          {/if}
         </div>
       </div>
     {/if}

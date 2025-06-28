@@ -5,6 +5,7 @@ import type { Database } from '$lib/database.types';
 import { captureException } from '@sentry/sveltekit';
 import { toast } from 'svelte-sonner';
 import { nanoid } from 'nanoid';
+import { page } from '$app/stores';
 
 const supabase = createBrowserClient<Database>(
   PUBLIC_SUPABASE_URL,
@@ -39,9 +40,17 @@ function emptyData(): KanbanStoreData {
 }
 
 function createKanbanStore() {
-  let orgId: string | null = null;
-
   const { set, subscribe, update } = writable<KanbanStoreData>(emptyData());
+
+  let addedToBoardHandler: ((b: string) => void) | null = null
+  function setAddedToBoardHandler(h: typeof addedToBoardHandler) {
+    addedToBoardHandler = h
+  }
+
+  let removedFromBoardHandler: ((b: string) => void) | null = null
+  function setRemovedFromBoardHandler(h: typeof removedFromBoardHandler) {
+    removedFromBoardHandler = h
+  }
 
   async function fetchBoard(
     boardId: string,
@@ -184,7 +193,7 @@ function createKanbanStore() {
     }
   }
 
-  async function createBoard({
+  async function createBoard(orgId: string, {
     name,
     owner_id,
     useOnboardingTemplate
@@ -193,7 +202,6 @@ function createKanbanStore() {
     owner_id: string;
     useOnboardingTemplate: boolean;
   }) {
-    if (!orgId) return;
     const boardId = nanoid();
     const { error } = await (useOnboardingTemplate
       ? supabase.rpc('create_board', {
@@ -216,6 +224,7 @@ function createKanbanStore() {
     }
     await fetchBoard(boardId);
     toast.success(`Created board "${name}"`);
+    return boardId
   }
 
   async function updateBoard(
@@ -555,7 +564,7 @@ function createKanbanStore() {
       );
       return d;
     });
-    toast.success('Member added');
+    toast.success('Member Removed');
     return true;
   }
 
@@ -691,7 +700,7 @@ function createKanbanStore() {
             return;
           const oldCard = payload.old_record as Card;
           update(d => {
-            const cat = d.boards[oldCard.board_id].categories.find(
+            const cat = d.boards[oldCard.board_id]?.categories.find(
               i => i.id === oldCard.category_id
             );
             if (!cat) return d;
@@ -704,6 +713,18 @@ function createKanbanStore() {
       default:
         break;
     }
+  }
+
+  function handleMembershipRevoked(boardId: string) {
+    removedFromBoardHandler?.(boardId)
+    update(d => {
+      delete d.boards[boardId]
+      return d
+    })
+  }
+
+  function handleMembershipGranted(boardId: string) {
+    fetchBoard(boardId).then(() => addedToBoardHandler?.(boardId))
   }
 
   // --- Expose store API ---
@@ -725,8 +746,12 @@ function createKanbanStore() {
     removeMember,
     realtime: {
       category: categoryUpdateRealtime,
-      card: cardUpdateRealtime
-    }
+      card: cardUpdateRealtime,
+      handleMembershipRevoked,
+      handleMembershipGranted
+    },
+    setAddedToBoardHandler,
+    setRemovedFromBoardHandler,
   };
 }
 
