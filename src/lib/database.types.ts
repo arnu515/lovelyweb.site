@@ -507,6 +507,10 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      aaa: {
+        Args: { topic: string; user_id: string };
+        Returns: boolean;
+      };
       accept_invite: {
         Args: { org_id: string };
         Returns: undefined;
@@ -561,6 +565,10 @@ export type Database = {
       get_user_provider: {
         Args: { email: string };
         Returns: string;
+      };
+      update_board_name: {
+        Args: { new_name: string; board_id: string };
+        Returns: undefined;
       };
     };
     Enums: {

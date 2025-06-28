@@ -334,3 +334,9 @@ begin
     auth_uid
   );
 end $$ language plpgsql security invoker;
+
+create function update_board_name(new_name text, board_id text)
+returns void
+as $$
+  update kanban_boards set name = new_name where id = board_id and owner_id = (select auth.uid());
+$$ language sql security definer;
