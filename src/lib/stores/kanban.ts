@@ -5,7 +5,6 @@ import type { Database } from '$lib/database.types';
 import { captureException } from '@sentry/sveltekit';
 import { toast } from 'svelte-sonner';
 import { nanoid } from 'nanoid';
-import { page } from '$app/stores';
 
 const supabase = createBrowserClient<Database>(
   PUBLIC_SUPABASE_URL,
@@ -42,14 +41,14 @@ function emptyData(): KanbanStoreData {
 function createKanbanStore() {
   const { set, subscribe, update } = writable<KanbanStoreData>(emptyData());
 
-  let addedToBoardHandler: ((b: string) => void) | null = null
+  let addedToBoardHandler: ((b: string) => void) | null = null;
   function setAddedToBoardHandler(h: typeof addedToBoardHandler) {
-    addedToBoardHandler = h
+    addedToBoardHandler = h;
   }
 
-  let removedFromBoardHandler: ((b: string) => void) | null = null
+  let removedFromBoardHandler: ((b: string) => void) | null = null;
   function setRemovedFromBoardHandler(h: typeof removedFromBoardHandler) {
-    removedFromBoardHandler = h
+    removedFromBoardHandler = h;
   }
 
   async function fetchBoard(
@@ -193,15 +192,18 @@ function createKanbanStore() {
     }
   }
 
-  async function createBoard(orgId: string, {
-    name,
-    owner_id,
-    useOnboardingTemplate
-  }: {
-    name: string;
-    owner_id: string;
-    useOnboardingTemplate: boolean;
-  }) {
+  async function createBoard(
+    orgId: string,
+    {
+      name,
+      owner_id,
+      useOnboardingTemplate
+    }: {
+      name: string;
+      owner_id: string;
+      useOnboardingTemplate: boolean;
+    }
+  ) {
     const boardId = nanoid();
     const { error } = await (useOnboardingTemplate
       ? supabase.rpc('create_board', {
@@ -224,7 +226,7 @@ function createKanbanStore() {
     }
     await fetchBoard(boardId);
     toast.success(`Created board "${name}"`);
-    return boardId
+    return boardId;
   }
 
   async function updateBoard(
@@ -276,11 +278,11 @@ function createKanbanStore() {
     name: string;
     color: string;
   }) {
-    const t = toast.loading('Creating category')
+    const t = toast.loading('Creating category');
     const categoryId = crypto.randomUUID();
     const board = await fetchBoard(board_id);
     if (!board) {
-      toast.dismiss(t)
+      toast.dismiss(t);
       toast.error('Could not create category', { description: 'Board not found' });
       return;
     }
@@ -293,7 +295,7 @@ function createKanbanStore() {
       color,
       position: maxPos + 1
     });
-    toast.dismiss(t)
+    toast.dismiss(t);
     if (error) {
       captureException(error, { tags: { supabase: 'kanban_categories' } });
       toast.error('Could not create category', { description: error.message });
@@ -362,12 +364,12 @@ function createKanbanStore() {
   }*/
 
   async function deleteCategory(categoryId: string) {
-    const t = toast.loading('Deleting category')
+    const t = toast.loading('Deleting category');
     const { error } = await supabase
       .from('kanban_categories')
       .delete()
       .eq('id', categoryId);
-    toast.dismiss(t)
+    toast.dismiss(t);
     if (error) {
       captureException(error, { tags: { supabase: 'kanban_categories' } });
       toast.error('Could not delete category', { description: error.message });
@@ -395,7 +397,7 @@ function createKanbanStore() {
     tags?: string[];
     created_by: string;
   }) {
-    const t = toast.loading("Creating card", { dismissable: false })
+    const t = toast.loading('Creating card', { dismissable: false });
     const cardId = nanoid();
     const board = await fetchBoard(board_id);
     if (!board) {
@@ -449,7 +451,7 @@ function createKanbanStore() {
 
     const updated_at = new Date().toISOString();
 
-    cardsOptimisticallyUpdated.add(cardId)
+    cardsOptimisticallyUpdated.add(cardId);
     update(d => {
       const oldBoard = d.boards[boardId];
       if (!oldBoard) return d;
@@ -496,7 +498,7 @@ function createKanbanStore() {
       .eq('id', cardId);
 
     if (error) {
-      cardsOptimisticallyUpdated.delete(cardId)
+      cardsOptimisticallyUpdated.delete(cardId);
       update(d => {
         if (newCategory !== undefined && newCardIdx) {
           newCategory.cards.splice(newCardIdx, 1);
@@ -517,9 +519,9 @@ function createKanbanStore() {
   }
 
   async function deleteCard(cardId: string) {
-    const t = toast.loading("Deleting card", { dismissable: false })
+    const t = toast.loading('Deleting card', { dismissable: false });
     const { error } = await supabase.from('kanban_cards').delete().eq('id', cardId);
-    toast.dismiss(t)
+    toast.dismiss(t);
     if (error) {
       captureException(error, { tags: { supabase: 'kanban_delete_card' } });
       toast.error('Could not delete card', { description: error.message });
@@ -568,6 +570,28 @@ function createKanbanStore() {
     return true;
   }
 
+  function boardUpdateRealtime(evt: string, payload: any) {
+    type Board = Database['public']['Tables']['kanban_boards']['Row'];
+    if (
+      typeof payload !== 'object' ||
+      payload === null ||
+      evt === 'UPDATE' ||
+      payload.operation !== 'INSERT' ||
+      typeof payload.old_record !== 'object' ||
+      payload.old_record === null ||
+      typeof payload.record !== 'object' ||
+      payload.record === null ||
+      payload.table !== 'kanban_boards'
+    )
+      return;
+    const board = payload.record as Board;
+    update(d => {
+      const b = d.boards[board.id];
+      if (b) Object.assign(b, board);
+      return d;
+    });
+  }
+
   function categoryUpdateRealtime(evt: string, payload: any) {
     type Cat = Database['public']['Tables']['kanban_categories']['Row'];
     if (typeof payload !== 'object' || payload === null) return;
@@ -583,13 +607,14 @@ function createKanbanStore() {
             return;
           const cat = payload.record as Cat;
           update(d => {
-            const b = d.boards[cat.board_id]
+            const b = d.boards[cat.board_id];
             const newCat: Category = {
               ...cat,
               cards: []
-            }
-            if (b && b.categories.length > newCat.position) b.categories.splice(newCat.position, 0, {...newCat})
-            else b?.categories.push(newCat)
+            };
+            if (b && b.categories.length > newCat.position)
+              b.categories.splice(newCat.position, 0, { ...newCat });
+            else b?.categories.push(newCat);
             return d;
           });
         }
@@ -605,10 +630,10 @@ function createKanbanStore() {
             return;
           const cat = payload.old_record as Category;
           update(d => {
-            const b = d.boards[cat.board_id]
+            const b = d.boards[cat.board_id];
             if (!b) return d;
-            const ci = b.categories.findIndex(c => c.id === cat.id)
-            if (ci !== -1) b.categories.splice(ci, 1)
+            const ci = b.categories.findIndex(c => c.id === cat.id);
+            if (ci !== -1) b.categories.splice(ci, 1);
             return d;
           });
         }
@@ -656,8 +681,8 @@ function createKanbanStore() {
           const oldCard = payload.old_record as Card;
           const newCard = payload.record as Card;
           if (cardsOptimisticallyUpdated.has(oldCard.id)) {
-            cardsOptimisticallyUpdated.delete(oldCard.id)
-            return
+            cardsOptimisticallyUpdated.delete(oldCard.id);
+            return;
           }
           update(d => {
             if (
@@ -716,15 +741,15 @@ function createKanbanStore() {
   }
 
   function handleMembershipRevoked(boardId: string) {
-    removedFromBoardHandler?.(boardId)
+    removedFromBoardHandler?.(boardId);
     update(d => {
-      delete d.boards[boardId]
-      return d
-    })
+      delete d.boards[boardId];
+      return d;
+    });
   }
 
   function handleMembershipGranted(boardId: string) {
-    fetchBoard(boardId).then(() => addedToBoardHandler?.(boardId))
+    fetchBoard(boardId).then(() => addedToBoardHandler?.(boardId));
   }
 
   // --- Expose store API ---
@@ -745,13 +770,14 @@ function createKanbanStore() {
     addMember,
     removeMember,
     realtime: {
+      board: boardUpdateRealtime,
       category: categoryUpdateRealtime,
       card: cardUpdateRealtime,
       handleMembershipRevoked,
       handleMembershipGranted
     },
     setAddedToBoardHandler,
-    setRemovedFromBoardHandler,
+    setRemovedFromBoardHandler
   };
 }
 
