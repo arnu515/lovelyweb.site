@@ -2,12 +2,14 @@ import { error } from '@sveltejs/kit';
 import type { PageLoad } from './$types';
 import { captureException } from '@sentry/sveltekit';
 
-export const load: PageLoad = async ({ parent, params: { orgId, notebookId } }) => {
+export const load: PageLoad = async ({ parent, params: { orgId, notebookId }, depends }) => {
   const { supabase, auth } = await parent();
   
   if (!auth.user) {
     throw error(401, 'Unauthorized');
   }
+
+  depends(`app:notebook-${notebookId}`)
 
   // Fetch notebook details
   const notebookPromise = supabase

@@ -60,11 +60,11 @@
 
   $: recentChats =
     $chatOverview?.data?.map(chat => ({
+      id: chat.id,
       name: chat.name,
       avatar: chat.is_group
         ? getGroupAvatarUrl(chat.id, chat.avatar_url)
         : chat.avatar_url,
-      slug: chat.slug,
       is_group: chat.is_group,
       // TODO: online
       online: true
@@ -304,7 +304,12 @@
         </h3>
       </div>
       <div class="space-y-1">
-        <Button variant="ghost" class="sb-btn" on:click={handleNavigation}>
+        <Button
+          href="/app/{currentOrg.id}/notes"
+          variant="ghost"
+          class={cn('sb-btn', currentPage === 'notes' && 'active')}
+          on:click={handleNavigation}
+        >
           <FileText class="icon" />
           <span>Notes</span>
         </Button>
@@ -325,15 +330,6 @@
         <Button variant="ghost" class="sb-btn" on:click={handleNavigation}>
           <Calendar class="icon" />
           <span>Calendar</span>
-        </Button>
-        <Button
-          href="/app/{currentOrg.id}/notes"
-          variant="ghost"
-          class={cn('sb-btn', currentPage === 'notes' && 'active')}
-          on:click={handleNavigation}
-        >
-          <FileText class="icon" />
-          <span>Notes</span>
         </Button>
       </div>
     </div>
@@ -365,7 +361,7 @@
             <Button
               variant="ghost"
               class="w-full justify-start text-left"
-              href="/app/{currentOrg.id}/chat/{chat.slug}"
+              href="/app/{currentOrg.id}/chat/{chat.is_group ? '-' : '@'}{chat.id}"
               on:click={handleNavigation}
             >
               <div class="relative mr-3">

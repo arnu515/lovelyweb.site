@@ -122,9 +122,9 @@
   // Use .name, get avatar like ChatSidebar, and use latest message logic
   $: recentChats =
     $chatOverview?.data?.map(chat => ({
+      id: chat.id,
       name: chat.name,
       data: chat.data,
-      slug: chat.slug,
       typ: chat.typ,
       time: chat.msg_created_at
         ? formatRelative(
@@ -272,7 +272,7 @@
         {#each recentChats as chat}
           <Button
             variant="ghost"
-            href="/app/{orgId}/chat/{chat.slug}"
+            href="/app/{orgId}/chat/{chat.is_group ? '-' : '@'}{chat.id}"
             class="flex cursor-pointer items-center gap-4 rounded-xl p-3 !py-8 transition-all duration-200 hover:bg-gray-200/50 dark:hover:bg-gray-900/50"
           >
             <div class="relative">

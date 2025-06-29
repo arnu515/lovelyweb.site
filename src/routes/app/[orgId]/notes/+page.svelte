@@ -23,6 +23,7 @@
   import { formatRelative } from 'date-fns';
   import { cn } from '$lib/utils';
   import type { Database } from '$lib/database.types';
+  import { nanoid } from 'nanoid';
 
   export let data;
 
@@ -60,6 +61,7 @@
     createLoading = true;
     try {
       const { error } = await supabase.from('notebooks').insert({
+        id: nanoid(24),
         name: notebookName.trim(),
         description: notebookDescription.trim() || null,
         color: notebookColor,
@@ -217,7 +219,7 @@
                 variant="ghost"
                 size="icon"
                 class="absolute right-2 top-2 h-8 w-8 opacity-0 transition-opacity duration-200 group-hover:opacity-100 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/30 dark:hover:text-red-400"
-                on:click|preventDefault={() => deleteNotebook(notebook.id, notebook.name)}
+                on:click={() => deleteNotebook(notebook.id, notebook.name)}
                 disabled={deleteLoading}
               >
                 <Trash2 class="h-4 w-4" />

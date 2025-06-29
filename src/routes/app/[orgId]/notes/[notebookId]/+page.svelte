@@ -4,7 +4,7 @@
   import { Label } from '$lib/components/ui/label';
   import * as Dialog from '$lib/components/ui/dialog';
   import { Skeleton } from '$lib/components/ui/skeleton';
-  import { BookOpen, Plus, Trash2, FileText, FileEdit as Edit3, Save, ArrowLeft, Eye, EyeOff } from 'lucide-svelte';
+  import { Plus, Trash2, FileText, FileEdit as Edit3, Save, ArrowLeft, Eye, EyeOff } from 'lucide-svelte';
   import { createBrowserClient } from '@supabase/ssr';
   import { 
     PUBLIC_SUPABASE_ANON_KEY, 
@@ -14,9 +14,8 @@
   import { invalidate } from '$app/navigation';
   import { cn } from '$lib/utils';
   import type { Database } from '$lib/database.types';
-  import { marked } from 'marked';
-  import DOMPurify from 'dompurify';
-  import TurndownService from 'turndown';
+  import { nanoid } from 'nanoid';
+  import { page } from '$app/stores';
 
   export let data;
 
@@ -25,6 +24,8 @@
     PUBLIC_SUPABASE_ANON_KEY
   );
 
+  $: notebookId = $page.params.notebookId
+  
   let createPageDialogOpen = false;
   let createPageLoading = false;
   let deletePageLoading = false;
@@ -38,12 +39,6 @@
   let editorContent = '';
   let isPreviewMode = false;
   let hasUnsavedChanges = false;
-
-  // Turndown service for converting HTML to Markdown
-  const turndownService = new TurndownService({
-    headingStyle: 'atx',
-    codeBlockStyle: 'fenced'
-  });
 
   $: if (selectedPageId) {
     loadPageContent(selectedPageId);
@@ -82,6 +77,7 @@
       const { data: newPage, error } = await supabase
         .from('notebook_pages')
         .insert({
+          id: nanoid(24),
           notebook_id: notebook.id,
           title: newPageTitle.trim(),
           content: '',
@@ -98,7 +94,7 @@
       newPageTitle = '';
       selectedPageId = newPage.id;
       
-      await invalidate('app:notebook');
+      await invalidate('app:notebook-' + notebookId);
     } catch (error: any) {
       toast.error('Failed to create page', {
         description: error.message
@@ -129,7 +125,7 @@
         editorContent = '';
       }
       
-      await invalidate('app:notebook');
+      await invalidate('app:notebook-' + notebookId);
     } catch (error: any) {
       toast.error('Failed to delete page', {
         description: error.message
@@ -148,7 +144,6 @@
         .from('notebook_pages')
         .update({ 
           content: editorContent,
-          updated_at: new Date().toISOString()
         })
         .eq('id', selectedPageId);
 
@@ -171,8 +166,8 @@
 
   function getRenderedContent(content: string): string {
     try {
-      const html = marked(content);
-      return DOMPurify.sanitize(html);
+      // TEMP
+      return content;
     } catch (error) {
       return '<p>Error rendering content</p>';
     }
@@ -184,7 +179,7 @@
     clearTimeout(autoSaveTimeout);
     autoSaveTimeout = setTimeout(() => {
       savePage();
-    }, 2000); // Auto-save after 2 seconds of inactivity
+    }, 10000); // Auto-save after 10 seconds of inactivity
   }
 </script>
 
@@ -272,7 +267,7 @@
                   variant="ghost"
                   size="icon"
                   class="absolute right-1 top-1 h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/30 dark:hover:text-red-400"
-                  on:click|stopPropagation={() => deletePage(page.id, page.title)}
+                  on:click={(e) => {e.stopPropagation(); deletePage(page.id, page.title)}}
                   disabled={deletePageLoading}
                 >
                   <Trash2 class="h-3 w-3" />

@@ -2,7 +2,9 @@ import { error } from '@sveltejs/kit';
 import type { PageLoad } from './$types';
 import { captureException } from '@sentry/sveltekit';
 
-export const load: PageLoad = async ({ parent, params: { orgId } }) => {
+export const load: PageLoad = async ({ parent, params: { orgId }, depends }) => {
+  depends('app:notes')
+
   const { supabase, auth } = await parent();
   
   if (!auth.user) {

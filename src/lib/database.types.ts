@@ -371,6 +371,96 @@ export type Database = {
           }
         ];
       };
+      notebook_pages: {
+        Row: {
+          content: string | null;
+          created_at: string;
+          created_by: string;
+          id: string;
+          notebook_id: string;
+          position: number;
+          title: string;
+        };
+        Insert: {
+          content?: string | null;
+          created_at?: string;
+          created_by: string;
+          id: string;
+          notebook_id: string;
+          position?: number;
+          title?: string;
+        };
+        Update: {
+          content?: string | null;
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          notebook_id?: string;
+          position?: number;
+          title?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'notebook_pages_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'notebook_pages_notebook_id_fkey';
+            columns: ['notebook_id'];
+            isOneToOne: false;
+            referencedRelation: 'notebooks';
+            referencedColumns: ['id'];
+          }
+        ];
+      };
+      notebooks: {
+        Row: {
+          color: string;
+          created_at: string | null;
+          description: string | null;
+          id: string;
+          name: string;
+          org_id: string;
+          owner_id: string;
+        };
+        Insert: {
+          color?: string;
+          created_at?: string;
+          description?: string | null;
+          id: string;
+          name: string;
+          org_id: string;
+          owner_id: string;
+        };
+        Update: {
+          color?: string;
+          created_at?: string;
+          description?: string | null;
+          id?: string;
+          name?: string;
+          org_id?: string;
+          owner_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'notebooks_org_id_fkey';
+            columns: ['org_id'];
+            isOneToOne: false;
+            referencedRelation: 'organisations';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'notebooks_owner_id_fkey';
+            columns: ['owner_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          }
+        ];
+      };
       org_invites: {
         Row: {
           created_at: string;
@@ -403,102 +493,6 @@ export type Database = {
             columns: ['org_id'];
             isOneToOne: false;
             referencedRelation: 'organisations';
-            referencedColumns: ['id'];
-          }
-        ];
-      };
-      notebook_pages: {
-        Row: {
-          content: string;
-          created_at: string;
-          created_by: string;
-          id: string;
-          notebook_id: string;
-          position: number;
-          title: string;
-          updated_at: string;
-        };
-        Insert: {
-          content?: string;
-          created_at?: string;
-          created_by: string;
-          id?: string;
-          notebook_id: string;
-          position?: number;
-          title?: string;
-          updated_at?: string;
-        };
-        Update: {
-          content?: string;
-          created_at?: string;
-          created_by?: string;
-          id?: string;
-          notebook_id?: string;
-          position?: number;
-          title?: string;
-          updated_at?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: 'notebook_pages_created_by_fkey';
-            columns: ['created_by'];
-            isOneToOne: false;
-            referencedRelation: 'users';
-            referencedColumns: ['id'];
-          },
-          {
-            foreignKeyName: 'notebook_pages_notebook_id_fkey';
-            columns: ['notebook_id'];
-            isOneToOne: false;
-            referencedRelation: 'notebooks';
-            referencedColumns: ['id'];
-          }
-        ];
-      };
-      notebooks: {
-        Row: {
-          color: string;
-          created_at: string;
-          description: string | null;
-          id: string;
-          name: string;
-          org_id: string;
-          owner_id: string;
-          updated_at: string;
-        };
-        Insert: {
-          color?: string;
-          created_at?: string;
-          description?: string | null;
-          id?: string;
-          name: string;
-          org_id: string;
-          owner_id: string;
-          updated_at?: string;
-        };
-        Update: {
-          color?: string;
-          created_at?: string;
-          description?: string | null;
-          id?: string;
-          name?: string;
-          org_id?: string;
-          owner_id?: string;
-          updated_at?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: 'notebooks_org_id_fkey';
-            columns: ['org_id'];
-            isOneToOne: false;
-            referencedRelation: 'organisations';
-            referencedColumns: ['id'];
-          },
-          {
-            foreignKeyName: 'notebooks_owner_id_fkey';
-            columns: ['owner_id'];
-            isOneToOne: false;
-            referencedRelation: 'users';
             referencedColumns: ['id'];
           }
         ];
@@ -619,6 +613,14 @@ export type Database = {
         Args: { id: string; board_name: string; org_id: string };
         Returns: undefined;
       };
+      edit_chat_message: {
+        Args: { msg_id: string; new_data: Json };
+        Returns: undefined;
+      };
+      edit_group_chat_message: {
+        Args: { msg_id: string; new_data: Json };
+        Returns: undefined;
+      };
       get_chat_overview: {
         Args: { org_id: string };
         Returns: {
@@ -632,10 +634,22 @@ export type Database = {
           msg_created_at: string;
           msg_edited_at: string;
           msg_read_at: string;
-          sender_name: string;
           sender_id: string;
+          sender_name: string;
           sender_avatar_url: string;
-          slug: string;
+        }[];
+      };
+      get_messages: {
+        Args: { slug: string };
+        Returns: {
+          id: string;
+          from_id: string;
+          to_id: string;
+          org_id: string;
+          typ: Database['public']['Enums']['msg_type'];
+          data: Json;
+          created_at: string;
+          edited_at: string;
         }[];
       };
       get_user_by_email: {
