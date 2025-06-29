@@ -2,7 +2,14 @@
   import { Button } from '$lib/components/ui/button';
   import { Input } from '$lib/components/ui/input';
   import { Badge } from '$lib/components/ui/badge';
-  import { Search, Users, MessageCircle, Home, LogOut } from 'lucide-svelte';
+  import {
+    Search,
+    Users,
+    MessageCircle,
+    Home,
+    LogOut,
+    RefreshCw
+  } from 'lucide-svelte';
   import { cn } from '$lib/utils';
   import { page } from '$app/stores';
   import * as Collapsible from '$lib/components/ui/collapsible';
@@ -229,6 +236,10 @@
       </div>
     </Collapsible.Trigger>
     <Collapsible.Content class="user-collapsible">
+      <Button on:click={() => window.location.reload()} variant="ghost">
+        <RefreshCw />
+        Refresh
+      </Button>
       <Button href="/app/{orgId}" variant="ghost">
         <Home />
         Back to Org Home

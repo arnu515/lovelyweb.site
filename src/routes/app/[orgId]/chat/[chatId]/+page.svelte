@@ -57,7 +57,7 @@
     ]) => (co ? co.dataMap[chatId] : null)
   );
   $: orgId = $page.params.orgId;
-  $: messages = chat.messages.fetch($page.params.chatId, data.auth.user!.id);
+  $: messages = chat.messages.fetch($page.params.chatId, orgId, data.auth.user!.id);
 
   function formatMessageTime(date: Date) {
     return date.toLocaleTimeString('en-US', {

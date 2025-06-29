@@ -100,3 +100,59 @@ begin
   );
 end
 $$ language plpgsql security definer;
+
+create function rt_chat_group_members()
+returns trigger
+as $$
+declare
+  group_ record;
+begin
+  if TG_OP = 'INSERT' then
+    (select g.id, g.name, g.avatar_type::text as avatar_url, 0 as unread_count, -- temp
+      m.typ, m.data, m.created_at, m.edited_at,
+      null::timestamptz as read_at -- temp
+    into group_
+    from chat_groups g
+    left join lateral (
+      select m.typ, m.data, m.created_at, m.edited_at
+      from group_messages m
+      where m.org_id = $1 and m.group_id = g.id
+      order by m.created_at desc
+      limit 1
+    ) as m on true
+    where g.id = new.group_id)
+    perform realtime.broadcast_changes(
+      'chat-group-members:' || coalesce(new.user_id, old.user_id),
+      TG_OP,
+      TG_OP,
+      '',
+      'public',
+      group_,
+      null
+    );
+  else
+    perform realtime.broadcast_changes(
+      'chat-group-members:' || coalesce(new.user_id, old.user_id),
+      TG_OP,
+      TG_OP,
+      '',
+      'public',
+      null,
+      old
+    );
+  end if;
+  return new;
+end $$ language plpgsql security definer;
+
+create trigger rt_chat_group_members
+after insert or delete on chat_group_members
+for each row
+execute function rt_chat_group_members();
+
+create policy "Chat Group Members"
+on realtime.messages
+for select to authenticated
+using (
+  split_part((select realtime.topic()), ':', '1') = 'chat-group-members'
+  and split_part((select realtime.topic()), ':', '2')::uuid = (select auth.uid())
+);
