@@ -14,6 +14,7 @@
     PUBLIC_SUPABASE_ANON_KEY,
     PUBLIC_SUPABASE_URL
   } from '$env/static/public';
+  import { onMount } from 'svelte';
 
   const supabase = createBrowserClient(
     PUBLIC_SUPABASE_URL,
@@ -25,7 +26,8 @@
   let searchQuery = '';
   let isUserCollapsibleOpen = false;
 
-  $: chats = $chat.chatOverview?.data;
+  const { chatOverview } = chat;
+  $: chats = $chatOverview?.data;
   $: filteredChats = chats
     ? chats.filter(chat => {
         const q = searchQuery.toLowerCase();
@@ -47,6 +49,10 @@
       .from('avatars')
       .getPublicUrl(`/org/${orgId}/group/${gid}.${avatar_type}`).data.publicUrl;
   }
+
+  onMount(() => {
+    if (!$chatOverview?.data) chatOverview.fetchOverview(orgId, user.id);
+  });
 </script>
 
 <aside

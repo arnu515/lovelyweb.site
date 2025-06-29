@@ -57,8 +57,6 @@
     ]) => (co ? co.dataMap[chatId] : null)
   );
   $: orgId = $page.params.orgId;
-  $: isGroup = !$page.params.chatId.startsWith('@');
-
   $: messages = chat.messages.fetch($page.params.chatId);
   $: if (messages) console.log($messages);
 
@@ -282,7 +280,7 @@
           </div>
         {:else if typeof msgs === 'string'}
           An error occured
-        {:else if msgs.length === 0 && msgQueue.length === 0}
+        {:else if msgs.length === 0}
           <div class="h-full items-center justify-center p-8 md:flex">
             <div
               class="glass dark:glass-dark mx-auto max-w-md rounded-2xl p-8 text-center"
@@ -330,7 +328,7 @@
                   class={cn(
                     'rounded-2xl px-4 py-2 shadow-sm',
                     message.from_id === user.id
-                      ? ('isOptimistic' in message && message.isOptimistic)
+                      ? 'isOptimistic' in message && message.isOptimistic
                         ? 'bg-gray-300 text-black dark:bg-gray-600 dark:text-white'
                         : 'gradient-primary text-white'
                       : 'glass dark:glass-dark text-gray-900 dark:text-white'
@@ -355,14 +353,14 @@
                   {#if 'isOptimistic' in message && message.isOptimistic}
                     <em class="text-xs text-gray-500">sending...</em>
                   {:else}
-                  <!-- TODO: edit indicator -->
-                  {#if true}
-                    <em class="text-xs text-gray-500">edited</em>
-                  {/if}
-                  <!-- TODO: read indicator -->
-                  {#if message.from_id === user.id && true}
-                    <span class="text-xs text-blue-500"><CheckCheck /></span>
-                  {/if}
+                    <!-- TODO: edit indicator -->
+                    {#if true}
+                      <em class="text-xs text-gray-500">edited</em>
+                    {/if}
+                    <!-- TODO: read indicator -->
+                    {#if message.from_id === user.id && true}
+                      <span class="text-xs text-blue-500"><CheckCheck /></span>
+                    {/if}
                   {/if}
                 </div>
               </div>

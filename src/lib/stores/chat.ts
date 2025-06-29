@@ -18,25 +18,16 @@ const supabase = createBrowserClient<Database>(
   PUBLIC_SUPABASE_ANON_KEY
 );
 
-type ChatOverview =
+type DbChatOverview =
   Database['public']['Functions']['get_chat_overview']['Returns'][number];
-
-type Message = Database['public']['Functions']['get_messages']['Returns'][number];
-type GroupMessage = Database['public']['Tables']['group_messages']['Row'];
-
-type OptimisticMessage = {
-  id: string;
-  from_id: string;
-  to_id: string;
-  org_id: string;
-  typ: Database['public']['Enums']['msg_type'];
-  data: any;
-  created_at: string;
-  edited_at: string | null;
-  isOptimistic: true;
+type ChatOverview = Omit<DbChatOverview, 'msg_edited_at'> & {
+  msg_edited_at: DbChatOverview['msg_edited_at'] | null;
 };
 
-type ChatMessage = Message | OptimisticMessage;
+type Message = Database['public']['Tables']['messages']['Row'];
+type GroupMessage = Database['public']['Tables']['group_messages']['Row'];
+
+type ChatMessage = Message & { isOptimistic?: true };
 
 function createChatStore() {
   // Chat overview data
@@ -44,14 +35,21 @@ function createChatStore() {
   let overviewData: ChatOverview[] = [];
   let currentOrgId: string | null = null;
 
-  const { set: setOverview, subscribe: subscribeOverview, update: updateOverview } = writable<{
+  const {
+    set: setOverview,
+    subscribe: subscribeOverview,
+    update: updateOverview
+  } = writable<{
     data: typeof overviewData;
     dataMap: typeof overviewDataMap;
   } | null>(null);
 
   // Messages data per chat
-  const messagesData = new Map<string, Writable<ChatMessage[] | undefined | string>>();
-  const optimisticMessages = new Map<string, OptimisticMessage[]>();
+  const messagesData = new Map<
+    string,
+    Writable<ChatMessage[] | undefined | string>
+  >();
+  const optimisticMessages = new Map<string, ChatMessage[]>();
 
   // Realtime subscriptions
   const realtimeSubscriptions = new Map<string, () => void>();
@@ -59,17 +57,17 @@ function createChatStore() {
 
   function initializeRealtime(orgId: string, userId: string) {
     if (currentUserId === userId && currentOrgId === orgId) return;
-    
+
     // Clean up existing subscriptions
     cleanupRealtime();
-    
+
     currentUserId = userId;
     currentOrgId = orgId;
 
     // Subscribe to individual chat messages
     const individualChatChannel = supabase
       .channel(`chat:${orgId}:${userId}`, { config: { private: true } })
-      .on('broadcast', { event: '*' }, (payload) => {
+      .on('broadcast', { event: '*' }, payload => {
         handleIndividualChatMessage(payload.event, payload.payload);
       })
       .subscribe();
@@ -96,15 +94,24 @@ function createChatStore() {
 
       for (const membership of groupMemberships) {
         const groupChannel = supabase
-          .channel(`chat-group:${orgId}:${membership.group_id}`, { config: { private: true } })
-          .on('broadcast', { event: '*' }, (payload) => {
-            handleGroupChatMessage(payload.event, payload.payload, membership.group_id);
+          .channel(`chat-group:${orgId}:${membership.group_id}`, {
+            config: { private: true }
+          })
+          .on('broadcast', { event: '*' }, payload => {
+            handleGroupChatMessage(
+              payload.event,
+              payload.payload,
+              membership.group_id
+            );
           })
           .subscribe();
 
-        realtimeSubscriptions.set(`chat-group:${orgId}:${membership.group_id}`, () => {
-          supabase.removeChannel(groupChannel);
-        });
+        realtimeSubscriptions.set(
+          `chat-group:${orgId}:${membership.group_id}`,
+          () => {
+            supabase.removeChannel(groupChannel);
+          }
+        );
       }
     } catch (error) {
       captureException(error, { tags: { action: 'subscribe_group_chats' } });
@@ -116,20 +123,32 @@ function createChatStore() {
 
     switch (event) {
       case 'INSERT':
-        if (payload.operation === 'INSERT' && payload.table === 'messages' && payload.record) {
+        if (
+          payload.operation === 'INSERT' &&
+          payload.table === 'messages' &&
+          payload.record
+        ) {
           const message = payload.record as Message;
           addMessageToChat(getIndividualChatSlug(message), message);
           updateChatOverview(message);
         }
         break;
       case 'UPDATE':
-        if (payload.operation === 'UPDATE' && payload.table === 'messages' && payload.record) {
+        if (
+          payload.operation === 'UPDATE' &&
+          payload.table === 'messages' &&
+          payload.record
+        ) {
           const message = payload.record as Message;
           updateMessageInChat(getIndividualChatSlug(message), message);
         }
         break;
       case 'DELETE':
-        if (payload.operation === 'DELETE' && payload.table === 'messages' && payload.old_record) {
+        if (
+          payload.operation === 'DELETE' &&
+          payload.table === 'messages' &&
+          payload.old_record
+        ) {
           const message = payload.old_record as Message;
           removeMessageFromChat(getIndividualChatSlug(message), message.id);
         }
@@ -142,7 +161,11 @@ function createChatStore() {
 
     switch (event) {
       case 'INSERT':
-        if (payload.operation === 'INSERT' && payload.table === 'group_messages' && payload.record) {
+        if (
+          payload.operation === 'INSERT' &&
+          payload.table === 'group_messages' &&
+          payload.record
+        ) {
           const message = payload.record as GroupMessage;
           const chatMessage = convertGroupMessageToChatMessage(message);
           addMessageToChat(`-${groupId}`, chatMessage);
@@ -150,14 +173,22 @@ function createChatStore() {
         }
         break;
       case 'UPDATE':
-        if (payload.operation === 'UPDATE' && payload.table === 'group_messages' && payload.record) {
+        if (
+          payload.operation === 'UPDATE' &&
+          payload.table === 'group_messages' &&
+          payload.record
+        ) {
           const message = payload.record as GroupMessage;
           const chatMessage = convertGroupMessageToChatMessage(message);
           updateMessageInChat(`-${groupId}`, chatMessage);
         }
         break;
       case 'DELETE':
-        if (payload.operation === 'DELETE' && payload.table === 'group_messages' && payload.old_record) {
+        if (
+          payload.operation === 'DELETE' &&
+          payload.table === 'group_messages' &&
+          payload.old_record
+        ) {
           const message = payload.old_record as GroupMessage;
           removeMessageFromChat(`-${groupId}`, message.id);
         }
@@ -167,14 +198,18 @@ function createChatStore() {
 
   function getIndividualChatSlug(message: Message): string {
     if (!currentUserId) return '';
-    return message.from_id === currentUserId ? `@${message.to_id}` : `@${message.from_id}`;
+    return message.from_id === currentUserId
+      ? `@${message.to_id}`
+      : `@${message.from_id}`;
   }
 
-  function convertGroupMessageToChatMessage(groupMessage: GroupMessage): ChatMessage {
+  function convertGroupMessageToChatMessage(
+    groupMessage: GroupMessage
+  ): ChatMessage {
     return {
       id: groupMessage.id,
       from_id: groupMessage.by_id,
-      to_id: '', // Not applicable for group messages
+      to_id: groupMessage.group_id,
       org_id: groupMessage.org_id,
       typ: groupMessage.typ,
       data: groupMessage.data,
@@ -190,18 +225,23 @@ function createChatStore() {
         if (Array.isArray(messages)) {
           // Remove optimistic message if it exists
           const optimistic = optimisticMessages.get(chatSlug) || [];
-          const optimisticIndex = optimistic.findIndex(opt => 
-            opt.data === message.data && opt.from_id === message.from_id
+          const optimisticIndex = optimistic.findIndex(
+            opt => opt.data === message.data && opt.from_id === message.from_id
           );
-          
+
           if (optimisticIndex !== -1) {
             optimistic.splice(optimisticIndex, 1);
             optimisticMessages.set(chatSlug, optimistic);
           }
 
           // Add the real message
-          return [...messages.filter(m => !('isOptimistic' in m) || m.id !== message.id), message]
-            .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+          return [
+            ...messages.filter(m => !('isOptimistic' in m) || m.id !== message.id),
+            message
+          ].sort(
+            (a, b) =>
+              new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+          );
         }
         return messages;
       });
@@ -213,7 +253,7 @@ function createChatStore() {
     if (store) {
       store.update(messages => {
         if (Array.isArray(messages)) {
-          return messages.map(m => m.id === message.id ? message : m);
+          return messages.map(m => (m.id === message.id ? message : m));
         }
         return messages;
       });
@@ -235,10 +275,10 @@ function createChatStore() {
   function updateChatOverview(message: Message) {
     updateOverview(overview => {
       if (!overview) return overview;
-      
+
       const chatSlug = getIndividualChatSlug(message);
       const existingChat = overview.dataMap[chatSlug];
-      
+
       if (existingChat) {
         const updatedChat = {
           ...existingChat,
@@ -247,13 +287,15 @@ function createChatStore() {
           msg_created_at: message.created_at,
           msg_edited_at: message.edited_at
         };
-        
+
         return {
-          data: overview.data.map(chat => chat.slug === chatSlug ? updatedChat : chat),
+          data: overview.data.map(chat =>
+            chat.slug === chatSlug ? updatedChat : chat
+          ),
           dataMap: { ...overview.dataMap, [chatSlug]: updatedChat }
         };
       }
-      
+
       return overview;
     });
   }
@@ -261,10 +303,10 @@ function createChatStore() {
   function updateChatOverviewForGroup(message: GroupMessage, groupId: string) {
     updateOverview(overview => {
       if (!overview) return overview;
-      
+
       const chatSlug = `-${groupId}`;
       const existingChat = overview.dataMap[chatSlug];
-      
+
       if (existingChat) {
         const updatedChat = {
           ...existingChat,
@@ -273,13 +315,15 @@ function createChatStore() {
           msg_created_at: message.created_at,
           msg_edited_at: message.edited_at
         };
-        
+
         return {
-          data: overview.data.map(chat => chat.slug === chatSlug ? updatedChat : chat),
+          data: overview.data.map(chat =>
+            chat.slug === chatSlug ? updatedChat : chat
+          ),
           dataMap: { ...overview.dataMap, [chatSlug]: updatedChat }
         };
       }
-      
+
       return overview;
     });
   }
@@ -296,7 +340,7 @@ function createChatStore() {
     subscribe: subscribeOverview,
     async fetchOverview(orgId: string, userId: string) {
       if (!isBrowser()) return;
-      
+
       if (currentOrgId !== orgId) {
         currentOrgId = orgId;
         overviewDataMap = {};
@@ -305,16 +349,20 @@ function createChatStore() {
       }
 
       try {
-        const { data: overview, error } = await supabase.rpc('get_chat_overview', { org_id: orgId });
-        
+        const { data: overview, error } = await supabase.rpc('get_chat_overview', {
+          org_id: orgId
+        });
+
         if (error) {
           captureException(error, { tags: { supabase: 'get_chat_overview' } });
-          toast.error('Could not get chat overview', { description: error.message });
+          toast.error('Could not get chat overview', {
+            description: error.message
+          });
         } else {
           overviewData = overview;
           overviewDataMap = Object.fromEntries(overview.map(i => [i.slug, i]));
           setOverview({ data: overviewData, dataMap: overviewDataMap });
-          
+
           // Initialize realtime after fetching overview
           initializeRealtime(orgId, userId);
         }
@@ -341,7 +389,7 @@ function createChatStore() {
       }
 
       store.set(undefined);
-      
+
       supabase.rpc('get_messages', { slug: chatSlug }).then(({ data, error }) => {
         if (error) {
           captureException(error, { tags: { supabase: 'messages' } });
@@ -354,13 +402,18 @@ function createChatStore() {
       return { subscribe: store.subscribe };
     },
 
-    async sendMessage(chatSlug: string, content: string, orgId: string, userId: string): Promise<boolean> {
+    async sendMessage(
+      chatSlug: string,
+      content: string,
+      orgId: string,
+      userId: string
+    ): Promise<boolean> {
       try {
         const messageId = nanoid();
         const isGroup = chatSlug.startsWith('-');
-        
+
         // Create optimistic message
-        const optimisticMessage: OptimisticMessage = {
+        const optimisticMessage: ChatMessage = {
           id: messageId,
           from_id: userId,
           to_id: isGroup ? '' : chatSlug.substring(1),
@@ -428,7 +481,7 @@ function createChatStore() {
             });
           }
 
-          throw new Error(error.message);
+          throw error;
         }
 
         return true;

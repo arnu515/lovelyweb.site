@@ -8,7 +8,9 @@
 <div
   class="flex h-screen bg-gradient-to-br from-purple-100/80 via-blue-100/80 to-indigo-200/80 dark:from-gray-900 dark:via-purple-900/20 dark:to-blue-900/20"
 >
-  <ChatSidebar user={data.auth.user} />
+  {#if data.auth.user}
+    <ChatSidebar user={data.auth.user} />
+  {/if}
 
   <main class="flex flex-1 flex-col overflow-hidden">
     <div class="flex-1 overflow-hidden">
