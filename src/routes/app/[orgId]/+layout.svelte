@@ -28,11 +28,8 @@
 
     chat.init(data.org.id, data.auth.user.id);
 
-    console.log('Org layout mounted');
-
     return () => {
       window.removeEventListener('resize', checkMobile);
-      console.log('Org layout unmounted');
       boardMembershipsUnsub?.();
       chat.cleanupRealtime();
     };

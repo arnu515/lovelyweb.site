@@ -9,20 +9,16 @@
   export let data: LayoutData;
 
   onMount(() => {
-    console.log('Chat layout mounted');
     const orgId = $page.params.orgId;
     if (!data.auth.user) {
       goto('/auth');
       return;
     }
     chat.init(orgId, data.auth.user.id).then(fetched => {
-      if (!fetched && !$chatOverview) {
-        console.log('Chat layout fetching overview');
+      if (!fetched && !$chatOverview)
         chatOverview.fetchOverview(orgId, data.auth.user!.id);
-      }
     });
     return () => {
-      console.log('Chat layout unmounted');
       chat.cleanupRealtime();
     };
   });

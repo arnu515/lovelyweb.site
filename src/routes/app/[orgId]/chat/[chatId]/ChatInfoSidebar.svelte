@@ -345,11 +345,7 @@
           {chat.name}
         </h3>
 
-        {#if !chat.is_group}
-          <p class="text-sm text-gray-500 dark:text-gray-400">
-            @{chat.slug.substring(1)}
-          </p>
-        {:else}
+        {#if chat.is_group}
           <p class="text-sm text-gray-500 dark:text-gray-400">Group Chat</p>
         {/if}
       </div>

@@ -529,7 +529,6 @@ export type Database = {
           is_group: boolean;
           id: string;
           name: string;
-          slug: string;
           avatar_url: string;
           unread_count: number;
           typ: Database['public']['Enums']['msg_type'];
@@ -537,19 +536,6 @@ export type Database = {
           msg_created_at: string;
           msg_edited_at: string;
           msg_read_at: string;
-        }[];
-      };
-      get_messages: {
-        Args: { slug: string };
-        Returns: {
-          id: string;
-          from_id: string;
-          to_id: string;
-          org_id: string;
-          typ: Database['public']['Enums']['msg_type'];
-          data: Json;
-          created_at: string;
-          edited_at: string;
         }[];
       };
       get_user_by_email: {

@@ -24,10 +24,12 @@ type ChatOverview = Omit<DbChatOverview, 'msg_edited_at'> & {
   msg_edited_at: DbChatOverview['msg_edited_at'] | null;
 };
 
-type Message = Database['public']['Tables']['messages']['Row'];
-type GroupMessage = Database['public']['Tables']['group_messages']['Row'];
-
-type ChatMessage = Message & { isOptimistic?: true };
+type Message = Database['public']['Tables']['messages']['Row'] & {
+  isOptimistic?: true;
+};
+type GroupMessage = Database['public']['Tables']['group_messages']['Row'] & {
+  isOptimistic?: true;
+};
 
 function createChatStore() {
   // Chat overview data
@@ -45,11 +47,19 @@ function createChatStore() {
   } | null>(null);
 
   // Messages data per chat
-  const messagesData = new Map<
+  // Separate maps for individual and group chats
+  const individualMessagesData = new Map<
     string,
-    Writable<ChatMessage[] | undefined | string>
+    Writable<Message[] | undefined | string>
   >();
-  const optimisticMessages = new Map<string, ChatMessage[]>();
+  const groupMessagesData = new Map<
+    string,
+    Writable<GroupMessage[] | undefined | string>
+  >();
+
+  // Optimistic maps: Message[] with isOptimistic: true for individual, GroupMessage[] with isOptimistic: true for group
+  const individualOptimisticMessages = new Set<string>();
+  const groupOptimisticMessages = new Set<string>();
 
   // Realtime subscriptions
   const realtimeSubscriptions = new Map<string, () => void>();
@@ -57,7 +67,6 @@ function createChatStore() {
 
   function initializeRealtime(orgId: string, userId: string) {
     if (currentUserId === userId && currentOrgId === orgId) return;
-    console.log('Initializing realtime', { orgId, userId });
 
     // Clean up existing subscriptions
     cleanupRealtime();
@@ -69,7 +78,6 @@ function createChatStore() {
     const individualChatChannel = supabase
       .channel(`chat:${orgId}:${userId}`, { config: { private: true } })
       .on('broadcast', { event: '*' }, payload => {
-        console.log('Received chat msg', payload);
         handleIndividualChatMessage(payload.event, payload.payload);
       })
       .subscribe();
@@ -100,11 +108,7 @@ function createChatStore() {
             config: { private: true }
           })
           .on('broadcast', { event: '*' }, payload => {
-            handleGroupChatMessage(
-              payload.event,
-              payload.payload,
-              membership.group_id
-            );
+            handleGroupChatMessage(payload.event, payload.payload);
           })
           .subscribe();
 
@@ -123,6 +127,7 @@ function createChatStore() {
   function handleIndividualChatMessage(event: string, payload: any) {
     if (!payload || typeof payload !== 'object') return;
 
+    const isGroup = false;
     switch (event) {
       case 'INSERT':
         if (
@@ -131,9 +136,10 @@ function createChatStore() {
           payload.record
         ) {
           const message = payload.record as Message;
-          console.log('got message', message);
-          addMessageToChat(getIndividualChatSlug(message), message);
-          updateChatOverview(message);
+          const otherId =
+            message.from_id === currentUserId ? message.to_id : message.from_id;
+          updateChatOverview(isGroup, otherId);
+          addMessageToChat(otherId, { message, isGroup });
         }
         break;
       case 'UPDATE':
@@ -143,7 +149,10 @@ function createChatStore() {
           payload.record
         ) {
           const message = payload.record as Message;
-          updateMessageInChat(getIndividualChatSlug(message), message);
+          const otherId =
+            message.from_id === currentUserId ? message.to_id : message.from_id;
+          updateMessageInChat(otherId, { message, isGroup });
+          updateChatOverview(isGroup, otherId);
         }
         break;
       case 'DELETE':
@@ -153,15 +162,19 @@ function createChatStore() {
           payload.old_record
         ) {
           const message = payload.old_record as Message;
-          removeMessageFromChat(getIndividualChatSlug(message), message.id);
+          const otherId =
+            message.from_id === currentUserId ? message.to_id : message.from_id;
+          removeMessageFromChat(otherId, message.id, isGroup);
+          updateChatOverview(isGroup, otherId);
         }
         break;
     }
   }
 
-  function handleGroupChatMessage(event: string, payload: any, groupId: string) {
+  function handleGroupChatMessage(event: string, payload: any) {
     if (!payload || typeof payload !== 'object') return;
 
+    const isGroup = true;
     switch (event) {
       case 'INSERT':
         if (
@@ -170,9 +183,8 @@ function createChatStore() {
           payload.record
         ) {
           const message = payload.record as GroupMessage;
-          const chatMessage = convertGroupMessageToChatMessage(message);
-          addMessageToChat(`-${groupId}`, chatMessage);
-          updateChatOverviewForGroup(message, groupId);
+          addMessageToChat(message.group_id, { message, isGroup });
+          updateChatOverview(isGroup, message.group_id);
         }
         break;
       case 'UPDATE':
@@ -182,8 +194,8 @@ function createChatStore() {
           payload.record
         ) {
           const message = payload.record as GroupMessage;
-          const chatMessage = convertGroupMessageToChatMessage(message);
-          updateMessageInChat(`-${groupId}`, chatMessage);
+          updateMessageInChat(message.group_id, { message, isGroup });
+          updateChatOverview(isGroup, message.group_id);
         }
         break;
       case 'DELETE':
@@ -193,140 +205,113 @@ function createChatStore() {
           payload.old_record
         ) {
           const message = payload.old_record as GroupMessage;
-          removeMessageFromChat(`-${groupId}`, message.id);
+          removeMessageFromChat(message.group_id, message.id, isGroup);
+          updateChatOverview(isGroup, message.group_id);
         }
         break;
     }
   }
 
-  function getIndividualChatSlug(message: Message): string {
-    if (!currentUserId) return '';
-    return message.from_id === currentUserId
-      ? `@${message.to_id}`
-      : `@${message.from_id}`;
-  }
-
-  function convertGroupMessageToChatMessage(
-    groupMessage: GroupMessage
-  ): ChatMessage {
-    return {
-      id: groupMessage.id,
-      from_id: groupMessage.by_id,
-      to_id: groupMessage.group_id,
-      org_id: groupMessage.org_id,
-      typ: groupMessage.typ,
-      data: groupMessage.data,
-      created_at: groupMessage.created_at,
-      edited_at: groupMessage.edited_at
-    };
-  }
-
-  function addMessageToChat(chatSlug: string, message: ChatMessage) {
-    const store = messagesData.get(chatSlug);
-    if (store) {
-      store.update(messages => {
-        if (Array.isArray(messages)) {
-          // Remove optimistic message if it exists
-          const optimistic = optimisticMessages.get(chatSlug) || [];
-          const optimisticIndex = optimistic.findIndex(
-            opt => opt.data === message.data && opt.from_id === message.from_id
-          );
-
-          if (optimisticIndex !== -1) {
-            optimistic.splice(optimisticIndex, 1);
-            optimisticMessages.set(chatSlug, optimistic);
-          }
-
-          // Add the real message
-          return [
-            ...messages.filter(m => !('isOptimistic' in m) || m.id !== message.id),
-            message
-          ].sort(
-            (a, b) =>
-              new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-          );
+  function addMessageToChat(
+    chatId: string,
+    {
+      message,
+      isGroup
+    }:
+      | {
+          message: Message;
+          isGroup: false;
         }
-        return messages;
+      | {
+          message: GroupMessage;
+          isGroup: true;
+        }
+  ) {
+    if (isGroup) {
+      groupMessagesData.get(chatId)?.update(d => {
+        if (typeof d !== 'object') return d;
+        if (groupOptimisticMessages.delete(message.id)) {
+          const msg = d.find(m => m.id === message.id);
+          if (msg) {
+            Object.assign(msg, message);
+            delete msg.isOptimistic;
+          } else d.push(message);
+        } else d.push(message);
+        return d;
+      });
+    } else {
+      individualMessagesData.get(chatId)?.update(d => {
+        if (typeof d !== 'object') return d;
+        if (individualOptimisticMessages.delete(message.id)) {
+          const msg = d.find(m => m.id === message.id);
+          if (msg) {
+            Object.assign(msg, message);
+            delete msg.isOptimistic;
+          } else d.push(message);
+        } else d.push(message);
+        return d;
       });
     }
   }
 
-  function updateMessageInChat(chatSlug: string, message: ChatMessage) {
-    const store = messagesData.get(chatSlug);
-    if (store) {
-      store.update(messages => {
-        if (Array.isArray(messages)) {
-          return messages.map(m => (m.id === message.id ? message : m));
+  function updateMessageInChat(
+    chatId: string,
+    {
+      message,
+      isGroup
+    }:
+      | {
+          message: Message;
+          isGroup: false;
         }
-        return messages;
+      | {
+          message: GroupMessage;
+          isGroup: true;
+        }
+  ) {
+    (isGroup ? groupMessagesData : individualMessagesData)
+      .get(chatId)
+      ?.update(d => {
+        if (Array.isArray(d))
+          return d.map(m => (m.id === message.id ? message : m));
+        return d as any;
       });
-    }
   }
 
-  function removeMessageFromChat(chatSlug: string, messageId: string) {
-    const store = messagesData.get(chatSlug);
-    if (store) {
-      store.update(messages => {
-        if (Array.isArray(messages)) {
-          return messages.filter(m => m.id !== messageId);
-        }
-        return messages;
+  function removeMessageFromChat(
+    chatId: string,
+    messageId: string,
+    isGroup: boolean
+  ) {
+    (isGroup ? groupMessagesData : individualMessagesData)
+      .get(chatId)
+      ?.update(d => {
+        if (Array.isArray(d)) return d.filter(m => m.id !== messageId);
+        return d as any;
       });
-    }
   }
 
-  function updateChatOverview(message: Message) {
+  function updateChatOverview(isGroup: boolean, id: string) {
     updateOverview(overview => {
       if (!overview) return overview;
-
-      const chatSlug = getIndividualChatSlug(message);
-      const existingChat = overview.dataMap[chatSlug];
-
-      if (existingChat) {
-        const updatedChat = {
-          ...existingChat,
-          typ: message.typ,
-          data: message.data,
-          msg_created_at: message.created_at,
-          msg_edited_at: message.edited_at
-        };
-
-        return {
-          data: overview.data.map(chat =>
-            chat.slug === chatSlug ? updatedChat : chat
-          ),
-          dataMap: { ...overview.dataMap, [chatSlug]: updatedChat }
-        };
+      const ov = overview.dataMap[(isGroup ? '-' : '@') + id];
+      const msgStore = isGroup
+        ? groupMessagesData.get(id)
+        : individualMessagesData.get(id);
+      if (!msgStore) ov.typ = null as any;
+      else {
+        msgStore.subscribe(msgs => {
+          if (Array.isArray(msgs)) {
+            const msg = msgs.at(-1);
+            if (msg) {
+              ov.typ = msg.typ;
+              ov.data = msg.data;
+              ov.msg_created_at = msg.created_at;
+              ov.msg_edited_at = msg.edited_at;
+            } else ov.typ = null as any;
+          } else ov.typ = null as any;
+        });
       }
-
-      return overview;
-    });
-  }
-
-  function updateChatOverviewForGroup(message: GroupMessage, groupId: string) {
-    updateOverview(overview => {
-      if (!overview) return overview;
-
-      const chatSlug = `-${groupId}`;
-      const existingChat = overview.dataMap[chatSlug];
-
-      if (existingChat) {
-        const updatedChat = {
-          ...existingChat,
-          typ: message.typ,
-          data: message.data,
-          msg_created_at: message.created_at,
-          msg_edited_at: message.edited_at
-        };
-
-        return {
-          data: overview.data.map(chat =>
-            chat.slug === chatSlug ? updatedChat : chat
-          ),
-          dataMap: { ...overview.dataMap, [chatSlug]: updatedChat }
-        };
-      }
-
       return overview;
     });
   }
@@ -363,7 +348,9 @@ function createChatStore() {
           });
         } else {
           overviewData = overview;
-          overviewDataMap = Object.fromEntries(overview.map(i => [i.slug, i]));
+          overviewDataMap = Object.fromEntries(
+            overview.map(i => [(i.is_group ? '-' : '@') + i.id, i])
+          );
           setOverview({ data: overviewData, dataMap: overviewDataMap });
         }
       } catch (error) {
@@ -373,37 +360,52 @@ function createChatStore() {
   };
 
   // Messages functionality
+  type FetchReturnType =
+    | ({ isGroup: true } & Readable<Message[] | undefined | string>)
+    | ({ isGroup: false } & Readable<GroupMessage[] | undefined | string>);
   const messages = {
-    fetch(chatSlug: string): Readable<ChatMessage[] | undefined | string> {
-      if (!isBrowser()) return readable(undefined);
+    fetch(chatSlug: string, userId: string): FetchReturnType {
+      const isGroup = !chatSlug.startsWith('@');
+      const chatId = chatSlug.substring(1);
+      if (!isBrowser() || !userId) return { isGroup, ...readable(undefined) };
 
-      let store = messagesData.get(chatSlug);
+      let store: Writable<any> | undefined = isGroup
+        ? individualMessagesData.get(chatId)
+        : groupMessagesData.get(chatId);
       if (!store) {
-        store = writable<ChatMessage[] | undefined | string>(undefined);
-        messagesData.set(chatSlug, store);
+        store = writable<any>(undefined);
+        (isGroup ? groupMessagesData : individualMessagesData).set(chatId, store);
       }
 
       const currentValue = get(store);
       if (Array.isArray(currentValue)) {
-        return { subscribe: store.subscribe };
+        return { isGroup, subscribe: store.subscribe };
       }
 
       store.set(undefined);
 
-      supabase.rpc('get_messages', { slug: chatSlug }).then(({ data, error }) => {
+      let promise = isGroup
+        ? supabase.from('group_messages').select().eq('group_id', chatId)
+        : supabase
+            .from('messages')
+            .select()
+            .or(
+              `and(to_id.eq.${userId},from_id.eq.${chatId}),and(to_id.eq.${chatId},from_id.eq.${userId})`
+            );
+      promise.then(({ data, error }) => {
         if (error) {
           captureException(error, { tags: { supabase: 'messages' } });
-          store!.set(error.message);
+          store.set(error.message);
         } else {
-          store!.set(data);
+          store.set(data);
         }
       });
 
-      return { subscribe: store.subscribe };
+      return { isGroup, subscribe: store.subscribe };
     },
 
     async sendMessage(
-      chatSlug: string,
+      isGroup: boolean,
       toId: string,
       content: string,
       orgId: string,
@@ -411,36 +413,54 @@ function createChatStore() {
     ): Promise<boolean> {
       try {
         const messageId = nanoid();
-        const isGroup = !chatSlug.startsWith('@');
-
-        // Create optimistic message
-        const optimisticMessage: ChatMessage = {
-          id: messageId,
-          from_id: userId,
-          to_id: toId,
-          org_id: orgId,
-          typ: 'text',
-          data: content,
-          created_at: new Date().toISOString(),
-          edited_at: null,
-          isOptimistic: true
-        };
-
-        // Add optimistic message to store
-        const store = messagesData.get(chatSlug);
-        if (store) {
-          store.update(messages => {
-            if (Array.isArray(messages)) {
-              return [...messages, optimisticMessage];
-            }
-            return [optimisticMessage];
-          });
+        let store;
+        if (isGroup) {
+          store = groupMessagesData.get(toId);
+          const msg = {
+            id: messageId,
+            by_id: userId,
+            group_id: toId,
+            org_id: orgId,
+            typ: 'text' as const,
+            data: content,
+            created_at: new Date().toISOString(),
+            edited_at: null,
+            isOptimistic: true as const
+          };
+          if (store) {
+            store.update(messages => {
+              if (Array.isArray(messages)) {
+                messages.push(msg);
+                return messages;
+              }
+              return [msg];
+            });
+          }
+          groupOptimisticMessages.add(messageId);
+        } else {
+          const msg = {
+            id: messageId,
+            from_id: userId,
+            to_id: toId,
+            org_id: orgId,
+            typ: 'text' as const,
+            data: content,
+            created_at: new Date().toISOString(),
+            edited_at: null,
+            isOptimistic: true as const
+          };
+          store = individualMessagesData.get(toId);
+          if (store) {
+            store.update(messages => {
+              if (Array.isArray(messages)) {
+                messages.push(msg);
+                return messages;
+              }
+              return [msg];
+            });
+          }
+          individualOptimisticMessages.add(messageId);
         }
-
-        // Track optimistic message
-        const optimistic = optimisticMessages.get(chatSlug) || [];
-        optimistic.push(optimisticMessage);
-        optimisticMessages.set(chatSlug, optimistic);
 
         // Send actual message
         let error;
@@ -463,22 +483,19 @@ function createChatStore() {
         }
 
         if (error) {
-          // Remove optimistic message on error
-          const optimisticList = optimisticMessages.get(chatSlug) || [];
-          const index = optimisticList.findIndex(m => m.id === messageId);
-          if (index !== -1) {
-            optimisticList.splice(index, 1);
-            optimisticMessages.set(chatSlug, optimisticList);
-          }
-
-          if (store) {
+          if (
+            (isGroup
+              ? groupOptimisticMessages
+              : individualOptimisticMessages
+            ).delete(messageId) &&
+            store
+          )
             store.update(messages => {
               if (Array.isArray(messages)) {
-                return messages.filter(m => m.id !== messageId);
+                return messages.filter(m => m.id !== messageId) as any;
               }
               return messages;
             });
-          }
 
           throw error;
         }
@@ -494,20 +511,34 @@ function createChatStore() {
     },
 
     removeChat(chatSlug: string) {
-      const store = messagesData.get(chatSlug);
-      if (store) {
-        store.set(undefined);
-        messagesData.delete(chatSlug);
+      const isGroup = chatSlug.charAt(0) !== '@';
+      const chatId = chatSlug.substring(1);
+      if (isGroup) {
+        const store = groupMessagesData.get(chatId);
+        if (store) {
+          store.set(undefined);
+          groupMessagesData.delete(chatSlug);
+        }
+      } else {
+        const store = individualMessagesData.get(chatId);
+        if (store) {
+          store.set(undefined);
+          individualMessagesData.delete(chatSlug);
+        }
       }
-      optimisticMessages.delete(chatSlug);
     },
 
     clearAll() {
-      for (const [_, store] of messagesData) {
+      for (const [_, store] of individualMessagesData) {
         store.set(undefined);
       }
-      messagesData.clear();
-      optimisticMessages.clear();
+      for (const [_, store] of groupMessagesData) {
+        store.set(undefined);
+      }
+      individualMessagesData.clear();
+      groupMessagesData.clear();
+      individualOptimisticMessages.clear();
+      groupOptimisticMessages.clear();
     }
   };
 
@@ -520,9 +551,7 @@ function createChatStore() {
   }
 
   async function init(orgId: string, userId: string) {
-    console.log('Initializing chat store');
     if (currentOrgId !== orgId || currentUserId !== userId) {
-      console.log('New org or user', { orgId, userId });
       cleanup();
       await chatOverview.fetchOverview(orgId, userId);
       initializeRealtime(orgId, userId);

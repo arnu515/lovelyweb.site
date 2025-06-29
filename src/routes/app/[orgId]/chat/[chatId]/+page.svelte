@@ -57,8 +57,7 @@
     ]) => (co ? co.dataMap[chatId] : null)
   );
   $: orgId = $page.params.orgId;
-  $: messages = chat.messages.fetch($page.params.chatId);
-  $: if (messages) console.log($messages);
+  $: messages = chat.messages.fetch($page.params.chatId, data.auth.user!.id);
 
   function formatMessageTime(date: Date) {
     return date.toLocaleTimeString('en-US', {
@@ -102,7 +101,7 @@
     messageInput = '';
 
     await chat.messages.sendMessage(
-      $page.params.chatId,
+      $currentChat.is_group,
       $currentChat.id,
       content,
       orgId,
@@ -126,6 +125,35 @@
     if (files && files.length > 0) {
       // Handle file upload
       console.log('Files selected:', files);
+    }
+  }
+
+  type NormMsg = {
+    id: string;
+    from_id: string;
+    to_id: string;
+    typ: Database['public']['Enums']['msg_type'];
+    data: any;
+    created_at: string;
+    edited_at: string | null;
+    isOptimistic?: true;
+  };
+  function normMsg(isGroup: boolean, msgs: any): NormMsg {
+    if (isGroup) {
+      const m = msgs as Database['public']['Tables']['group_messages']['Row'];
+      return {
+        id: m.id,
+        from_id: m.by_id,
+        to_id: m.group_id,
+        typ: m.typ,
+        data: m.data,
+        created_at: m.created_at,
+        edited_at: m.edited_at,
+        isOptimistic: (m as any).isOptimistic
+      };
+    } else {
+      const m = msgs as Database['public']['Tables']['messages']['Row'];
+      return m;
     }
   }
 
@@ -285,7 +313,7 @@
             </div>
           </div>
         {:else if typeof msgs === 'string'}
-          An error occured
+          An error occured: {msgs}
         {:else if msgs.length === 0}
           <div class="h-full items-center justify-center p-8 md:flex">
             <div
@@ -305,7 +333,8 @@
             </div>
           </div>
         {:else}
-          {#each msgs as message, index}
+          {#each msgs as message_, index}
+            {@const message = normMsg(messages.isGroup, message_)}
             <!-- Date Header -->
             {#if shouldShowDateHeader(message, msgs[index - 1])}
               <div class="flex justify-center">

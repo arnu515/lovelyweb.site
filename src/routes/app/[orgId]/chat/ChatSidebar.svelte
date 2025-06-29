@@ -31,9 +31,7 @@
   $: filteredChats = chats
     ? chats.filter(chat => {
         const q = searchQuery.toLowerCase();
-        return (
-          chat.name.toLowerCase().includes(q) || chat.slug.toLowerCase().includes(q)
-        );
+        return chat.name.toLowerCase().includes(q);
       })
     : null;
 
@@ -110,7 +108,7 @@
             : chat.avatar_url}
           <Button
             variant="ghost"
-            href="/app/{orgId}/chat/{chat.slug}"
+            href={`/app/${orgId}/chat/${chat.is_group ? `-${chat.id}` : `@${chat.id}`}`}
             on:click={handleChatClick}
             class={cn(
               'h-auto w-full justify-start p-3 transition-all duration-200',
