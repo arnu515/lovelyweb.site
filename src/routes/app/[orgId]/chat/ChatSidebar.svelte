@@ -6,7 +6,7 @@
   import { cn } from '$lib/utils';
   import { page } from '$app/stores';
   import * as Collapsible from '$lib/components/ui/collapsible';
-  import { chatOverview } from '$lib/stores/chat';
+  import { chat } from '$lib/stores/chat';
   import Skeleton from '$lib/components/ui/skeleton/skeleton.svelte';
   import { formatRelative } from 'date-fns';
   import { createBrowserClient } from '@supabase/ssr';
@@ -25,7 +25,7 @@
   let searchQuery = '';
   let isUserCollapsibleOpen = false;
 
-  $: chats = $chatOverview?.data;
+  $: chats = $chat.chatOverview?.data;
   $: filteredChats = chats
     ? chats.filter(chat => {
         const q = searchQuery.toLowerCase();

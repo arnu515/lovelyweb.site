@@ -2,6 +2,7 @@ import { createBrowserClient, isBrowser } from '@supabase/ssr';
 import { PUBLIC_SUPABASE_ANON_KEY, PUBLIC_SUPABASE_URL } from '$env/static/public';
 import { kanban } from './stores/kanban';
 import type { Database } from './database.types';
+import { chat } from './stores/chat';
 
 const supabase = createBrowserClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY);
 
@@ -70,5 +71,16 @@ export function kanbanBoard(boardId: string) {
     board.unsubscribe();
     cat.unsubscribe();
     cards.unsubscribe();
+  };
+}
+
+export function chatRealtime(orgId: string, userId: string) {
+  if (!isBrowser()) return;
+  
+  // Initialize chat realtime through the chat store
+  chat.chatOverview.fetchOverview(orgId, userId);
+  
+  return () => {
+    chat.cleanup();
   };
 }

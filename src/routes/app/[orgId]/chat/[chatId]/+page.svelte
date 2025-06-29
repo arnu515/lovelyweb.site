@@ -24,7 +24,7 @@
   } from 'lucide-svelte';
   import { cn } from '$lib/utils';
   import { page } from '$app/stores';
-  import { chatOverview, messages as msgStore } from '$lib/stores/chat.js';
+  import { chat } from '$lib/stores/chat.js';
   import { derived } from 'svelte/store';
   import { Skeleton } from '$lib/components/ui/skeleton/index.js';
   import {
@@ -33,8 +33,6 @@
   } from '$env/static/public';
   import { createBrowserClient } from '@supabase/ssr';
   import type { Database } from '$lib/database.types.js';
-  import { toast } from 'svelte-sonner';
-  import { nanoid } from 'nanoid';
 
   export let data;
   const user = data.auth.user!;
@@ -50,7 +48,7 @@
   let showChatInfo = false;
 
   const currentChat = derived(
-    [page, chatOverview],
+    [page, chat.chatOverview],
     ([
       {
         params: { chatId }
@@ -61,10 +59,8 @@
   $: orgId = $page.params.orgId;
   $: isGroup = !$page.params.chatId.startsWith('@');
 
-  $: messages = msgStore.fetch($page.params.chatId);
+  $: messages = chat.messages.fetch($page.params.chatId);
   $: if (messages) console.log($messages);
-
-  let msgQueue: [number, string][] = [];
 
   function formatMessageTime(date: Date) {
     return date.toLocaleTimeString('en-US', {
@@ -103,37 +99,11 @@
 
   async function sendMessage() {
     if (!messageInput.trim()) return;
-    const currChat = $currentChat;
-    if (!currChat) return;
 
     const content = messageInput;
     messageInput = '';
 
-    try {
-      if (!isGroup) {
-        const { error } = await supabase.rpc('send_chat_message', {
-          msg_id: nanoid(),
-          data: content,
-          typ: 'text',
-          to_id: currChat.id,
-          org_id: orgId
-        });
-        if (error) throw new Error(error.message);
-      } else {
-        const { error } = await supabase.rpc('send_group_chat_message', {
-          msg_id: nanoid(),
-          data: content,
-          typ: 'text',
-          group_id: currChat.id,
-          org_id: orgId
-        });
-        if (error) throw new Error(error.message);
-      }
-    } catch (e) {
-      toast.error('Could not send messge', {
-        description: (e as any)?.message || 'An unknown error occured'
-      });
-    }
+    await chat.messages.sendMessage($page.params.chatId, content, orgId, user.id);
   }
 
   function handleKeyPress(event: KeyboardEvent) {
@@ -360,7 +330,9 @@
                   class={cn(
                     'rounded-2xl px-4 py-2 shadow-sm',
                     message.from_id === user.id
-                      ? 'gradient-primary text-white'
+                      ? ('isOptimistic' in message && message.isOptimistic)
+                        ? 'bg-gray-300 text-black dark:bg-gray-600 dark:text-white'
+                        : 'gradient-primary text-white'
                       : 'glass dark:glass-dark text-gray-900 dark:text-white'
                   )}
                 >
@@ -380,6 +352,9 @@
                 >
                   <!-- TODO: edit time -->
                   <span>{formatMessageTime(new Date(message.created_at))}</span>
+                  {#if 'isOptimistic' in message && message.isOptimistic}
+                    <em class="text-xs text-gray-500">sending...</em>
+                  {:else}
                   <!-- TODO: edit indicator -->
                   {#if true}
                     <em class="text-xs text-gray-500">edited</em>
@@ -388,25 +363,8 @@
                   {#if message.from_id === user.id && true}
                     <span class="text-xs text-blue-500"><CheckCheck /></span>
                   {/if}
+                  {/if}
                 </div>
-              </div>
-            </div>
-          {/each}
-          {#each msgQueue as msg, idx (msg[0])}
-            <div class="flex justify-end">
-              <div class="order-2 max-w-xs lg:max-w-md xl:max-w-lg">
-                <div
-                  class="rounded-2xl bg-gray-300 px-4 py-2 text-black shadow-sm dark:bg-gray-600 dark:text-white"
-                >
-                  <p class="text-sm leading-relaxed">{msg[1]}</p>
-                </div>
-                {#if idx === msgQueue.length - 1}
-                  <div
-                    class="mt-1 flex items-center justify-end space-x-1 text-xs text-gray-500"
-                  >
-                    <em class="text-xs text-gray-500">sending your message...</em>
-                  </div>
-                {/if}
               </div>
             </div>
           {/each}

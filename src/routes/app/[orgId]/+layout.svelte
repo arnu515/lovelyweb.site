@@ -4,6 +4,7 @@
   import type { LayoutData } from './$types';
   import { onMount } from 'svelte';
   import * as realtime from '$lib/realtime';
+  import { chat } from '$lib/stores/chat';
 
   export let data: LayoutData;
 
@@ -24,10 +25,16 @@
       data.org.id,
       data.auth.user.id
     );
+    
+    const chatRealtimeUnsub = realtime.chatRealtime(
+      data.org.id,
+      data.auth.user.id
+    );
 
     return () => {
       window.removeEventListener('resize', checkMobile);
       boardMembershipsUnsub?.();
+      chatRealtimeUnsub?.();
     };
   });
 </script>
