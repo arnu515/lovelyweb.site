@@ -46,6 +46,23 @@ using (
   (select private.is_user_part_of_group(group_id, (select auth.uid())))
 );
 
+create policy "Participants can delete their messages"
+on messages
+for delete
+to authenticated
+using (
+  from_id = (select auth.uid()) or
+  to_id = (select auth.uid())
+);
+
+create policy "Group message sender can delete"
+on group_messages
+for delete
+to authenticated
+using (
+  by_id = (select auth.uid())
+);
+
 create function get_chat_overview(org_id text)
 returns table (
   is_group boolean,
