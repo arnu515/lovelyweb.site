@@ -15,12 +15,15 @@
     Image as ImageIcon,
     Sparkles,
     Volume2,
-    FileEdit as Edit3,
+    Edit3,
     ArrowLeft,
     CheckCheck,
     Loader2,
     MessageCircle,
-    Info
+    Info,
+    Trash2,
+    Check,
+    X
   } from 'lucide-svelte';
   import { cn } from '$lib/utils';
   import { page } from '$app/stores';
@@ -33,6 +36,7 @@
   } from '$env/static/public';
   import { createBrowserClient } from '@supabase/ssr';
   import type { Database } from '$lib/database.types.js';
+  import { toast } from 'svelte-sonner';
 
   export let data;
   const user = data.auth.user!;
@@ -46,6 +50,9 @@
   let messagesContainer: HTMLElement;
   let fileInput: HTMLInputElement;
   let showChatInfo = false;
+  
+  // Message editing state
+  let editingMessage: { id: string; content: string; isGroup: boolean } | null = null;
 
   const currentChat = derived(
     [page, chat.chatOverview],
@@ -97,9 +104,17 @@
   async function sendMessage() {
     if (!messageInput.trim() || !$currentChat) return;
 
-    const content = messageInput;
-    messageInput = '';
+    const content = messageInput.trim();
+    
+    // Check if we're editing a message
+    if (editingMessage) {
+      await editMessage(editingMessage.id, content, editingMessage.isGroup);
+      editingMessage = null;
+      messageInput = '';
+      return;
+    }
 
+    messageInput = '';
     await chat.messages.sendMessage(
       $currentChat.is_group,
       $currentChat.id,
@@ -109,10 +124,73 @@
     );
   }
 
+  async function editMessage(messageId: string, newContent: string, isGroup: boolean) {
+    try {
+      if (isGroup) {
+        const { error } = await supabase.rpc('edit_group_chat_message', {
+          msg_id: messageId,
+          new_data: newContent
+        });
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.rpc('edit_chat_message', {
+          msg_id: messageId,
+          new_data: newContent
+        });
+        if (error) throw error;
+      }
+      toast.success('Message updated');
+    } catch (error: any) {
+      toast.error('Failed to update message', {
+        description: error.message
+      });
+    }
+  }
+
+  async function deleteMessage(messageId: string, isGroup: boolean) {
+    try {
+      if (isGroup) {
+        const { error } = await supabase
+          .from('group_messages')
+          .delete()
+          .eq('id', messageId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('messages')
+          .delete()
+          .eq('id', messageId);
+        if (error) throw error;
+      }
+      toast.success('Message deleted');
+    } catch (error: any) {
+      toast.error('Failed to delete message', {
+        description: error.message
+      });
+    }
+  }
+
+  function startEditingMessage(messageId: string, content: string, isGroup: boolean) {
+    editingMessage = { id: messageId, content, isGroup };
+    messageInput = content;
+    // Focus the input
+    setTimeout(() => {
+      const input = document.querySelector('#message-input') as HTMLInputElement;
+      input?.focus();
+    }, 0);
+  }
+
+  function cancelEditing() {
+    editingMessage = null;
+    messageInput = '';
+  }
   function handleKeyPress(event: KeyboardEvent) {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
       sendMessage();
+    } else if (event.key === 'Escape' && editingMessage) {
+      event.preventDefault();
+      cancelEditing();
     }
   }
 
@@ -359,22 +437,53 @@
                   message.from_id === user.id ? 'order-2' : 'order-1'
                 )}
               >
-                <div
-                  class={cn(
-                    'rounded-2xl px-4 py-2 shadow-sm',
-                    message.from_id === user.id
-                      ? 'isOptimistic' in message && message.isOptimistic
-                        ? 'bg-gray-300 text-black dark:bg-gray-600 dark:text-white'
-                        : 'gradient-primary text-white'
-                      : 'glass dark:glass-dark text-gray-900 dark:text-white'
-                  )}
-                >
-                  {#if message.typ === 'text'}
-                    <p class="text-sm leading-relaxed">{message.data}</p>
-                  {:else if message.typ === 'attachment'}
-                    <!-- TODO: attachment -->
-                  {:else if message.typ === 'voice'}
-                    <!-- TODO: voice message -->
+                <div class="group relative">
+                  <div
+                    class={cn(
+                      'rounded-2xl px-4 py-2 shadow-sm',
+                      message.from_id === user.id
+                        ? 'isOptimistic' in message && message.isOptimistic
+                          ? 'bg-gray-300 text-black dark:bg-gray-600 dark:text-white'
+                          : 'gradient-primary text-white'
+                        : 'glass dark:glass-dark text-gray-900 dark:text-white'
+                    )}
+                  >
+                    {#if message.typ === 'text'}
+                      <p class="text-sm leading-relaxed">{message.data}</p>
+                    {:else if message.typ === 'attachment'}
+                      <!-- TODO: attachment -->
+                    {:else if message.typ === 'voice'}
+                      <!-- TODO: voice message -->
+                    {/if}
+                  </div>
+                  
+                  <!-- Message Actions (only for user's own text messages) -->
+                  {#if message.from_id === user.id && message.typ === 'text' && !('isOptimistic' in message && message.isOptimistic)}
+                    <div
+                      class={cn(
+                        'absolute top-1/2 -translate-y-1/2 flex items-center space-x-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100',
+                        message.from_id === user.id ? '-left-16' : '-right-16'
+                      )}
+                    >
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        class="h-6 w-6 bg-white/90 text-gray-600 hover:bg-white hover:text-blue-600 dark:bg-gray-800/90 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-blue-400"
+                        on:click={() => startEditingMessage(message.id, message.data, messages.isGroup)}
+                        title="Edit message"
+                      >
+                        <Edit3 class="h-3 w-3" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        class="h-6 w-6 bg-white/90 text-gray-600 hover:bg-white hover:text-red-600 dark:bg-gray-800/90 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-red-400"
+                        on:click={() => deleteMessage(message.id, messages.isGroup)}
+                        title="Delete message"
+                      >
+                        <Trash2 class="h-3 w-3" />
+                      </Button>
+                    </div>
                   {/if}
                 </div>
                 <div
@@ -388,8 +497,7 @@
                   {#if 'isOptimistic' in message && message.isOptimistic}
                     <em class="text-xs text-gray-500">sending...</em>
                   {:else}
-                    <!-- TODO: edit indicator -->
-                    {#if true}
+                    {#if message.edited_at}
                       <em class="text-xs text-gray-500">edited</em>
                     {/if}
                     <!-- TODO: read indicator -->
@@ -409,6 +517,31 @@
     <div
       class="glass dark:glass-dark border-t border-white/20 p-4 dark:border-gray-700/50"
     >
+      <!-- Edit Message Banner -->
+      {#if editingMessage}
+        <div
+          class="mb-3 flex items-center justify-between rounded-lg bg-orange-100 px-4 py-2 dark:bg-orange-900/30"
+        >
+          <div class="flex items-center space-x-2">
+            <Edit3 class="h-4 w-4 text-orange-600 dark:text-orange-400" />
+            <span class="text-sm font-medium text-orange-800 dark:text-orange-200">
+              Edit Message
+            </span>
+            <span class="text-sm text-orange-600 dark:text-orange-400">
+              {editingMessage.content}
+            </span>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            class="h-6 w-6 text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-200"
+            on:click={cancelEditing}
+          >
+            <X class="h-4 w-4" />
+          </Button>
+        </div>
+      {/if}
+      
       <div class="flex items-end space-x-2">
         <!-- Attachment Button -->
         <Button
@@ -426,8 +559,9 @@
             class="glass dark:glass-dark relative rounded-2xl border border-white/30 dark:border-gray-700/50"
           >
             <Input
+              id="message-input"
               bind:value={messageInput}
-              placeholder="Type a message..."
+              placeholder={editingMessage ? "Edit your message..." : "Type a message..."}
               class="border-0 bg-transparent pr-12 focus:ring-0"
               on:keypress={handleKeyPress}
             />
@@ -477,7 +611,9 @@
           size="icon"
           on:click={messageInput.trim() ? sendMessage : undefined}
         >
-          {#if messageInput.trim()}
+          {#if messageInput.trim() && editingMessage}
+            <Check class="h-4 w-4" />
+          {:else if messageInput.trim()}
             <Send class="h-4 w-4" />
           {:else}
             <Mic class="h-4 w-4" />
