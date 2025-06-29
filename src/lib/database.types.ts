@@ -536,6 +536,10 @@ export type Database = {
           msg_created_at: string;
           msg_edited_at: string;
           msg_read_at: string;
+          sender_name: string;
+          sender_id: string;
+          sender_avatar_url: string;
+          slug: string;
         }[];
       };
       get_user_by_email: {

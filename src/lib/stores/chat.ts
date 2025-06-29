@@ -26,9 +26,15 @@ type ChatOverview = Omit<DbChatOverview, 'msg_edited_at'> & {
 
 type Message = Database['public']['Tables']['messages']['Row'] & {
   isOptimistic?: true;
+  sender_name?: string | null;
+  sender_id?: string | null;
+  sender_avatar_url?: string | null;
 };
 type GroupMessage = Database['public']['Tables']['group_messages']['Row'] & {
   isOptimistic?: true;
+  sender_name?: string | null;
+  sender_id?: string | null;
+  sender_avatar_url?: string | null;
 };
 
 function createChatStore() {
@@ -440,19 +446,35 @@ function createChatStore() {
       store.set(undefined);
 
       let promise = isGroup
-        ? supabase.from('group_messages').select().eq('group_id', chatId)
+        ? supabase
+            .from('group_messages')
+            .select('*, users!group_messages_by_id_fkey(name, avatar_url)')
+            .eq('group_id', chatId)
+            .order('created_at', { ascending: true })
         : supabase
             .from('messages')
             .select()
             .or(
               `and(to_id.eq.${userId},from_id.eq.${chatId}),and(to_id.eq.${chatId},from_id.eq.${userId})`
-            );
+            )
+            .order('created_at', { ascending: true });
       promise.then(({ data, error }) => {
         if (error) {
           captureException(error, { tags: { supabase: 'messages' } });
           store.set(error.message);
         } else {
-          store.set(data);
+          if (isGroup) {
+            // Add sender info to group messages
+            const messagesWithSender = data.map((msg: any) => ({
+              ...msg,
+              sender_name: msg.users?.name || null,
+              sender_id: msg.by_id,
+              sender_avatar_url: msg.users?.avatar_url || null
+            }));
+            store.set(messagesWithSender);
+          } else {
+            store.set(data);
+          }
         }
       });
 

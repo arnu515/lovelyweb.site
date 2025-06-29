@@ -215,6 +215,9 @@
     created_at: string;
     edited_at: string | null;
     isOptimistic?: true;
+    sender_name?: string | null;
+    sender_id?: string | null;
+    sender_avatar_url?: string | null;
   };
   function normMsg(isGroup: boolean, msgs: any): NormMsg {
     if (isGroup) {
@@ -227,11 +230,19 @@
         data: m.data,
         created_at: m.created_at,
         edited_at: m.edited_at,
-        isOptimistic: (m as any).isOptimistic
+        isOptimistic: (m as any).isOptimistic,
+        sender_name: (m as any).sender_name || null,
+        sender_id: (m as any).sender_id || null,
+        sender_avatar_url: (m as any).sender_avatar_url || null
       };
     } else {
       const m = msgs as Database['public']['Tables']['messages']['Row'];
-      return m;
+      return {
+        ...m,
+        sender_name: null,
+        sender_id: null,
+        sender_avatar_url: null
+      };
     }
   }
 
@@ -431,12 +442,38 @@
                 message.from_id === user.id ? 'justify-end' : 'justify-start'
               )}
             >
+              <!-- Avatar for group messages (left side) -->
+              {#if messages.isGroup && message.from_id !== user.id}
+                <div class="mr-3 flex-shrink-0">
+                  {#if message.sender_avatar_url}
+                    <img
+                      src={message.sender_avatar_url}
+                      alt="{message.sender_name || 'User'}'s Avatar"
+                      class="h-8 w-8 rounded-full"
+                    />
+                  {:else}
+                    <div
+                      class="glass dark:glass-dark flex h-8 w-8 items-center justify-center rounded-full border border-gray-400 text-sm uppercase shadow-none dark:border-gray-700"
+                    >
+                      {(message.sender_name || 'U').charAt(0)}
+                    </div>
+                  {/if}
+                </div>
+              {/if}
+
               <div
                 class={cn(
                   'max-w-xs lg:max-w-md xl:max-w-lg',
                   message.from_id === user.id ? 'order-2' : 'order-1'
                 )}
               >
+                <!-- Sender name for group messages -->
+                {#if messages.isGroup && message.from_id !== user.id && message.sender_name}
+                  <div class="mb-1 text-xs font-medium text-gray-600 dark:text-gray-400">
+                    {message.sender_name}
+                  </div>
+                {/if}
+
                 <div class="group relative">
                   <div
                     class={cn(

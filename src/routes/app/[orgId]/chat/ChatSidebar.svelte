@@ -201,7 +201,11 @@
                     {:else if !chat.typ}
                       <em class="text-muted-foreground">No message yet</em>
                     {:else if chat.typ === 'text'}
-                      {chat.data}
+                      {#if chat.is_group && chat.sender_name}
+                        <span class="font-semibold">{chat.sender_name}:</span> {chat.data}
+                      {:else}
+                        {chat.data}
+                      {/if}
                     {:else if chat.typ === 'attachment'}
                       TODO: attachment
                     {:else if chat.typ === 'voice'}
