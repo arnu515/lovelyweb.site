@@ -83,8 +83,12 @@ begin
     end if;
 
     insert into group_messages(id, group_id, by_id, org_id, typ, data)
-      values (msg_id, group_id, by_id, org_id, typ, data)
-      returning * into msg_record;
+      values (msg_id, group_id, by_id, org_id, typ, data);
+    select m.*, u.id as sender_id, u.name as sender_name, u.avatar_url as sender_avatar_url
+      into msg_record
+      from group_messages m
+      inner join users u on u.id = m.by_id
+      where m.id = msg_id;
   else
     raise exception 'Message type "%" not implemented', typ;
   end if;

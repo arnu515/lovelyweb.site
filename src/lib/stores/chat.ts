@@ -239,6 +239,7 @@ function createChatStore() {
           payload.record
         ) {
           const message = payload.record as GroupMessage;
+          console.log({ id: message.sender_id });
           addMessageToChat(message.group_id, { message, isGroup });
           updateChatOverview(isGroup, message.group_id);
         }
@@ -328,8 +329,11 @@ function createChatStore() {
     (isGroup ? groupMessagesData : individualMessagesData)
       .get(chatId)
       ?.update(d => {
-        if (Array.isArray(d))
-          return d.map(m => (m.id === message.id ? message : m));
+        if (Array.isArray(d)) {
+          const idx = d.findIndex(m => m.id === message.id);
+          if (idx !== -1) Object.assign(d[idx], message);
+          return d;
+        }
         return d as any;
       });
   }
@@ -504,7 +508,10 @@ function createChatStore() {
             data: content,
             created_at: new Date().toISOString(),
             edited_at: null,
-            isOptimistic: true as const
+            isOptimistic: true as const,
+            sender_name: null,
+            sender_id: null,
+            sender_avatar_url: null
           };
           if (store) {
             store.update(messages => {
