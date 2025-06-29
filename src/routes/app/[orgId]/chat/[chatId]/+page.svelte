@@ -96,12 +96,18 @@
   }
 
   async function sendMessage() {
-    if (!messageInput.trim()) return;
+    if (!messageInput.trim() || !$currentChat) return;
 
     const content = messageInput;
     messageInput = '';
 
-    await chat.messages.sendMessage($page.params.chatId, content, orgId, user.id);
+    await chat.messages.sendMessage(
+      $page.params.chatId,
+      $currentChat.id,
+      content,
+      orgId,
+      user.id
+    );
   }
 
   function handleKeyPress(event: KeyboardEvent) {

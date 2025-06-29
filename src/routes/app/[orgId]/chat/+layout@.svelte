@@ -1,8 +1,31 @@
 <script lang="ts">
   import ChatSidebar from './ChatSidebar.svelte';
   import type { LayoutData } from './$types';
+  import { onMount } from 'svelte';
+  import { chat, chatOverview } from '$lib/stores/chat';
+  import { goto } from '$app/navigation';
+  import { page } from '$app/stores';
 
   export let data: LayoutData;
+
+  onMount(() => {
+    console.log('Chat layout mounted');
+    const orgId = $page.params.orgId;
+    if (!data.auth.user) {
+      goto('/auth');
+      return;
+    }
+    chat.init(orgId, data.auth.user.id).then(fetched => {
+      if (!fetched && !$chatOverview) {
+        console.log('Chat layout fetching overview');
+        chatOverview.fetchOverview(orgId, data.auth.user!.id);
+      }
+    });
+    return () => {
+      console.log('Chat layout unmounted');
+      chat.cleanupRealtime();
+    };
+  });
 </script>
 
 <div

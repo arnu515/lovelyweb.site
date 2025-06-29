@@ -73,14 +73,3 @@ export function kanbanBoard(boardId: string) {
     cards.unsubscribe();
   };
 }
-
-export function chatRealtime(orgId: string, userId: string) {
-  if (!isBrowser()) return;
-  
-  // Initialize chat realtime through the chat store
-  chat.chatOverview.fetchOverview(orgId, userId);
-  
-  return () => {
-    chat.cleanup();
-  };
-}

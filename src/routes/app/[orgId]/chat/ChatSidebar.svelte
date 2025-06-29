@@ -50,9 +50,9 @@
       .getPublicUrl(`/org/${orgId}/group/${gid}.${avatar_type}`).data.publicUrl;
   }
 
-  onMount(() => {
-    if (!$chatOverview?.data) chatOverview.fetchOverview(orgId, user.id);
-  });
+  // onMount(() => {
+  //   if (!$chatOverview?.data) chatOverview.fetchOverview(orgId, user.id);
+  // });
 </script>
 
 <aside

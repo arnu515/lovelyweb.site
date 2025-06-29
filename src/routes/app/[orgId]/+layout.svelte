@@ -25,16 +25,16 @@
       data.org.id,
       data.auth.user.id
     );
-    
-    const chatRealtimeUnsub = realtime.chatRealtime(
-      data.org.id,
-      data.auth.user.id
-    );
+
+    chat.init(data.org.id, data.auth.user.id);
+
+    console.log('Org layout mounted');
 
     return () => {
       window.removeEventListener('resize', checkMobile);
+      console.log('Org layout unmounted');
       boardMembershipsUnsub?.();
-      chatRealtimeUnsub?.();
+      chat.cleanupRealtime();
     };
   });
 </script>

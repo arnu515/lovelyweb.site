@@ -57,6 +57,7 @@ function createChatStore() {
 
   function initializeRealtime(orgId: string, userId: string) {
     if (currentUserId === userId && currentOrgId === orgId) return;
+    console.log('Initializing realtime', { orgId, userId });
 
     // Clean up existing subscriptions
     cleanupRealtime();
@@ -68,6 +69,7 @@ function createChatStore() {
     const individualChatChannel = supabase
       .channel(`chat:${orgId}:${userId}`, { config: { private: true } })
       .on('broadcast', { event: '*' }, payload => {
+        console.log('Received chat msg', payload);
         handleIndividualChatMessage(payload.event, payload.payload);
       })
       .subscribe();
@@ -129,6 +131,7 @@ function createChatStore() {
           payload.record
         ) {
           const message = payload.record as Message;
+          console.log('got message', message);
           addMessageToChat(getIndividualChatSlug(message), message);
           updateChatOverview(message);
         }
@@ -362,9 +365,6 @@ function createChatStore() {
           overviewData = overview;
           overviewDataMap = Object.fromEntries(overview.map(i => [i.slug, i]));
           setOverview({ data: overviewData, dataMap: overviewDataMap });
-
-          // Initialize realtime after fetching overview
-          initializeRealtime(orgId, userId);
         }
       } catch (error) {
         captureException(error, { tags: { action: 'fetch_chat_overview' } });
@@ -404,19 +404,20 @@ function createChatStore() {
 
     async sendMessage(
       chatSlug: string,
+      toId: string,
       content: string,
       orgId: string,
       userId: string
     ): Promise<boolean> {
       try {
         const messageId = nanoid();
-        const isGroup = chatSlug.startsWith('-');
+        const isGroup = !chatSlug.startsWith('@');
 
         // Create optimistic message
         const optimisticMessage: ChatMessage = {
           id: messageId,
           from_id: userId,
-          to_id: isGroup ? '' : chatSlug.substring(1),
+          to_id: toId,
           org_id: orgId,
           typ: 'text',
           data: content,
@@ -444,16 +445,14 @@ function createChatStore() {
         // Send actual message
         let error;
         if (isGroup) {
-          const groupId = chatSlug.substring(1);
           ({ error } = await supabase.rpc('send_group_chat_message', {
             msg_id: messageId,
             data: content,
             typ: 'text',
-            group_id: groupId,
+            group_id: toId,
             org_id: orgId
           }));
         } else {
-          const toId = chatSlug.substring(1);
           ({ error } = await supabase.rpc('send_chat_message', {
             msg_id: messageId,
             data: content,
@@ -520,10 +519,27 @@ function createChatStore() {
     currentUserId = null;
   }
 
+  async function init(orgId: string, userId: string) {
+    console.log('Initializing chat store');
+    if (currentOrgId !== orgId || currentUserId !== userId) {
+      console.log('New org or user', { orgId, userId });
+      cleanup();
+      await chatOverview.fetchOverview(orgId, userId);
+      initializeRealtime(orgId, userId);
+      currentOrgId = orgId;
+      currentUserId = userId;
+      return true;
+    }
+    initializeRealtime(orgId, userId);
+    return false;
+  }
+
   return {
     chatOverview,
     messages,
-    cleanup
+    init,
+    cleanup,
+    cleanupRealtime
   };
 }
 
