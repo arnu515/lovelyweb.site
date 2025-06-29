@@ -4,17 +4,7 @@
   import { Label } from '$lib/components/ui/label';
   import * as Dialog from '$lib/components/ui/dialog';
   import { Skeleton } from '$lib/components/ui/skeleton';
-  import { 
-    BookOpen, 
-    Plus, 
-    Trash2, 
-    FileText,
-    Edit3,
-    Save,
-    ArrowLeft,
-    Eye,
-    EyeOff
-  } from 'lucide-svelte';
+  import { BookOpen, Plus, Trash2, FileText, FileEdit as Edit3, Save, ArrowLeft, Eye, EyeOff } from 'lucide-svelte';
   import { createBrowserClient } from '@supabase/ssr';
   import { 
     PUBLIC_SUPABASE_ANON_KEY, 
