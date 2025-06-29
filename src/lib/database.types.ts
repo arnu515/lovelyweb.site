@@ -566,6 +566,26 @@ export type Database = {
         Args: { email: string };
         Returns: string;
       };
+      send_chat_message: {
+        Args: {
+          msg_id: string;
+          to_id: string;
+          org_id: string;
+          typ: Database['public']['Enums']['msg_type'];
+          data: Json;
+        };
+        Returns: undefined;
+      };
+      send_group_chat_message: {
+        Args: {
+          msg_id: string;
+          group_id: string;
+          org_id: string;
+          typ: Database['public']['Enums']['msg_type'];
+          data: Json;
+        };
+        Returns: undefined;
+      };
       update_board_name: {
         Args: { new_name: string; board_id: string };
         Returns: undefined;

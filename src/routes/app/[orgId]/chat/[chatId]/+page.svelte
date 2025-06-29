@@ -34,6 +34,7 @@
   import { createBrowserClient } from '@supabase/ssr';
   import type { Database } from '$lib/database.types.js';
   import { toast } from 'svelte-sonner';
+  import { nanoid } from 'nanoid';
 
   export let data;
   const user = data.auth.user!;
@@ -58,6 +59,7 @@
     ]) => (co ? co.dataMap[chatId] : null)
   );
   $: orgId = $page.params.orgId;
+  $: isGroup = !$page.params.chatId.startsWith('@');
 
   $: messages = msgStore.fetch($page.params.chatId);
   $: if (messages) console.log($messages);
@@ -101,26 +103,37 @@
 
   async function sendMessage() {
     if (!messageInput.trim()) return;
-    let id = Math.random();
+    const currChat = $currentChat;
+    if (!currChat) return;
 
     const content = messageInput;
     messageInput = '';
-    msgQueue = [...msgQueue, [id, content]];
 
     try {
-      const res = await fetch('?', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'text', content }),
-        credentials: 'include'
-      });
-      if (!res.ok) throw new Error((await res.json()).error);
+      if (!isGroup) {
+        const { error } = await supabase.rpc('send_chat_message', {
+          msg_id: nanoid(),
+          data: content,
+          typ: 'text',
+          to_id: currChat.id,
+          org_id: orgId
+        });
+        if (error) throw new Error(error.message);
+      } else {
+        const { error } = await supabase.rpc('send_group_chat_message', {
+          msg_id: nanoid(),
+          data: content,
+          typ: 'text',
+          group_id: currChat.id,
+          org_id: orgId
+        });
+        if (error) throw new Error(error.message);
+      }
     } catch (e) {
       toast.error('Could not send messge', {
         description: (e as any)?.message || 'An unknown error occured'
       });
     }
-    msgQueue = msgQueue.filter(([_id]) => _id !== id);
   }
 
   function handleKeyPress(event: KeyboardEvent) {
