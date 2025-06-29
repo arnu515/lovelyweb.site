@@ -407,6 +407,102 @@ export type Database = {
           }
         ];
       };
+      notebook_pages: {
+        Row: {
+          content: string;
+          created_at: string;
+          created_by: string;
+          id: string;
+          notebook_id: string;
+          position: number;
+          title: string;
+          updated_at: string;
+        };
+        Insert: {
+          content?: string;
+          created_at?: string;
+          created_by: string;
+          id?: string;
+          notebook_id: string;
+          position?: number;
+          title?: string;
+          updated_at?: string;
+        };
+        Update: {
+          content?: string;
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          notebook_id?: string;
+          position?: number;
+          title?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'notebook_pages_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'notebook_pages_notebook_id_fkey';
+            columns: ['notebook_id'];
+            isOneToOne: false;
+            referencedRelation: 'notebooks';
+            referencedColumns: ['id'];
+          }
+        ];
+      };
+      notebooks: {
+        Row: {
+          color: string;
+          created_at: string;
+          description: string | null;
+          id: string;
+          name: string;
+          org_id: string;
+          owner_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          color?: string;
+          created_at?: string;
+          description?: string | null;
+          id?: string;
+          name: string;
+          org_id: string;
+          owner_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          color?: string;
+          created_at?: string;
+          description?: string | null;
+          id?: string;
+          name?: string;
+          org_id?: string;
+          owner_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'notebooks_org_id_fkey';
+            columns: ['org_id'];
+            isOneToOne: false;
+            referencedRelation: 'organisations';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'notebooks_owner_id_fkey';
+            columns: ['owner_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          }
+        ];
+      };
       organisations: {
         Row: {
           created_at: string;

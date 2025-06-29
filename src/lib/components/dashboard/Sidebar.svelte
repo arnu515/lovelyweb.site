@@ -326,6 +326,15 @@
           <Calendar class="icon" />
           <span>Calendar</span>
         </Button>
+        <Button
+          href="/app/{currentOrg.id}/notes"
+          variant="ghost"
+          class={cn('sb-btn', currentPage === 'notes' && 'active')}
+          on:click={handleNavigation}
+        >
+          <FileText class="icon" />
+          <span>Notes</span>
+        </Button>
       </div>
     </div>
 
