@@ -156,3 +156,213 @@ using (
   split_part((select realtime.topic()), ':', '1') = 'chat-group-members'
   and split_part((select realtime.topic()), ':', '2')::uuid = (select auth.uid())
 );
+
+-- Function to edit individual chat messages
+CREATE OR REPLACE FUNCTION edit_chat_message(
+  msg_id text,
+  new_data json
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  msg_record messages%rowtype;
+  msg_typ msg_type;
+  to_id uuid;
+  org_id text;
+  from_id uuid;
+BEGIN
+  -- Get message type, to_id, org_id, from_id
+  SELECT messages.typ, messages.to_id, messages.org_id, messages.from_id
+    INTO msg_typ, to_id, org_id, from_id
+  FROM messages
+  WHERE messages.id = msg_id AND messages.from_id = auth.uid();
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Message not found or you do not have permission to edit it';
+  END IF;
+
+  IF msg_typ = 'text' THEN
+    IF jsonb_typeof(new_data::jsonb) <> 'string' THEN
+      RAISE EXCEPTION 'Text message data must be a JSONB string';
+    END IF;
+
+    UPDATE messages
+    SET
+      data = new_data,
+      edited_at = now()
+    WHERE
+      messages.id = msg_id
+      AND messages.from_id = auth.uid()
+      AND messages.typ = 'text'
+    RETURNING * INTO msg_record;
+  ELSE
+    RAISE EXCEPTION 'Message type "%" not implemented', msg_typ;
+  END IF;
+
+  -- Broadcast the update to both sender and recipient
+  PERFORM realtime.broadcast_changes(
+    'chat:' || org_id || ':' || from_id::text,
+    'UPDATE',
+    'UPDATE',
+    'messages',
+    'public',
+    msg_record,
+    NULL
+  );
+  PERFORM realtime.broadcast_changes(
+    'chat:' || org_id || ':' || to_id::text,
+    'UPDATE',
+    'UPDATE',
+    'messages',
+    'public',
+    msg_record,
+    NULL
+  );
+END;
+$$;
+
+-- Trigger function for broadcasting deleted messages
+CREATE OR REPLACE FUNCTION rt_message_delete()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  -- Broadcast to sender
+  PERFORM realtime.broadcast_changes(
+    'chat:' || OLD.org_id || ':' || OLD.from_id::text,
+    'DELETE',
+    'DELETE',
+    'messages',
+    'public',
+    NULL,
+    OLD
+  );
+  -- Broadcast to recipient
+  PERFORM realtime.broadcast_changes(
+    'chat:' || OLD.org_id || ':' || OLD.to_id::text,
+    'DELETE',
+    'DELETE',
+    'messages',
+    'public',
+    NULL,
+    OLD
+  );
+  RETURN OLD;
+END;
+$$;
+
+CREATE TRIGGER rt_message_delete
+AFTER DELETE ON messages
+FOR EACH ROW
+EXECUTE FUNCTION rt_message_delete();
+
+-- Trigger function for broadcasting deleted group messages
+CREATE OR REPLACE FUNCTION rt_group_message_delete()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  PERFORM realtime.broadcast_changes(
+    'chat-group:' || OLD.org_id || ':' || OLD.group_id::text,
+    'DELETE',
+    'DELETE',
+    'group_messages',
+    'public',
+    NULL,
+    OLD
+  );
+  RETURN OLD;
+END;
+$$;
+
+CREATE TRIGGER rt_group_message_delete
+AFTER DELETE ON group_messages
+FOR EACH ROW
+EXECUTE FUNCTION rt_group_message_delete();
+
+-- RLS policy for message delete broadcasts
+CREATE POLICY "Chat Message Delete"
+ON realtime.messages
+FOR SELECT TO authenticated
+USING (
+  split_part((select realtime.topic()), ':', 1) = 'chat'
+  AND split_part((select realtime.topic()), ':', 3)::uuid = (select auth.uid())
+  AND EXISTS (
+    SELECT 1 FROM organisations_users
+    WHERE organisation_id = split_part((select realtime.topic()), ':', 2)
+      AND user_id = (select auth.uid())
+  )
+);
+
+-- RLS policy for group message delete broadcasts
+CREATE POLICY "Chat Group Message Delete"
+ON realtime.group_messages
+FOR SELECT TO authenticated
+USING (
+  split_part((select realtime.topic()), ':', 1) = 'chat-group'
+  AND EXISTS (
+    SELECT 1 FROM chat_group_members
+    WHERE group_id = split_part((select realtime.topic()), ':', 3)
+      AND user_id = (select auth.uid())
+  )
+);
+
+-- Function to edit group chat messages
+CREATE OR REPLACE FUNCTION edit_group_chat_message(
+  msg_id text,
+  new_data json
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  msg_record group_messages%rowtype;
+  msg_typ msg_type;
+  group_id text;
+  org_id text;
+BEGIN
+  -- Get message type, group_id, org_id
+  SELECT group_messages.typ, group_messages.group_id, group_messages.org_id
+    INTO msg_typ, group_id, org_id
+  FROM group_messages
+  WHERE group_messages.id = msg_id AND group_messages.by_id = auth.uid();
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Message not found or you do not have permission to edit it';
+  END IF;
+
+  IF msg_typ = 'text' THEN
+    IF jsonb_typeof(new_data::jsonb) <> 'string' THEN
+      RAISE EXCEPTION 'Text message data must be a JSONB string';
+    END IF;
+
+    UPDATE group_messages
+    SET
+      data = new_data,
+      edited_at = now()
+    WHERE
+      group_messages.id = msg_id
+      AND group_messages.by_id = auth.uid()
+      AND group_messages.typ = 'text'
+    RETURNING * INTO msg_record;
+  ELSE
+    RAISE EXCEPTION 'Message type "%" not implemented', msg_typ;
+  END IF;
+
+  -- Broadcast the update to the group channel
+  PERFORM realtime.broadcast_changes(
+    'chat-group:' || org_id || ':' || group_id::text,
+    'UPDATE',
+    'UPDATE',
+    'group_messages',
+    'public',
+    msg_record,
+    NULL
+  );
+END;
+$$;
