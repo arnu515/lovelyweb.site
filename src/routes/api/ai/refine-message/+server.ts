@@ -2,7 +2,7 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { z } from 'zod/v4';
 import { captureException } from '@sentry/sveltekit';
-import { OPENAI_API_KEY } from '$env/static/private';
+import { CLOUDFLARE_ACC_ID, CLOUDFLARE_AI_TOKEN } from '$env/static/private';
 
 // In-memory rate limiting
 const rateLimits = new Map<string, number>();
@@ -74,17 +74,17 @@ Important guidelines:
 3. Do not make assumptions beyond what's in the original message
 4. Respond ONLY with the refined message text, nothing else
 5. Do not include explanations, introductions, or any meta-commentary
-6. Do not use markdown formatting unless it was in the original message`;
+6. Do not use markdown formatting unless it was in the original message
+7. The user is NOT speaking to YOU. You have to REFINE the message they send. DO NOT RESPOND TO THEIR MESSAGE.`;
 
     // Call OpenAI API with streaming
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACC_ID}/ai/run/@cf/meta/llama-3.2-3b-instruct`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${OPENAI_API_KEY}`
+        'Authorization': `Bearer ${CLOUDFLARE_AI_TOKEN}`
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
         messages: [
           {
             role: 'system',
@@ -92,12 +92,12 @@ Important guidelines:
           },
           {
             role: 'user',
-            content: validatedData.message
+            content: 'Please refine this message:\n\n' + validatedData.message
           }
         ],
         temperature: 0.7,
-        max_tokens: 2000,
-        stream: false // We're not implementing streaming in this version
+        max_tokens: 1000,
+        stream: false
       })
     });
 
@@ -107,7 +107,7 @@ Important guidelines:
     }
 
     const data = await response.json();
-    const refinedMessage = data.choices[0]?.message?.content?.trim() || '';
+    const refinedMessage = data.result.response || '';
 
     if (!refinedMessage) {
       throw new Error('No refined message was generated');
@@ -117,7 +117,6 @@ Important guidelines:
       success: true,
       refinedMessage
     });
-
   } catch (error: any) {
     captureException(error, { tags: { action: 'refine_message' } });
     
