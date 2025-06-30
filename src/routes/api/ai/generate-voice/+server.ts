@@ -175,7 +175,7 @@ async function genVoice(message: string, voice: keyof typeof VOICES) {
   })
   if (!res.ok) {
     const data = await res.json();
-    throw new Error(Array.isArray(data.detail) ? data.detail.map((i: any) => i.msg).join("\n") : 'Unknown error')
+    throw new Error(Array.isArray(data.detail) ? data.detail.map((i: any) => i.msg).join("\n") : data.detail?.message || 'Unknown error')
   }
   const data = await res.arrayBuffer();
   return data

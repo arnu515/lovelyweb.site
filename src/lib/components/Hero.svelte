@@ -1,6 +1,7 @@
 <script lang="ts">
   import { Button } from '$lib/components/ui/button';
   import { ArrowRight, Mail, MessageCircle, Video, Brain } from 'lucide-svelte';
+  import BoltImage from "$lib/assets/bolt.png"
 </script>
 
 <section
@@ -10,6 +11,12 @@
   <div
     class="absolute inset-0 bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-purple-900/20 dark:to-blue-900/20"
   ></div>
+
+  <div class="hidden md:block absolute top-20 right-4 z-30">
+    <a href="https://bolt.new">
+    <img src={BoltImage} alt="Powered by bolt.new" class="w-24 h-24">
+      </a>
+  </div>
 
   <!-- Animated Background Elements -->
   <div class="absolute inset-0 overflow-hidden">
@@ -27,6 +34,11 @@
   </div>
 
   <div class="container relative z-10 mx-auto px-4 text-center sm:px-6 lg:px-8">
+    <div class="flex justify-center my-4 md:hidden z-30">
+      <a href="https://bolt.new">
+      <img src={BoltImage} alt="Powered by bolt.new" class="border border-gray-500 rounded-full w-20 h-20 md:w-24 md:h-24">
+        </a>
+    </div>
     <div class="mx-auto max-w-4xl">
       <!-- Badge -->
       <div
