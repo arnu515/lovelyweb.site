@@ -10,7 +10,7 @@ const rateLimits = new Map<string, number>();
 // Validate request body
 const refineMessageSchema = z.object({
   message: z.string().min(1).max(2000),
-  style: z.enum(['formal', 'casual', 'funny', 'concise', 'professional']),
+  style: z.enum(['formal', 'casual', 'funny', 'concise', 'medieval']),
   customInstructions: z.string().max(500).optional()
 });
 
@@ -56,8 +56,8 @@ export const POST: RequestHandler = async ({ request, locals: { auth } }) => {
       case 'concise':
         styleDescription = "Make the message brief and to the point. Remove unnecessary words and focus on the core message.";
         break;
-      case 'professional':
-        styleDescription = "Use business-appropriate language that is clear, direct, and respectful. Maintain a professional tone throughout.";
+      case 'medieval':
+        styleDescription = "Use Shakespherean English in a playful tone. It does not have to be accurate, just convincing.";
         break;
     }
 

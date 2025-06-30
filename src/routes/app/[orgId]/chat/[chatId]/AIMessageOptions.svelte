@@ -7,7 +7,6 @@
   import { FileEdit as Edit3, Volume2, X, Sparkles, Loader2 } from 'lucide-svelte';
   import { cn } from '$lib/utils';
   import { toast } from 'svelte-sonner';
-  import { page } from '$app/stores';
 
   export let mode: 'refine' | 'voice' | null = null;
   export let messageInput: string = '';
@@ -25,7 +24,7 @@
     { id: 'casual', label: 'Casual', description: 'Relaxed and friendly' },
     { id: 'funny', label: 'Funny', description: 'Humorous and light-hearted' },
     { id: 'concise', label: 'Concise', description: 'Brief and to the point' },
-    { id: 'professional', label: 'Professional', description: 'Business-appropriate' }
+    { id: 'medieval', label: 'Medieval', description: 'Shakesphere style' }
   ];
   
   let selectedRefineStyle = 'formal';
