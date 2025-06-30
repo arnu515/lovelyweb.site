@@ -1,16 +1,5 @@
 <script lang="ts">
-  import {
-    Search,
-    Clock,
-    Mail,
-    MessageCircle,
-    FileText,
-    Calendar,
-    CheckSquare,
-    Kanban,
-    Users
-  } from 'lucide-svelte';
-  import { Input } from '$lib/components/ui/input';
+  import { Mail, MessageCircle, Users } from 'lucide-svelte';
   import { Button } from '$lib/components/ui/button';
 
   export let user: NonNullable<App.Locals['auth']['user']>;
@@ -116,20 +105,6 @@
           ? 'afternoon'
           : 'evening'}, <span class="text-nowrap">{user.name}</span>!
     </h1>
-  </div>
-
-  <!-- Search Bar -->
-  <div class="mx-auto max-w-4xl">
-    <div class="relative">
-      <Search
-        class="absolute left-4 top-1/2 z-10 h-5 w-5 -translate-y-1/2 transform text-gray-400 md:left-6 md:h-6 md:w-6"
-      />
-      <Input
-        bind:value={searchQuery}
-        placeholder="Ask or find anything..."
-        class="glass dark:glass-dark w-full rounded-xl border-white/30 py-4 pl-12 pr-4 text-base shadow-xl transition-all duration-200 focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/50 dark:border-gray-700/50 md:py-6 md:pl-16 md:pr-6 md:text-lg"
-      />
-    </div>
   </div>
 
   <!-- Recent Activity Grid -->
