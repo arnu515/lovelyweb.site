@@ -4,7 +4,7 @@
   import { Label } from '$lib/components/ui/label';
   import * as Dialog from '$lib/components/ui/dialog';
   import { Skeleton } from '$lib/components/ui/skeleton';
-  import { Plus, Trash2, FileText, Save, ArrowLeft, Loader2 } from 'lucide-svelte';
+  import { Plus, Trash2, FileText, Save, ArrowLeft, Loader2, Menu, X } from 'lucide-svelte';
   import { createBrowserClient } from '@supabase/ssr';
   import { 
     PUBLIC_SUPABASE_ANON_KEY, 
@@ -16,7 +16,7 @@
   import type { Database } from '$lib/database.types';
   import { nanoid } from 'nanoid';
   import { page } from '$app/stores';
-  import { onDestroy } from 'svelte';
+  import { onDestroy, onMount } from 'svelte';
   import { Crepe } from '@milkdown/crepe';
   import '@milkdown/crepe/theme/common/style.css';
   import './theme.css';
@@ -34,6 +34,8 @@
   let createPageLoading = false;
   let deletePageLoading = false;
   let saveLoading = false;
+  let sidebarOpen = false;
+  let isMobile = false;
 
   // Page creation
   let newPageTitle = '';
@@ -47,6 +49,22 @@
   $: if (selectedPageId) {
     initEditor(selectedPageId);
   }
+
+  onMount(() => {
+    const checkMobile = () => {
+      isMobile = window.innerWidth < 768;
+      if (!isMobile) {
+        sidebarOpen = true;
+      }
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
+  });
 
   async function initEditor(pageId: string) {
     if (crepeEditor) {
@@ -145,6 +163,11 @@
       newPageTitle = '';
       selectedPageId = newPage.id;
       
+      // Close sidebar on mobile after creating page
+      if (isMobile) {
+        sidebarOpen = false;
+      }
+      
       await invalidate('app:notebook-' + notebookId);
     } catch (error: any) {
       toast.error('Failed to create page', {
@@ -202,7 +225,7 @@
 
       if (error) throw error;
 
-      toast.success('Page saved successfully');
+      // Remove the toast notification - it was annoying
       hasUnsavedChanges = false;
       currentContent = markdown;
     } catch (error: any) {
@@ -211,6 +234,14 @@
       });
     } finally {
       saveLoading = false;
+    }
+  }
+
+  function handlePageSelect(pageId: string) {
+    selectedPageId = pageId;
+    // Close sidebar on mobile when selecting a page
+    if (isMobile) {
+      sidebarOpen = false;
     }
   }
 
@@ -238,9 +269,24 @@
   {/await}
 </svelte:head>
 
+<!-- Mobile overlay -->
+{#if isMobile && sidebarOpen}
+  <div
+    class="fixed inset-0 z-40 bg-black/50 md:hidden"
+    on:click={() => (sidebarOpen = false)}
+    on:keydown={e => e.key === 'Escape' && (sidebarOpen = false)}
+    role="button"
+    tabindex="0"
+  ></div>
+{/if}
+
 <div class="flex h-screen bg-gradient-to-br from-purple-100/80 via-blue-100/80 to-indigo-200/80 dark:from-gray-900 dark:via-purple-900/20 dark:to-blue-900/20">
   <!-- Sidebar -->
-  <div class="glass dark:glass-dark flex w-80 flex-col border-r border-white/20 dark:border-gray-700/50">
+  <div class={cn(
+    "glass dark:glass-dark flex flex-col border-r border-white/20 dark:border-gray-700/50 transition-transform duration-300 md:relative md:translate-x-0",
+    isMobile ? "fixed left-0 top-0 z-50 h-full w-80" : "w-80",
+    isMobile && sidebarOpen ? "translate-x-0" : isMobile ? "-translate-x-full" : ""
+  )}>
     <!-- Header -->
     {#await data.notebook}
       <div class="border-b border-white/20 p-4 dark:border-gray-700/50">
@@ -265,6 +311,16 @@
           <h1 class="truncate text-lg font-semibold text-gray-900 dark:text-white">
             {notebook.name}
           </h1>
+          {#if isMobile}
+            <Button
+              variant="ghost"
+              size="icon"
+              class="ml-auto h-8 w-8 md:hidden"
+              on:click={() => (sidebarOpen = false)}
+            >
+              <X class="h-4 w-4" />
+            </Button>
+          {/if}
         </div>
         
         <Button
@@ -306,7 +362,7 @@
                     "w-full justify-start text-left",
                     selectedPageId === page.id && "bg-purple-100/80 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300"
                   )}
-                  on:click={() => (selectedPageId = page.id)}
+                  on:click={() => handlePageSelect(page.id)}
                 >
                   <FileText class="mr-2 h-4 w-4 flex-shrink-0" />
                   <span class="truncate">{page.title}</span>
@@ -331,6 +387,31 @@
 
   <!-- Main Content -->
   <div class="flex flex-1 flex-col">
+    <!-- Mobile Header -->
+    {#if isMobile}
+      <div class="glass dark:glass-dark border-b border-white/20 p-4 dark:border-gray-700/50 md:hidden">
+        <div class="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            class="h-8 w-8"
+            on:click={() => (sidebarOpen = true)}
+          >
+            <Menu class="h-4 w-4" />
+          </Button>
+          {#await data.notebook then notebook}
+            <div
+              class="h-3 w-3 rounded-full"
+              style="background-color: {notebook.color}"
+            ></div>
+            <h1 class="truncate text-lg font-semibold text-gray-900 dark:text-white">
+              {notebook.name}
+            </h1>
+          {/await}
+        </div>
+      </div>
+    {/if}
+
     {#if selectedPageId}
       <!-- Editor Header -->
       <div class="glass dark:glass-dark border-b border-white/20 p-4 dark:border-gray-700/50 shadow-none">
@@ -368,7 +449,7 @@
       </div>
     {:else}
       <!-- No Page Selected -->
-      <div class="flex flex-1 items-center justify-center">
+      <div class="flex flex-1 items-center justify-center p-4">
         <div class="text-center">
           <div
             class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-r from-gray-500 to-gray-600"
@@ -379,8 +460,21 @@
             Select a page to start editing
           </h3>
           <p class="text-gray-600 dark:text-gray-300">
-            Choose a page from the sidebar or create a new one
+            {#if isMobile}
+              Tap the menu button to see your pages
+            {:else}
+              Choose a page from the sidebar or create a new one
+            {/if}
           </p>
+          {#if isMobile}
+            <Button
+              on:click={() => (sidebarOpen = true)}
+              class="gradient-primary mt-4 gap-2 text-white"
+            >
+              <Menu class="h-4 w-4" />
+              Open Pages
+            </Button>
+          {/if}
         </div>
       </div>
     {/if}
