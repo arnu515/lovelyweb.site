@@ -476,6 +476,7 @@
                 {/if}
 
                 <div class="group relative">
+                    {#if message.typ === 'text'}
                   <div
                     class={cn(
                       'rounded-2xl px-4 py-2 shadow-sm',
@@ -486,8 +487,8 @@
                         : 'glass dark:glass-dark text-gray-900 dark:text-white'
                     )}
                   >
-                    {#if message.typ === 'text'}
                       <p class="text-sm leading-relaxed">{message.data}</p>
+                  </div>
                     {:else if message.typ === 'voice'}
                       <VoicePlayer
                         messageId={message.id}
@@ -500,7 +501,6 @@
                     {:else if message.typ === 'attachment'}
                       <!-- TODO: attachment -->
                     {/if}
-                  </div>
                   
                   <!-- Message Actions (only for user's own text messages) -->
                   {#if message.from_id === user.id && message.typ === 'text' && !('isOptimistic' in message && message.isOptimistic)}
