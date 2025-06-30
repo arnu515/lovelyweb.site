@@ -184,6 +184,9 @@
         </h2>
       </div>
       <div class="glass dark:glass-dark space-y-4 rounded-2xl p-6">
+        {#if recentChats.length === 0}
+          <p class="text-center text-lg text-muted-foreground m-4"><em>You don't have any chats</em></p>
+        {:else}
         {#each recentChats as chat}
           <Button
             variant="ghost"
@@ -243,6 +246,7 @@
             </div>
           </Button>
         {/each}
+        {/if}
       </div>
     </div>
   </div>
