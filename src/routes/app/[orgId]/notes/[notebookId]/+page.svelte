@@ -408,13 +408,27 @@
               {notebook.name}
             </h1>
           {/await}
+          {#if selectedPageId}
+          <div class="flex md:hidden items-center justify-end ml-auto gap-4">
+            <div class="h-3 w-3 rounded-full {hasUnsavedChanges ? 'bg-orange-500' : 'bg-green-500'}"></div>
+            <Button
+              on:click={savePage}
+              disabled={!hasUnsavedChanges || saveLoading}
+              class="gradient-primary gap-2 text-white"
+              size="sm"
+            >
+              <Save class="h-4 w-4" />
+              {saveLoading ? 'Saving...' : 'Save'}
+            </Button>
+          </div>
+          {/if}
         </div>
       </div>
     {/if}
 
     {#if selectedPageId}
       <!-- Editor Header -->
-      <div class="glass dark:glass-dark border-b border-white/20 p-4 dark:border-gray-700/50 shadow-none">
+      <div class="glass dark:glass-dark border-b border-white/20 p-4 dark:border-gray-700/50 shadow-none hidden md:block">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
             <div class="h-2 w-2 rounded-full {hasUnsavedChanges ? 'bg-orange-500' : 'bg-green-500'}"></div>
