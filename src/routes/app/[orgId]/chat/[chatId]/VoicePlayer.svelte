@@ -4,9 +4,10 @@
   import { 
     Play, 
     Pause, 
-    Volume2, 
+    Volume2,
     Loader2,
-    Download
+    Download,
+    ChevronDown
   } from 'lucide-svelte';
   import { cn } from '$lib/utils';
   import { toast } from 'svelte-sonner';
@@ -19,6 +20,12 @@
   export let isOwn: boolean = false;
 
   const dispatch = createEventDispatcher();
+  
+  // Playback speed options
+  const speedOptions = [0.5, 1, 1.5, 2];
+  let currentSpeedIndex = 1; // Start with 1x speed
+  let playbackSpeed = speedOptions[currentSpeedIndex];
+  let showSpeedMenu = false;
 
   let isPlaying = false;
   let isLoading = false;
@@ -28,23 +35,8 @@
   let progressBarElement: HTMLDivElement;
   let isDragging = false;
 
-  // Audio visualization
-  let audioContext: AudioContext | null = null;
-  let analyser: AnalyserNode | null = null;
-  let dataArray: Uint8Array | null = null;
-  let animationFrame: number | null = null;
-  let waveformCanvas: HTMLCanvasElement;
-  let showWaveform = false;
-
   onMount(() => {
-    // Check if we can show waveform (requires AudioContext support)
-    try {
-      const testContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      testContext.close();
-      showWaveform = true;
-    } catch {
-      showWaveform = false;
-    }
+    // No initialization needed
   });
 
   onDestroy(() => {
@@ -62,19 +54,6 @@
       URL.revokeObjectURL(audioUrl);
       audioUrl = null;
     }
-
-    if (audioContext) {
-      audioContext.close();
-      audioContext = null;
-    }
-
-    if (animationFrame) {
-      cancelAnimationFrame(animationFrame);
-      animationFrame = null;
-    }
-
-    analyser = null;
-    dataArray = null;
   }
 
   async function fetchSignedUrl() {
@@ -124,12 +103,11 @@
       audioElement = new Audio(audioUrl);
       audioElement.preload = 'metadata';
 
+      // Set playback speed
+      audioElement.playbackRate = playbackSpeed;
+
       // Set up event listeners
-      audioElement.addEventListener('loadedmetadata', () => {
-        if (showWaveform) {
-          setupAudioVisualization();
-        }
-      });
+      audioElement.addEventListener('loadedmetadata', () => {});
 
       audioElement.addEventListener('timeupdate', () => {
         if (audioElement && !isDragging) {
@@ -140,10 +118,6 @@
       audioElement.addEventListener('ended', () => {
         isPlaying = false;
         currentTime = 0;
-        if (animationFrame) {
-          cancelAnimationFrame(animationFrame);
-          animationFrame = null;
-        }
       });
 
       audioElement.addEventListener('error', (e) => {
@@ -160,87 +134,37 @@
     }
   }
 
-  function setupAudioVisualization() {
-    if (!audioElement || !waveformCanvas) return;
-
-    try {
-      audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const source = audioContext.createMediaElementSource(audioElement);
-      analyser = audioContext.createAnalyser();
-      
-      analyser.fftSize = 256;
-      analyser.smoothingTimeConstant = 0.8;
-      source.connect(analyser);
-      analyser.connect(audioContext.destination);
-
-      dataArray = new Uint8Array(analyser.frequencyBinCount);
-      drawWaveform();
-    } catch (error) {
-      console.error('Failed to setup audio visualization:', error);
-      showWaveform = false;
-    }
-  }
-
-  function drawWaveform() {
-    if (!analyser || !dataArray || !waveformCanvas || !isPlaying) return;
-
-    const ctx = waveformCanvas.getContext('2d');
-    if (!ctx) return;
-
-    analyser.getByteFrequencyData(dataArray);
-
-    const width = waveformCanvas.width;
-    const height = waveformCanvas.height;
-
-    ctx.clearRect(0, 0, width, height);
-
-    const barWidth = width / dataArray.length * 2;
-    let x = 0;
-
-    // Create gradient
-    const gradient = ctx.createLinearGradient(0, 0, 0, height);
-    gradient.addColorStop(0, isOwn ? '#8b5cf6' : '#3b82f6');
-    gradient.addColorStop(1, isOwn ? '#3b82f6' : '#8b5cf6');
-
-    for (let i = 0; i < dataArray.length; i++) {
-      const barHeight = (dataArray[i] / 255) * height * 0.6;
-      
-      ctx.fillStyle = gradient;
-      ctx.fillRect(x, height - barHeight, barWidth - 1, barHeight);
-      
-      x += barWidth;
-    }
-
-    animationFrame = requestAnimationFrame(drawWaveform);
-  }
-
   async function togglePlayback() {
     if (!audioElement) {
       await initializeAudio();
       if (!audioElement) return;
     }
 
+    // Update playback speed
+    if (audioElement) {
+      audioElement.playbackRate = playbackSpeed;
+    }
+
     if (isPlaying) {
       audioElement.pause();
       isPlaying = false;
-      if (animationFrame) {
-        cancelAnimationFrame(animationFrame);
-        animationFrame = null;
-      }
     } else {
       try {
-        if (audioContext && audioContext.state === 'suspended') {
-          await audioContext.resume();
-        }
         await audioElement.play();
         isPlaying = true;
-        if (showWaveform && analyser && dataArray) {
-          drawWaveform();
-        }
       } catch (error) {
         console.error('Failed to play audio:', error);
         toast.error('Failed to play audio');
       }
+    }
+  }
+
+  function togglePlaybackSpeed() {
+    currentSpeedIndex = (currentSpeedIndex + 1) % speedOptions.length;
+    playbackSpeed = speedOptions[currentSpeedIndex];
+    
+    if (audioElement) {
+      audioElement.playbackRate = playbackSpeed;
     }
   }
 
@@ -251,7 +175,7 @@
     const clickX = event.clientX - rect.left;
     const percentage = clickX / rect.width;
     const newTime = percentage * audioElement.duration;
-    
+
     audioElement.currentTime = newTime;
     currentTime = newTime;
   }
@@ -319,19 +243,6 @@
 
   <!-- Audio Content -->
   <div class="flex-1 min-w-0">
-    <!-- Waveform or Progress Bar -->
-    <div class="mb-2">
-      {#if showWaveform && isPlaying && audioElement}
-        <canvas
-          bind:this={waveformCanvas}
-          width="300"
-          height="40"
-          class="w-full h-10 rounded cursor-pointer"
-          on:click={handleProgressClick}
-          on:mousedown={handleProgressMouseDown}
-        ></canvas>
-      {:else}
-        <!-- Progress Bar -->
         <div
           bind:this={progressBarElement}
           class={cn(
@@ -370,7 +281,6 @@
             ></div>
           {/if}
         </div>
-      {/if}
     </div>
 
     <!-- Time and Info -->
@@ -383,7 +293,19 @@
       </div>
       
       <div class="flex items-center space-x-2 opacity-70">
-        <span class="text-xs">{formatSize(size)}</span>
+        <!-- Playback Speed Button -->
+        <Button
+          variant="ghost"
+          size="sm"
+          class="h-6 px-2 text-xs opacity-70 hover:opacity-100"
+          on:click={togglePlaybackSpeed}
+          title="Change playback speed"
+        >
+          <span class="font-mono">{playbackSpeed}x</span>
+          <ChevronDown class="ml-1 h-3 w-3" />
+        </Button>
+        
+        <span class="text-xs hidden sm:inline">{formatSize(size)}</span>
         {#if audioUrl}
           <Button
             variant="ghost"
@@ -406,9 +328,3 @@
     </div>
   </div>
 </div>
-
-<style>
-  canvas {
-    image-rendering: pixelated;
-  }
-</style>
