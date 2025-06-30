@@ -5,8 +5,6 @@
     Mail,
     MessageCircle,
     FileText,
-    Calendar,
-    CheckSquare,
     Kanban,
     Users
   } from 'lucide-svelte';
@@ -174,14 +172,15 @@
     <div class="flex items-center space-x-2">
       <Clock class="h-5 w-5 text-gray-500 dark:text-gray-400" />
       <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
-        Recently viewed
+        Quick Links
       </h2>
     </div>
     <div
       class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5"
     >
-      {#each recentlyViewed as item}
+      {#each quickLinks as item}
         <Button
+          href={item.href}
           variant="ghost"
           class="h-auto p-0 transition-all duration-200 hover:scale-105"
         >
@@ -261,17 +260,15 @@
     <!-- Recent Chats -->
     <div class="space-y-4">
       <div class="flex items-center space-x-2">
-          Quick Links
         <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
           Recent chats
         </h2>
       </div>
       <div class="glass dark:glass-dark space-y-4 rounded-2xl p-6">
-        {#each quickLinks as item}
+        {#each recentChats as chat}
           <Button
             variant="ghost"
             href="/app/{orgId}/chat/{chat.is_group ? '-' : '@'}{chat.id}"
-            href={item.href}
             class="flex cursor-pointer items-center gap-4 rounded-xl p-3 !py-8 transition-all duration-200 hover:bg-gray-200/50 dark:hover:bg-gray-900/50"
           >
             <div class="relative">
