@@ -135,18 +135,43 @@
 
   async function deleteMessage(messageId: string, isGroup: boolean) {
     try {
-      if (isGroup) {
-        const { error } = await supabase
-          .from('group_messages')
-          .delete()
-          .eq('id', messageId);
-        if (error) throw error;
+      // Check if it's a voice message
+      const isVoiceMessage = Array.isArray($messages) && 
+        $messages.find(msg => msg.id === messageId)?.typ === 'voice';
+      
+      if (isVoiceMessage) {
+        // Use the voice delete endpoint for voice messages
+        const response = await fetch('/api/voice/delete', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            messageId,
+            orgId,
+            isGroup
+          })
+        });
+        
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || 'Failed to delete voice message');
+        }
       } else {
-        const { error } = await supabase
-          .from('messages')
-          .delete()
-          .eq('id', messageId);
-        if (error) throw error;
+        // Use regular delete for text messages
+        if (isGroup) {
+          const { error } = await supabase
+            .from('group_messages')
+            .delete()
+            .eq('id', messageId);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from('messages')
+            .delete()
+            .eq('id', messageId);
+          if (error) throw error;
+        }
       }
       toast.success('Message deleted');
     } catch (error: any) {
@@ -611,6 +636,7 @@
                         duration={message.data.time || 0}
                         size={message.data.size || 0}
                         isOwn={message.from_id === user.id}
+                        on:delete={({ detail }) => deleteMessage(detail.messageId, detail.isGroup)}
                       />
                     {/if}
                   

@@ -6,9 +6,11 @@
     Pause, 
     Loader2,
     Download,
+    Trash2
   } from 'lucide-svelte';
   import { cn } from '$lib/utils';
   import { toast } from 'svelte-sonner';
+  import { createEventDispatcher } from 'svelte';
 
   export let messageId: string;
   export let orgId: string;
@@ -16,6 +18,10 @@
   export let duration: number;
   export const size: number = 0;
   export let isOwn: boolean = false;
+  
+  const dispatch = createEventDispatcher<{
+    delete: { messageId: string; isGroup: boolean };
+  }>();
  
   // Playback speed options
   const speedOptions = [0.5, 1, 1.5, 2];
@@ -225,7 +231,7 @@
       <div class="flex items-center space-x-2 opacity-70">
         <!-- Playback Speed Button -->
         <Button
-          variant="ghost"
+          variant="ghost" 
           size="sm"
           class="h-6 px-2 text-xs opacity-70 hover:opacity-100"
           on:click={togglePlaybackSpeed}
@@ -253,6 +259,21 @@
           </Button>
         {/if}
       </div>
+      
+      <!-- Delete button (only shown for own messages when hovered) -->
+      {#if isOwn}
+        <div class="absolute -right-8 top-1/2 -translate-y-1/2 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+          <Button
+            variant="ghost"
+            size="icon"
+            class="h-6 w-6 bg-white/90 text-gray-600 hover:bg-white hover:text-red-600 dark:bg-gray-800/90 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-red-400"
+            on:click={() => dispatch('delete', { messageId, isGroup })}
+            title="Delete message"
+          >
+            <Trash2 class="h-3 w-3" />
+          </Button>
+        </div>
+      {/if}
     </div>
   </div>
 </div>
