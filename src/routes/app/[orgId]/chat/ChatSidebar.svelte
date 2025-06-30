@@ -8,7 +8,8 @@
     MessageCircle,
     Home,
     LogOut,
-    RefreshCw
+    RefreshCw,
+    Volume2
   } from 'lucide-svelte';
   import { cn } from '$lib/utils';
   import { page } from '$app/stores';
@@ -21,7 +22,6 @@
     PUBLIC_SUPABASE_ANON_KEY,
     PUBLIC_SUPABASE_URL
   } from '$env/static/public';
-  import { onMount } from 'svelte';
 
   const supabase = createBrowserClient(
     PUBLIC_SUPABASE_URL,
@@ -53,6 +53,13 @@
     return supabase.storage
       .from('avatars')
       .getPublicUrl(`/org/${orgId}/group/${gid}.${avatar_type}`).data.publicUrl;
+  }
+
+  function vmTime(v: any): string {
+    const seconds = v.time;
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   }
 
   // onMount(() => {
@@ -209,7 +216,10 @@
                     {:else if chat.typ === 'attachment'}
                       TODO: attachment
                     {:else if chat.typ === 'voice'}
-                      TODO: voice message
+                      <p class="flex items-center gap-1">
+                        <Volume2 class="w-4 h-4"/>
+                        <strong>{vmTime(chat.data)}</strong>
+                      </p>
                     {/if}
                   </p>
                 </div>
