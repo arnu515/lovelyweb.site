@@ -28,6 +28,7 @@
   import { cn } from '$lib/utils';
   import { page } from '$app/stores';
   import { chat } from '$lib/stores/chat.js';
+  import VoiceRecorder from './VoiceRecorder.svelte';
   import { derived } from 'svelte/store';
   import { Skeleton } from '$lib/components/ui/skeleton/index.js';
   import {
@@ -50,6 +51,7 @@
   let messagesContainer: HTMLElement;
   let fileInput: HTMLInputElement;
   let showChatInfo = false;
+  let showVoiceRecorder = false;
   
   // Message editing state
   let editingMessage: { id: string; content: string; isGroup: boolean } | null = null;
@@ -184,6 +186,24 @@
     editingMessage = null;
     messageInput = '';
   }
+
+  function startVoiceRecording() {
+    showVoiceRecorder = true;
+  }
+
+  function handleVoiceCancel() {
+    showVoiceRecorder = false;
+  }
+
+  function handleVoiceSend(event: CustomEvent<{ blob: Blob; duration: number }>) {
+    const { blob, duration } = event.detail;
+    showVoiceRecorder = false;
+    
+    // Here you would normally send the voice message
+    // For now, we'll just show a toast as requested
+    toast.success(`Voice message recorded: ${duration}s, ${Math.round(blob.size / 1024)}KB`);
+  }
+
   function handleKeyPress(event: KeyboardEvent) {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
@@ -554,6 +574,13 @@
     <div
       class="glass dark:glass-dark border-t border-white/20 p-4 dark:border-gray-700/50"
     >
+      {#if showVoiceRecorder}
+        <!-- Voice Recorder -->
+        <VoiceRecorder
+          on:cancel={handleVoiceCancel}
+          on:send={handleVoiceSend}
+        />
+      {:else}
       <!-- Edit Message Banner -->
       {#if editingMessage}
         <div
@@ -646,7 +673,7 @@
         <Button
           class="gradient-primary h-10 w-10 flex-shrink-0 text-white"
           size="icon"
-          on:click={messageInput.trim() ? sendMessage : undefined}
+          on:click={messageInput.trim() ? sendMessage : startVoiceRecording}
         >
           {#if messageInput.trim() && editingMessage}
             <Check class="h-4 w-4" />
@@ -657,6 +684,7 @@
           {/if}
         </Button>
       </div>
+      {/if}
     </div>
   </div>
 
