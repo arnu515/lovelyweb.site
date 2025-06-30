@@ -51,8 +51,8 @@ export const POST: RequestHandler = async ({ request, locals: { auth } }) => {
     const blobServiceClient = BlobServiceClient.fromConnectionString(AZURE_STORAGE_CONNECTION_STRING);
     const containerClient = blobServiceClient.getContainerClient('voice-messages');
 
-    // Create blob path: voice/[orgId]/[senderId]/[messageId].webm
-    const blobPath = `voice/${validatedData.orgId}/${validatedData.senderId}/${validatedData.messageId}.webm`;
+    // Create blob path: [orgId]/[senderId]/[messageId].webm
+    const blobPath = `${validatedData.orgId}/${validatedData.senderId}/${validatedData.messageId}.webm`;
     const blockBlobClient = containerClient.getBlockBlobClient(blobPath);
 
     // Upload to Azure Blob Storage
@@ -68,13 +68,6 @@ export const POST: RequestHandler = async ({ request, locals: { auth } }) => {
       PUBLIC_SUPABASE_URL,
       SUPABASE_SERVICE_ROLE_KEY
     );
-
-    // Insert message into Supabase using RPC
-    const messageData = {
-      time: validatedData.duration,
-      size: validatedData.size,
-      url: blobPath
-    };
 
     let error;
     if (validatedData.groupId) {
@@ -123,7 +116,7 @@ export const POST: RequestHandler = async ({ request, locals: { auth } }) => {
     captureException(error, { tags: { action: 'voice_upload' } });
     
     if (error instanceof z.ZodError) {
-      return json({ error: 'Invalid request data', details: error.errors }, { status: 400 });
+      return json({ error: 'Invalid request data', details: error.issues.map(i => i.message).join("\n") }, { status: 400 });
     }
     
     return json({ error: error.message || 'Internal server error' }, { status: 500 });

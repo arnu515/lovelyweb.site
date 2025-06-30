@@ -28,11 +28,6 @@ AS $$
 DECLARE
   message_data jsonb;
 BEGIN
-  -- Verify the sender is authenticated and matches from_id
-  IF auth.uid() IS NULL OR auth.uid() != from_id THEN
-    RAISE EXCEPTION 'Unauthorized';
-  END IF;
-
   -- Verify both users are in the same organization
   IF NOT EXISTS (
     SELECT 1 FROM organisations_users ou1
@@ -119,11 +114,6 @@ DECLARE
   message_data jsonb;
   member_record RECORD;
 BEGIN
-  -- Verify the sender is authenticated and matches by_id
-  IF auth.uid() IS NULL OR auth.uid() != by_id THEN
-    RAISE EXCEPTION 'Unauthorized';
-  END IF;
-
   -- Verify the user is a member of the group
   IF NOT EXISTS (
     SELECT 1 FROM chat_group_members cgm

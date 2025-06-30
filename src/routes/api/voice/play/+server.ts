@@ -6,7 +6,7 @@ import { PUBLIC_SUPABASE_URL } from '$env/static/public';
 import { SUPABASE_SERVICE_ROLE_KEY, AZURE_STORAGE_CONNECTION_STRING } from '$env/static/private';
 import type { Database } from '$lib/database.types';
 import { captureException } from '@sentry/sveltekit';
-import { BlobServiceClient } from '@azure/storage-blob';
+import { BlobSASPermissions, BlobServiceClient } from '@azure/storage-blob';
 
 const playSchema = z.object({
   messageId: z.string().min(1),
@@ -99,7 +99,7 @@ export const POST: RequestHandler = async ({ request, locals: { auth } }) => {
     expiresOn.setHours(expiresOn.getHours() + 1);
 
     const sasUrl = await blockBlobClient.generateSasUrl({
-      permissions: 'r', // read only
+      permissions: BlobSASPermissions.parse('r'), // read only
       expiresOn
     });
 
@@ -114,7 +114,7 @@ export const POST: RequestHandler = async ({ request, locals: { auth } }) => {
     captureException(error, { tags: { action: 'voice_play' } });
     
     if (error instanceof z.ZodError) {
-      return json({ error: 'Invalid request data', details: error.errors }, { status: 400 });
+      return json({ error: 'Invalid request data', details: error.issues.map(i => i.message).join('\n') }, { status: 400 });
     }
     
     return json({ error: error.message || 'Internal server error' }, { status: 500 });
