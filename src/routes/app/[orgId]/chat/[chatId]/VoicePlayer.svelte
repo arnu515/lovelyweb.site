@@ -1,13 +1,11 @@
 <script lang="ts">
-  import { createEventDispatcher, onDestroy, onMount } from 'svelte';
+  import { onDestroy } from 'svelte';
   import { Button } from '$lib/components/ui/button';
   import { 
     Play, 
     Pause, 
-    Volume2,
     Loader2,
     Download,
-    ChevronDown
   } from 'lucide-svelte';
   import { cn } from '$lib/utils';
   import { toast } from 'svelte-sonner';
@@ -16,28 +14,19 @@
   export let orgId: string;
   export let isGroup: boolean;
   export let duration: number;
-  export let size: number;
+  export const size: number = 0;
   export let isOwn: boolean = false;
-
-  const dispatch = createEventDispatcher();
-  
+ 
   // Playback speed options
   const speedOptions = [0.5, 1, 1.5, 2];
   let currentSpeedIndex = 1; // Start with 1x speed
   let playbackSpeed = speedOptions[currentSpeedIndex];
-  let showSpeedMenu = false;
 
   let isPlaying = false;
   let isLoading = false;
   let currentTime = 0;
   let audioElement: HTMLAudioElement | null = null;
   let audioUrl: string | null = null;
-  let progressBarElement: HTMLDivElement;
-  let isDragging = false;
-
-  onMount(() => {
-    // No initialization needed
-  });
 
   onDestroy(() => {
     cleanup();
@@ -110,9 +99,7 @@
       audioElement.addEventListener('loadedmetadata', () => {});
 
       audioElement.addEventListener('timeupdate', () => {
-        if (audioElement && !isDragging) {
-          currentTime = audioElement.currentTime;
-        }
+        if (audioElement) currentTime = audioElement.currentTime;
       });
 
       audioElement.addEventListener('ended', () => {
@@ -126,7 +113,7 @@
         isPlaying = false;
       });
 
-      await audioElement.load();
+      audioElement.load();
     } catch (error) {
       console.error('Failed to initialize audio:', error);
     } finally {
@@ -168,48 +155,10 @@
     }
   }
 
-  function handleProgressClick(event: MouseEvent) {
-    if (!audioElement || !progressBarElement) return;
-
-    const rect = progressBarElement.getBoundingClientRect();
-    const clickX = event.clientX - rect.left;
-    const percentage = clickX / rect.width;
-    const newTime = percentage * audioElement.duration;
-
-    audioElement.currentTime = newTime;
-    currentTime = newTime;
-  }
-
-  function handleProgressMouseDown(event: MouseEvent) {
-    isDragging = true;
-    handleProgressClick(event);
-    
-    const handleMouseMove = (e: MouseEvent) => {
-      if (isDragging) {
-        handleProgressClick(e);
-      }
-    };
-
-    const handleMouseUp = () => {
-      isDragging = false;
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-  }
-
   function formatTime(seconds: number): string {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, '0')}`;
-  }
-
-  function formatSize(bytes: number): string {
-    if (bytes < 1024) return `${bytes}B`;
-    if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)}KB`;
-    return `${Math.round(bytes / (1024 * 1024))}MB`;
   }
 </script>
 
@@ -243,19 +192,14 @@
 
   <!-- Audio Content -->
   <div class="flex-1 min-w-0">
+    <div class="flex flex-col gap-1">
         <div
-          bind:this={progressBarElement}
           class={cn(
             "relative h-2 rounded-full cursor-pointer transition-all duration-200",
             isOwn 
               ? "bg-white/20 hover:bg-white/30" 
               : "bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
           )}
-          on:click={handleProgressClick}
-          on:mousedown={handleProgressMouseDown}
-          role="slider"
-          tabindex="0"
-          aria-label="Audio progress"
         >
           <!-- Progress Fill -->
           <div
@@ -265,28 +209,14 @@
                 ? "bg-white" 
                 : "bg-purple-500 dark:bg-purple-400"
             )}
-            style="width: {audioElement ? (currentTime / audioElement.duration) * 100 : 0}%"
+            style="width: {audioElement ? (currentTime / duration) * 100 : 0}%"
           ></div>
-          
-          <!-- Progress Handle -->
-          {#if audioElement && currentTime > 0}
-            <div
-              class={cn(
-                "absolute top-1/2 w-4 h-4 rounded-full transform -translate-y-1/2 transition-all duration-100 shadow-lg",
-                isOwn 
-                  ? "bg-white" 
-                  : "bg-purple-500 dark:bg-purple-400"
-              )}
-              style="left: {(currentTime / audioElement.duration) * 100}%"
-            ></div>
-          {/if}
         </div>
     </div>
 
     <!-- Time and Info -->
     <div class="flex items-center justify-between text-sm">
       <div class="flex items-center space-x-2">
-        <Volume2 class="h-4 w-4 opacity-70" />
         <span class="font-medium">
           {audioElement ? formatTime(currentTime) : '0:00'} / {formatTime(duration)}
         </span>
@@ -302,10 +232,8 @@
           title="Change playback speed"
         >
           <span class="font-mono">{playbackSpeed}x</span>
-          <ChevronDown class="ml-1 h-3 w-3" />
         </Button>
         
-        <span class="text-xs hidden sm:inline">{formatSize(size)}</span>
         {#if audioUrl}
           <Button
             variant="ghost"
