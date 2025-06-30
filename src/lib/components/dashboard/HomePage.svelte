@@ -14,45 +14,43 @@
   import { Button } from '$lib/components/ui/button';
 
   export let user: NonNullable<App.Locals['auth']['user']>;
+  export let kanbanBoards: any[] = [];
+  export let notebooks: any[] = [];
 
-  // Mock data for recently viewed places
-  const recentlyViewed = [
-    {
-      name: 'Project Planning',
+  // Quick links - combining kanban boards, notebooks and chats
+  $: quickLinks = [
+    ...(kanbanBoards?.slice(0, 2).map(board => ({
+      name: board.name,
       type: 'kanban',
       icon: Kanban,
-      lastViewed: '2 hours ago',
-      gradient: 'from-blue-500 to-cyan-500'
-    },
-    {
-      name: 'Meeting Notes',
+      lastViewed: formatRelative(new Date(board.created_at), new Date()),
+      gradient: 'from-blue-500 to-cyan-500',
+      href: `/app/${orgId}/kanban/${board.id}`
+    })) || []),
+    ...(notebooks?.slice(0, 2).map(notebook => ({
+      name: notebook.name,
       type: 'notes',
       icon: FileText,
-      lastViewed: 'Yesterday',
-      gradient: 'from-green-500 to-teal-500'
-    },
-    {
-      name: 'Weekly Tasks',
-      type: 'tasks',
-      icon: CheckSquare,
-      lastViewed: '2 days ago',
-      gradient: 'from-purple-500 to-pink-500'
-    },
-    {
-      name: 'Team Calendar',
-      type: 'calendar',
-      icon: Calendar,
-      lastViewed: '3 days ago',
-      gradient: 'from-orange-500 to-red-500'
-    },
-    {
-      name: 'Client Emails',
-      type: 'email',
-      icon: Mail,
-      lastViewed: '1 week ago',
-      gradient: 'from-indigo-500 to-purple-500'
-    }
-  ];
+      lastViewed: formatRelative(new Date(notebook.created_at), new Date()),
+      gradient: 'from-green-500 to-teal-500',
+      href: `/app/${orgId}/notes/${notebook.id}`
+    })) || []),
+    ...($chatOverview?.data?.slice(0, 1).map(chat => ({
+      name: chat.name,
+      type: 'chat',
+      icon: MessageCircle,
+      lastViewed: chat.msg_created_at ? formatRelative(new Date(chat.msg_created_at), new Date()) : 'Recently',
+      gradient: 'from-purple-500 to-pink-500',
+      href: `/app/${orgId}/chat/${chat.is_group ? '-' : '@'}${chat.id}`
+    })) || [])
+  ].sort((a, b) => {
+    // Sort by most recent first (this is a simple sort, could be improved)
+    if (a.lastViewed.includes('second') || a.lastViewed.includes('minute')) return -1;
+    if (b.lastViewed.includes('second') || b.lastViewed.includes('minute')) return 1;
+    if (a.lastViewed.includes('hour')) return -1;
+    if (b.lastViewed.includes('hour')) return 1;
+    return 0;
+  }).slice(0, 5);
 
   // Mock data for recent emails
   const recentEmails = [
@@ -248,7 +246,7 @@
               >
                 {email.subject}
               </h5>
-              <p class="line-clamp-2 text-sm text-gray-600 dark:text-gray-400">
+              <p class="text-sm text-gray-500 dark:text-gray-400 capitalize">
                 {email.preview}
               </p>
             </div>
@@ -263,16 +261,17 @@
     <!-- Recent Chats -->
     <div class="space-y-4">
       <div class="flex items-center space-x-2">
-        <MessageCircle class="h-5 w-5 text-gray-500 dark:text-gray-400" />
+          Quick Links
         <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
           Recent chats
         </h2>
       </div>
       <div class="glass dark:glass-dark space-y-4 rounded-2xl p-6">
-        {#each recentChats as chat}
+        {#each quickLinks as item}
           <Button
             variant="ghost"
             href="/app/{orgId}/chat/{chat.is_group ? '-' : '@'}{chat.id}"
+            href={item.href}
             class="flex cursor-pointer items-center gap-4 rounded-xl p-3 !py-8 transition-all duration-200 hover:bg-gray-200/50 dark:hover:bg-gray-900/50"
           >
             <div class="relative">
@@ -328,6 +327,14 @@
             </div>
           </Button>
         {/each}
+        
+        {#if quickLinks.length === 0}
+          <div class="col-span-full text-center py-4">
+            <p class="text-gray-500 dark:text-gray-400">
+              No recent items. Start creating notes, kanban boards, or chat with your team!
+            </p>
+          </div>
+        {/if}
       </div>
     </div>
   </div>
