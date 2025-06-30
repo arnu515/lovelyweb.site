@@ -1,6 +1,6 @@
 create table org_invites (
-  invitee uuid not null references users(id),
-  org_id text not null references organisations(id),
+  invitee uuid not null references users(id) on update cascade on delete cascade,
+  org_id text not null references organisations(id) on update cascade on delete cascade,
   message text,
   created_at timestamptz not null default now(),
   primary key (invitee, org_id)

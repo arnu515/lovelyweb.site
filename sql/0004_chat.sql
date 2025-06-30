@@ -2,9 +2,9 @@ create type msg_type as enum ('text', 'attachment', 'voice');
 
 create table messages (
   id text primary key,
-  from_id uuid not null references users(id),
-  to_id uuid not null references users(id),
-  org_id text not null references organisations(id),
+  from_id uuid not null references users(id) on update cascade on delete cascade,
+  to_id uuid not null references users(id) on update cascade on delete cascade,
+  org_id text not null references organisations(id) on update cascade on delete cascade,
   typ msg_type not null,
   data jsonb not null,
   created_at timestamptz not null default now(),
@@ -15,9 +15,9 @@ create index idx_messages_from_to_in_org on messages (from_id, to_id, org_id);
 
 create table group_messages (
   id text primary key,
-  group_id text not null references chat_groups(id),
-  by_id uuid not null references users(id),
-  org_id text not null references organisations(id),
+  group_id text not null references chat_groups(id) on update cascade on delete cascade,
+  by_id uuid not null references users(id) on update cascade on delete cascade,
+  org_id text not null references organisations(id) on update cascade on delete cascade,
   typ msg_type not null,
   data jsonb not null,
   created_at timestamptz not null default now(),

@@ -39,7 +39,7 @@ create table kanban_cards (
   updated_at timestamptz,
   category_id text not null references kanban_categories(id) on update cascade on delete cascade,
   board_id text not null references kanban_boards(id) on update cascade on delete cascade,
-  created_by uuid not null references users(id)
+  created_by uuid not null references users(id) on update cascade on delete cascade
 );
 
 create index idx_kanban_boards_org_id on kanban_boards(org_id);

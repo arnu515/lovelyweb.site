@@ -5,14 +5,14 @@ create table chat_groups (
   name text not null,
   description text,
   avatar_type group_avatar_type,
-  org_id text not null references organisations(id),
-  owner_id uuid not null references users(id),
+  org_id text not null references organisations(id) on update cascade on delete cascade,
+  owner_id uuid not null references users(id) on update cascade on delete cascade,
   created_at timestamptz not null default now()
 );
 
 create table chat_group_members (
-  user_id uuid not null references users(id),
-  group_id text not null references chat_groups(id),
+  user_id uuid not null references users(id) on update cascade on delete cascade,
+  group_id text not null references chat_groups(id) on update cascade on delete cascade,
   created_at timestamptz not null default now(),
   primary key (user_id, group_id)
 );

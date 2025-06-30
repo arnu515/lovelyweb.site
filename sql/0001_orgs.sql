@@ -6,7 +6,7 @@ create table organisations (
   description text,
   link text,
   plan plan_enum not null default 'free'::plan_enum,
-  owner_id uuid not null references users(id),
+  owner_id uuid not null references users(id) on update cascade on delete cascade,
   created_at timestamptz not null default now()
 );
 
