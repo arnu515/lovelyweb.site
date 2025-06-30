@@ -3,13 +3,13 @@
   import { Button } from '$lib/components/ui/button';
   import { Input } from '$lib/components/ui/input';
   import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-  import ChatInfoSidebar from './ChatInfoSidebar.svelte';
-  import { Send, Paperclip, Mic, Phone, Video, MoreVertical, Smile, Image as ImageIcon, Sparkles, Volume2, FileEdit as Edit3, ArrowLeft, CheckCheck, Loader2, MessageCircle, Info, Trash2, Check, X } from 'lucide-svelte';
+  import { Send, Paperclip, Mic, Phone, Video, MoreVertical, Smile, Sparkles, Volume2, FileEdit as Edit3, ArrowLeft, CheckCheck, Loader2, MessageCircle, Info, Trash2, Check, X } from 'lucide-svelte';
   import { cn } from '$lib/utils';
   import { page } from '$app/stores';
   import { chat } from '$lib/stores/chat.js';
   import VoiceRecorder from './VoiceRecorder.svelte';
   import VoicePlayer from './VoicePlayer.svelte';
+  import AIMessageOptions from './AIMessageOptions.svelte';
   import { derived } from 'svelte/store';
   import { Skeleton } from '$lib/components/ui/skeleton/index.js';
   import {
@@ -19,6 +19,7 @@
   import { createBrowserClient } from '@supabase/ssr';
   import type { Database } from '$lib/database.types.js';
   import { toast } from 'svelte-sonner';
+  import ChatInfoSidebar from './ChatInfoSidebar.svelte';
 
   export let data;
   const user = data.auth.user!;
@@ -33,6 +34,8 @@
   let fileInput: HTMLInputElement;
   let showChatInfo = false;
   let showVoiceRecorder = false;
+  let aiMode: 'refine' | 'voice' | null = null;
+  let aiLoading = false;
   
   // Message editing state
   let editingMessage: { id: string; content: string; isGroup: boolean } | null = null;
@@ -168,6 +171,110 @@
     messageInput = '';
   }
 
+  async function refineMessage(event: CustomEvent<{ style: string; customInstructions: string }>) {
+    const { style, customInstructions } = event.detail;
+    
+    if (!messageInput.trim()) {
+      toast.error('Please enter a message to refine');
+      return;
+    }
+    
+    aiLoading = true;
+    const loadingToast = toast.loading('Refining your message...');
+    
+    try {
+      const response = await fetch('/api/ai/refine-message', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          message: messageInput,
+          style,
+          customInstructions
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to refine message');
+      }
+      
+      toast.dismiss(loadingToast);
+      toast.success('Message refined');
+      
+      // Update the message input with the refined message
+      messageInput = data.refinedMessage;
+      aiMode = null;
+      
+    } catch (error: any) {
+      toast.dismiss(loadingToast);
+      toast.error('Failed to refine message', {
+        description: error.message
+      });
+    } finally {
+      aiLoading = false;
+    }
+  }
+
+  async function generateVoiceMessage(event: CustomEvent<{ voice: string }>) {
+    const { voice } = event.detail;
+    
+    if (!messageInput.trim()) {
+      toast.error('Please enter a message to convert to voice');
+      return;
+    }
+    
+    if (messageInput.length > 500) {
+      toast.error('Message is too long for voice conversion');
+      return;
+    }
+    
+    aiLoading = true;
+    const loadingToast = toast.loading('Generating voice message...');
+    
+    try {
+      const chatId = $page.params.chatId;
+      const isGroup = chatId.startsWith('-');
+      const actualChatId = chatId.substring(1);
+      
+      const response = await fetch('/api/ai/generate-voice', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          message: messageInput,
+          voice,
+          orgId,
+          ...(isGroup ? { groupId: actualChatId } : { toId: actualChatId })
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to generate voice message');
+      }
+      
+      toast.dismiss(loadingToast);
+      toast.success('Voice message sent');
+      
+      // Clear the message input and reset AI mode
+      messageInput = '';
+      aiMode = null;
+      
+    } catch (error: any) {
+      toast.dismiss(loadingToast);
+      toast.error('Failed to generate voice message', {
+        description: error.message
+      });
+    } finally {
+      aiLoading = false;
+    }
+  }
+
   function startVoiceRecording() {
     showVoiceRecorder = true;
   }
@@ -188,10 +295,21 @@
   function handleKeyPress(event: KeyboardEvent) {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
-      sendMessage();
+      if (aiMode) {
+        if (aiMode === 'refine') {
+          refineMessage(new CustomEvent('refine', { detail: { style: 'formal', customInstructions: '' } }));
+        } else if (aiMode === 'voice') {
+          generateVoiceMessage(new CustomEvent('voice', { detail: { voice: 'male' } }));
+        }
+      } else {
+        sendMessage();
+      }
     } else if (event.key === 'Escape' && editingMessage) {
       event.preventDefault();
       cancelEditing();
+    } else if (event.key === 'Escape' && aiMode) {
+      event.preventDefault();
+      aiMode = null;
     }
   }
 
@@ -608,12 +726,23 @@
         <!-- Message Input -->
         <div class="flex-1">
           <div
-            class="glass dark:glass-dark relative rounded-2xl border border-white/30 dark:border-gray-700/50"
+            class={cn(
+              "glass dark:glass-dark relative rounded-2xl border border-white/30 dark:border-gray-700/50",
+              aiMode && "rounded-b-none border-b-0"
+            )}
           >
             <Input
               id="message-input"
               bind:value={messageInput}
-              placeholder={editingMessage ? "Edit your message..." : "Type a message..."}
+              placeholder={
+                editingMessage 
+                  ? "Edit your message..." 
+                  : aiMode === 'refine'
+                    ? "Type a message to refine..."
+                    : aiMode === 'voice'
+                      ? "Type a message to convert to voice..."
+                      : "Type a message..."
+              }
               class="border-0 bg-transparent pr-12 focus:ring-0"
               on:keypress={handleKeyPress}
             />
@@ -626,6 +755,19 @@
             </Button>
           </div>
         </div>
+        
+        {#if aiMode}
+          <div class="absolute bottom-[72px] left-0 right-0 z-10 px-4">
+            <AIMessageOptions 
+              mode={aiMode} 
+              {messageInput}
+              loading={aiLoading}
+              on:cancel={() => aiMode = null}
+              on:refine={refineMessage}
+              on:voice={generateVoiceMessage}
+            />
+          </div>
+        {/if}
 
         <!-- AI Dropdown -->
         <DropdownMenu.Root>
@@ -643,14 +785,10 @@
             class="glass dark:glass-dark border-white/20 dark:border-gray-700/50"
           >
             <DropdownMenu.Item class="gap-2">
-              <ImageIcon class="h-4 w-4" />
-              Generate an Image
-            </DropdownMenu.Item>
-            <DropdownMenu.Item class="gap-2">
               <Edit3 class="h-4 w-4" />
-              Refine Message
+              <span on:click={() => aiMode = 'refine'}>Refine Message</span>
             </DropdownMenu.Item>
-            <DropdownMenu.Item class="gap-2">
+            <DropdownMenu.Item class="gap-2" on:click={() => aiMode = 'voice'}>
               <Volume2 class="h-4 w-4" />
               Send as Audio Message
             </DropdownMenu.Item>
@@ -661,7 +799,15 @@
         <Button
           class="gradient-primary h-10 w-10 flex-shrink-0 text-white"
           size="icon"
-          on:click={messageInput.trim() ? sendMessage : startVoiceRecording}
+          on:click={
+            aiMode 
+              ? aiMode === 'refine'
+                ? () => refineMessage(new CustomEvent('refine', { detail: { style: 'formal', customInstructions: '' } }))
+                : () => generateVoiceMessage(new CustomEvent('voice', { detail: { voice: 'male' } }))
+              : messageInput.trim() 
+                ? sendMessage 
+                : startVoiceRecording
+          }
         >
           {#if messageInput.trim() && editingMessage}
             <Check class="h-4 w-4" />
