@@ -27,6 +27,7 @@ SECURITY INVOKER
 AS $$
 DECLARE
   message_data jsonb;
+  msg_record record;
 BEGIN
   -- Verify both users are in the same organization
   IF NOT EXISTS (
@@ -48,50 +49,26 @@ BEGIN
 
   -- Insert the message
   INSERT INTO messages (id, from_id, to_id, org_id, typ, data, created_at)
-  VALUES (msg_id, from_id, to_id, org_id, 'voice', message_data, now());
+  VALUES (msg_id, from_id, to_id, org_id, 'voice', message_data, now())
+  returning * into msg_record;
 
-  -- Send realtime notification
-  PERFORM pg_notify(
-    'chat:' || org_id || ':' || to_id,
-    json_build_object(
-      'event', 'INSERT',
-      'payload', json_build_object(
-        'operation', 'INSERT',
-        'table', 'messages',
-        'record', json_build_object(
-          'id', msg_id,
-          'from_id', from_id,
-          'to_id', to_id,
-          'org_id', org_id,
-          'typ', 'voice',
-          'data', message_data,
-          'created_at', extract(epoch from now()) * 1000,
-          'edited_at', null
-        )
-      )
-    )::text
+  perform realtime.broadcast_changes(
+    'chat:' || org_id || ':' || from_id::text,
+    'INSERT',
+    'INSERT',
+    'messages',
+    'public',
+    msg_record,
+    null
   );
-
-  -- Also notify the sender
-  PERFORM pg_notify(
-    'chat:' || org_id || ':' || from_id,
-    json_build_object(
-      'event', 'INSERT',
-      'payload', json_build_object(
-        'operation', 'INSERT',
-        'table', 'messages',
-        'record', json_build_object(
-          'id', msg_id,
-          'from_id', from_id,
-          'to_id', to_id,
-          'org_id', org_id,
-          'typ', 'voice',
-          'data', message_data,
-          'created_at', extract(epoch from now()) * 1000,
-          'edited_at', null
-        )
-      )
-    )::text
+  perform realtime.broadcast_changes(
+    'chat:' || org_id || ':' || to_id::text,
+    'INSERT',
+    'INSERT',
+    'messages',
+    'public',
+    msg_record,
+    null
   );
 END;
 $$;
@@ -112,7 +89,7 @@ SECURITY INVOKER
 AS $$
 DECLARE
   message_data jsonb;
-  member_record RECORD;
+  msg_record RECORD;
 BEGIN
   -- Verify the user is a member of the group
   IF NOT EXISTS (
@@ -135,33 +112,20 @@ BEGIN
   -- Insert the message
   INSERT INTO group_messages (id, by_id, group_id, org_id, typ, data, created_at)
   VALUES (msg_id, by_id, send_group_voice_message.group_id, org_id, 'voice', message_data, now());
+  select m.*, u.id as sender_id, u.name as sender_name, u.avatar_url as sender_avatar_url
+    into msg_record
+    from group_messages m
+    inner join users u on u.id = m.by_id
+    where m.id = msg_id;
 
-  -- Send realtime notifications to all group members
-  FOR member_record IN 
-    SELECT cgm.user_id
-    FROM chat_group_members cgm
-    WHERE cgm.group_id = send_group_voice_message.group_id
-  LOOP
-    PERFORM pg_notify(
-      'chat-group:' || org_id || ':' || send_group_voice_message.group_id,
-      json_build_object(
-        'event', 'INSERT',
-        'payload', json_build_object(
-          'operation', 'INSERT',
-          'table', 'group_messages',
-          'record', json_build_object(
-            'id', msg_id,
-            'by_id', by_id,
-            'group_id', send_group_voice_message.group_id,
-            'org_id', org_id,
-            'typ', 'voice',
-            'data', message_data,
-            'created_at', extract(epoch from now()) * 1000,
-            'edited_at', null
-          )
-        )
-      )::text
-    );
-  END LOOP;
+  perform realtime.broadcast_changes(
+    'chat-group:' || org_id || ':' || group_id::text,
+    'INSERT',
+    'INSERT',
+    'group_messages',
+    'public',
+    msg_record,
+    null
+  );
 END;
 $$;
