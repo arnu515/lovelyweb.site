@@ -262,7 +262,7 @@
       
       <!-- Delete button (only shown for own messages when hovered) -->
       {#if isOwn}
-        <div class="absolute -right-8 top-1/2 -translate-y-1/2 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+        <div class="absolute -left-8 top-1/2 -translate-y-1/2 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
           <Button
             variant="ghost"
             size="icon"
