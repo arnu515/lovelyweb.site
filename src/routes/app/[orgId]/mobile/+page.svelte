@@ -7,6 +7,6 @@
 </svelte:head>
 
 <ComingSoon
-  title="Email Integration Coming Soon"
-  description="A seamless email experience with AI-powered organization and smart features is coming soon!"
+  title="Mobile app coming soon"
+  description="A mobile app will be coming soon!"
 />

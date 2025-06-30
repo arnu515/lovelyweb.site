@@ -197,7 +197,7 @@
           <div
             class="space-y-1 border-t border-white/10 p-2 dark:border-gray-700/50"
           >
-            <Button variant="ghost" class="org-dropdown-btn">
+            <Button variant="ghost" class="org-dropdown-btn" href="/app/{orgId}/mobile">
               <Smartphone class="mr-2 h-4 w-4" />
               Get mobile app
             </Button>
@@ -253,7 +253,6 @@
         >
           <Inbox class="icon" />
           <span>Inbox</span>
-          <span class="badge">12</span>
         </Button>
         <Button
           variant="ghost"
@@ -313,10 +312,14 @@
           <FileText class="icon" />
           <span>Notes</span>
         </Button>
-        <Button variant="ghost" class="sb-btn" on:click={handleNavigation}>
+        <Button
+          href="/app/{currentOrg.id}/tasks"
+          variant="ghost"
+          class={cn('sb-btn', currentPage === 'tasks' && 'active')}
+          on:click={handleNavigation}
+        >
           <CheckSquare class="icon" />
           <span>Tasks</span>
-          <span class="badge">3</span>
         </Button>
         <Button
           href="/app/{currentOrg.id}/kanban"
@@ -327,7 +330,12 @@
           <Kanban class="icon" />
           <span>Kanban</span>
         </Button>
-        <Button variant="ghost" class="sb-btn" on:click={handleNavigation}>
+        <Button
+          href="/app/{currentOrg.id}/calendar"
+          variant="ghost"
+          class={cn('sb-btn', currentPage === 'calendar' && 'active')}
+          on:click={handleNavigation}
+        >
           <Calendar class="icon" />
           <span>Calendar</span>
         </Button>
@@ -352,7 +360,6 @@
         >
           <MessageCircle class="icon" />
           <span>Direct Messages</span>
-          <span class="badge">2</span>
         </Button>
 
         <!-- Recent Contacts -->

@@ -374,11 +374,6 @@
     return new Date(dateString).toLocaleDateString();
   }
 
-  function refineCardWithAI(card: any) {
-    toast.info(`AI refinement for "${card.title}" - Feature coming soon!`);
-    console.log('AI refine card:', card);
-  }
-
   async function moveCardToBoard(card: any, targetBoardId: string) {
     loading.moveCardToBoard = true;
     const board = await kanban.fetchBoard(targetBoardId);
@@ -700,13 +695,6 @@
                     >
                       <Edit class="h-4 w-4 text-gray-600 dark:text-gray-400" />
                       <span class="text-sm font-medium">Edit Card</span>
-                    </ContextMenu.Item>
-                    <ContextMenu.Item
-                      class="flex h-9 w-full items-center gap-2 rounded-md p-2 text-left text-sm hover:bg-gray-200/60 dark:hover:bg-gray-700/60"
-                      on:click={() => refineCardWithAI(card)}
-                    >
-                      <Sparkles class="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                      <span class="text-sm font-medium">Refine with AI</span>
                     </ContextMenu.Item>
                     <ContextMenu.Separator
                       class="my-1 border-gray-200 dark:border-gray-700"
