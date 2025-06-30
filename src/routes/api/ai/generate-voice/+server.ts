@@ -6,17 +6,23 @@ import { BlobServiceClient } from '@azure/storage-blob';
 import { AZURE_STORAGE_CONNECTION_STRING } from '$env/static/private';
 import { createClient } from '@supabase/supabase-js';
 import { PUBLIC_SUPABASE_URL } from '$env/static/public';
-import { SUPABASE_SERVICE_ROLE_KEY } from '$env/static/private';
+import { SUPABASE_SERVICE_ROLE_KEY, ELEVEN_LABS_KEY } from '$env/static/private';
 import type { Database } from '$lib/database.types';
 import { nanoid } from 'nanoid';
 
 // In-memory rate limiting
 const rateLimits = new Map<string, number>();
 
+const VOICES = {
+  'male': 'JBFqnCBsd6RMkjVDRZzb',
+  'female': 'XrExE9yKIg1WjnnlVkGX',
+}
+const VOICE_KEYS = Object.keys(VOICES)
+
 // Validate request body
 const generateVoiceSchema = z.object({
-  message: z.string().min(1).max(500),
-  voice: z.enum(['male', 'female', 'robot']),
+  message: z.string().min(12).max(500),
+  voice: z.enum(VOICE_KEYS),
   toId: z.string().min(1).optional(),
   groupId: z.string().min(1).optional(),
   orgId: z.string().min(1)
@@ -63,23 +69,20 @@ export const POST: RequestHandler = async ({ request, locals: { auth } }) => {
     // In a real implementation, you would call ElevenLabs API here
     
     // Simulate generating audio data (this would be the response from ElevenLabs)
-    const audioData = await simulateVoiceGeneration(validatedData.message, validatedData.voice);
-    
-    // Create a blob from the audio data
-    const audioBlob = new Blob([audioData], { type: 'audio/webm' });
+    const audioData = await genVoice(validatedData.message, validatedData.voice as any);
     
     // Upload to Azure Blob Storage
     const blobServiceClient = BlobServiceClient.fromConnectionString(AZURE_STORAGE_CONNECTION_STRING);
     const containerClient = blobServiceClient.getContainerClient('voice-messages');
     
     // Create blob path: [orgId]/[senderId]/[messageId].webm
-    const blobPath = `${validatedData.orgId}/${userId}/${messageId}.webm`;
+    const blobPath = `${validatedData.orgId}/${userId}/${messageId}.ogx`;
     const blockBlobClient = containerClient.getBlockBlobClient(blobPath);
     
     // Upload the blob
     await blockBlobClient.upload(audioData, audioData.byteLength, {
       blobHTTPHeaders: {
-        blobContentType: 'audio/webm'
+        blobContentType: 'audio/ogg'
       }
     });
 
@@ -89,8 +92,7 @@ export const POST: RequestHandler = async ({ request, locals: { auth } }) => {
       SUPABASE_SERVICE_ROLE_KEY
     );
 
-    // Calculate duration (simulated)
-    const durationInSeconds = Math.min(30, validatedData.message.length / 20);
+    const durationInSeconds = Math.round(getDuration(audioData, 48000));
     const sizeInBytes = audioData.byteLength;
 
     // Insert into database using RPC function
@@ -142,8 +144,7 @@ export const POST: RequestHandler = async ({ request, locals: { auth } }) => {
     
     if (error instanceof z.ZodError) {
       return json({ 
-        error: 'Invalid request data', 
-        details: error.issues.map(i => i.message).join('\n') 
+        error: error.issues.map(i => i.message).join('\n') 
       }, { status: 400 });
     }
     
@@ -153,28 +154,89 @@ export const POST: RequestHandler = async ({ request, locals: { auth } }) => {
   }
 };
 
-// Simulate voice generation (to be replaced with actual ElevenLabs API call)
-async function simulateVoiceGeneration(text: string, voice: string): Promise<ArrayBuffer> {
-  // Simulate processing time
-  await new Promise(resolve => setTimeout(resolve, 2000));
-  
-  // Create a simple audio buffer (this is just a placeholder)
-  const sampleRate = 44100;
-  const duration = Math.min(30, text.length / 20); // Roughly 20 chars per second, max 30 seconds
-  const frameCount = sampleRate * duration;
-  
-  const audioBuffer = new ArrayBuffer(frameCount * 2); // 16-bit audio = 2 bytes per sample
-  const view = new DataView(audioBuffer);
-  
-  // Generate a simple sine wave based on the voice type
-  const frequency = voice === 'male' ? 150 : voice === 'female' ? 250 : 200;
-  
-  for (let i = 0; i < frameCount; i++) {
-    const t = i / sampleRate;
-    const amplitude = Math.sin(2 * Math.PI * frequency * t) * 0.5;
-    const sample = Math.floor(amplitude * 32767);
-    view.setInt16(i * 2, sample, true);
+async function genVoice(message: string, voice: keyof typeof VOICES) {
+  /* curl -X POST "https://api.elevenlabs.io/v1/text-to-speech/JBFqnCBsd6RMkjVDRZzb?output_format=mp3_44100_128" \
+     -H "xi-api-key: xi-api-key" \
+     -H "Content-Type: application/json" \
+     -d '{
+  "text": "The first move is what sets everything in motion.",
+  "model_id": "eleven_multilingual_v2"
+}'*/
+  const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${VOICES[voice]}?output_format=opus_48000_64`, {
+    headers: {
+      'xi-api-key': ELEVEN_LABS_KEY,
+      'Content-Type': "application/json"
+    },
+    method: "POST",
+    body: JSON.stringify({
+      text: message,
+      model_id: "eleven_multilingual_v2"
+    })
+  })
+  if (!res.ok) {
+    const data = await res.json();
+    throw new Error(Array.isArray(data.detail) ? data.detail.map((i: any) => i.msg).join("\n") : 'Unknown error')
   }
-  
-  return audioBuffer;
+  const data = await res.arrayBuffer();
+  return data
+}
+
+const OGG_HEADER_SIZE = 27;
+const OPUS_HEADER_ID = 0x4F707573; // 'Opus' in hex
+function getDuration(buf: ArrayBuffer, sampleRate: number) {
+  let totalSamples = 0, offset = 0;
+  const bytes = new Uint8Array(buf)
+  while (offset < bytes.length) {
+    // Check for OGG page header
+    if (bytes[offset] !== 0x4F || bytes[offset+1] !== 0x67 || 
+        bytes[offset+2] !== 0x67 || bytes[offset+3] !== 0x53) {
+        break;
+    }
+   
+    const headerType = bytes[offset+5];
+    const granulePosition = readLittleEndianBigInt(bytes, offset+6, 8);
+   
+    // Check for first Opus header page
+    if (headerType & 0x02) {
+        // Look for Opus identification header
+        const idHeaderStart = offset + OGG_HEADER_SIZE;
+        const magicNumber = readLittleEndianUint32(bytes, idHeaderStart);
+        
+        if (magicNumber === OPUS_HEADER_ID) {
+            // Read sample rate from Opus header
+            sampleRate = readLittleEndianUint32(bytes, idHeaderStart + 12);
+        }
+    }
+    
+    // Accumulate total samples from granule position
+    if (granulePosition !== 0n) {
+        totalSamples = Number(granulePosition);
+    }
+    
+    // Move to next page
+    const segmentTable = bytes[offset+26];
+    const segmentSizes = bytes.slice(offset+OGG_HEADER_SIZE, offset+OGG_HEADER_SIZE+segmentTable);
+    const pageSize = segmentTable + OGG_HEADER_SIZE + segmentSizes.reduce((a, b) => a + b, 0);
+    offset += pageSize;
+  }
+  return totalSamples/sampleRate
+}
+
+// Helper function to read little-endian 32-bit unsigned integer
+function readLittleEndianUint32(bytes: Uint8Array, offset: number) {
+    return (
+        bytes[offset] | 
+        (bytes[offset+1] << 8) | 
+        (bytes[offset+2] << 16) | 
+        (bytes[offset+3] << 24)
+    ) >>> 0;
+}
+
+// Helper function to read little-endian 64-bit BigInt
+function readLittleEndianBigInt(bytes: Uint8Array, offset: number, length: number) {
+    let result = 0n;
+    for (let i = 0; i < length; i++) {
+        result |= BigInt(bytes[offset + i]) << BigInt(8 * i);
+    }
+    return result;
 }

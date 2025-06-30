@@ -34,7 +34,6 @@
   const voiceOptions = [
     { id: 'male', label: 'Male Voice', description: 'Deep and clear' },
     { id: 'female', label: 'Female Voice', description: 'Smooth and natural' },
-    { id: 'robot', label: 'Robot Voice', description: 'Mechanical and futuristic' }
   ];
   
   let selectedVoice = 'male';
