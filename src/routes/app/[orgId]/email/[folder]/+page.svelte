@@ -1,6 +1,7 @@
 <script lang="ts">
   import { Mail, Sparkles, Calendar, ArrowRight } from 'lucide-svelte';
   import { Button } from '$lib/components/ui/button';
+  import {page} from "$app/stores"
 </script>
 
 <svelte:head>
@@ -59,10 +60,6 @@
         <Button href="/app/{$page.params.orgId}" class="gap-2">
           <ArrowRight class="h-4 w-4" />
           Return to Dashboard
-        </Button>
-        
-        <Button variant="outline" class="gap-2">
-          Get Notified When Ready
         </Button>
       </div>
     </div>

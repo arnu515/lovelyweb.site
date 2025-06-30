@@ -5,6 +5,8 @@
     Mail,
     MessageCircle,
     FileText,
+    Calendar,
+    CheckSquare,
     Kanban,
     Users
   } from 'lucide-svelte';
@@ -12,43 +14,6 @@
   import { Button } from '$lib/components/ui/button';
 
   export let user: NonNullable<App.Locals['auth']['user']>;
-  export let kanbanBoards: any[] = [];
-  export let notebooks: any[] = [];
-
-  // Quick links - combining kanban boards, notebooks and chats
-  $: quickLinks = [
-    ...(kanbanBoards?.slice(0, 2).map(board => ({
-      name: board.name,
-      type: 'kanban',
-      icon: Kanban,
-      lastViewed: formatRelative(new Date(board.created_at), new Date()),
-      gradient: 'from-blue-500 to-cyan-500',
-      href: `/app/${orgId}/kanban/${board.id}`
-    })) || []),
-    ...(notebooks?.slice(0, 2).map(notebook => ({
-      name: notebook.name,
-      type: 'notes',
-      icon: FileText,
-      lastViewed: formatRelative(new Date(notebook.created_at), new Date()),
-      gradient: 'from-green-500 to-teal-500',
-      href: `/app/${orgId}/notes/${notebook.id}`
-    })) || []),
-    ...($chatOverview?.data?.slice(0, 1).map(chat => ({
-      name: chat.name,
-      type: 'chat',
-      icon: MessageCircle,
-      lastViewed: chat.msg_created_at ? formatRelative(new Date(chat.msg_created_at), new Date()) : 'Recently',
-      gradient: 'from-purple-500 to-pink-500',
-      href: `/app/${orgId}/chat/${chat.is_group ? '-' : '@'}${chat.id}`
-    })) || [])
-  ].sort((a, b) => {
-    // Sort by most recent first (this is a simple sort, could be improved)
-    if (a.lastViewed.includes('second') || a.lastViewed.includes('minute')) return -1;
-    if (b.lastViewed.includes('second') || b.lastViewed.includes('minute')) return 1;
-    if (a.lastViewed.includes('hour')) return -1;
-    if (b.lastViewed.includes('hour')) return 1;
-    return 0;
-  }).slice(0, 5);
 
   // Mock data for recent emails
   const recentEmails = [
@@ -167,43 +132,6 @@
     </div>
   </div>
 
-  <!-- Recently Viewed -->
-  <div class="space-y-4">
-    <div class="flex items-center space-x-2">
-      <Clock class="h-5 w-5 text-gray-500 dark:text-gray-400" />
-      <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
-        Quick Links
-      </h2>
-    </div>
-    <div
-      class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5"
-    >
-      {#each quickLinks as item}
-        <Button
-          href={item.href}
-          variant="ghost"
-          class="h-auto p-0 transition-all duration-200 hover:scale-105"
-        >
-          <div
-            class="glass dark:glass-dark w-full rounded-xl p-6 text-left transition-all duration-200 hover:bg-white/30 dark:hover:bg-gray-800/30"
-          >
-            <div
-              class="h-12 w-12 rounded-xl bg-gradient-to-r {item.gradient} mb-4 flex items-center justify-center"
-            >
-              <svelte:component this={item.icon} class="h-6 w-6 text-white" />
-            </div>
-            <h3 class="mb-1 font-semibold text-gray-900 dark:text-white">
-              {item.name}
-            </h3>
-            <p class="text-sm text-gray-500 dark:text-gray-400">
-              {item.lastViewed}
-            </p>
-          </div>
-        </Button>
-      {/each}
-    </div>
-  </div>
-
   <!-- Recent Activity Grid -->
   <div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
     <!-- Recent Emails -->
@@ -214,7 +142,22 @@
           Latest emails
         </h2>
       </div>
-      <div class="glass dark:glass-dark space-y-4 rounded-2xl p-6">
+      <div class="glass dark:glass-dark relative space-y-4 rounded-2xl p-6">
+        <div
+          class="absolute left-0 top-0 z-20 h-full w-full rounded-2xl bg-gray-200/20 backdrop-blur dark:bg-gray-800/20"
+        ></div>
+        <div
+          class="absolute z-30 mb-6 flex justify-center"
+          style="left: 50%; top: 50%; transform: translate(-50%, -50%);"
+        >
+          <div
+            class="glass dark:glass-dark rounded-2xl bg-white/40 px-8 py-4 text-center shadow-lg backdrop-blur-md dark:bg-gray-900/40"
+          >
+            <span class="text-lg font-semibold text-gray-900 dark:text-white"
+              >Coming Soon</span
+            >
+          </div>
+        </div>
         {#each recentEmails as email}
           <div
             class="flex cursor-pointer items-start space-x-4 rounded-xl p-3 transition-all duration-200 hover:bg-white/20 dark:hover:bg-gray-800/20"
@@ -245,7 +188,7 @@
               >
                 {email.subject}
               </h5>
-              <p class="text-sm text-gray-500 dark:text-gray-400 capitalize">
+              <p class="line-clamp-2 text-sm text-gray-600 dark:text-gray-400">
                 {email.preview}
               </p>
             </div>
@@ -260,6 +203,7 @@
     <!-- Recent Chats -->
     <div class="space-y-4">
       <div class="flex items-center space-x-2">
+        <MessageCircle class="h-5 w-5 text-gray-500 dark:text-gray-400" />
         <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
           Recent chats
         </h2>
@@ -324,14 +268,6 @@
             </div>
           </Button>
         {/each}
-        
-        {#if quickLinks.length === 0}
-          <div class="col-span-full text-center py-4">
-            <p class="text-gray-500 dark:text-gray-400">
-              No recent items. Start creating notes, kanban boards, or chat with your team!
-            </p>
-          </div>
-        {/if}
       </div>
     </div>
   </div>
