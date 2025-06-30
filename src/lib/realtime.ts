@@ -3,10 +3,11 @@ import { PUBLIC_SUPABASE_ANON_KEY, PUBLIC_SUPABASE_URL } from '$env/static/publi
 import { kanban } from './stores/kanban';
 import type { Database } from './database.types';
 import { chat } from './stores/chat';
+import { toast } from 'svelte-sonner';
 
 const supabase = createBrowserClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY);
 
-export function kanbanBoardMemberships(orgId: string, userId: string) {
+export function kanbanBoardMemberships(userId: string) {
   if (!isBrowser()) return;
   const memberships = supabase
     .channel(`kanban-board-membership:${userId}`, {
@@ -40,6 +41,20 @@ export function kanbanBoardMemberships(orgId: string, userId: string) {
     })
     .subscribe();
   return () => supabase.removeChannel(memberships);
+}
+
+export function org(orgId: string) {
+  if (!isBrowser()) return;
+  const org = supabase
+    .channel(`org:${orgId}`, {
+      config: { private: true }
+    })
+    .on('broadcast', { event: '*' }, e => {
+      toast.warning("Organisation Updated")
+      window.location.reload()
+    })
+    .subscribe();
+  return () => supabase.removeChannel(org);
 }
 
 export function kanbanBoard(boardId: string) {
