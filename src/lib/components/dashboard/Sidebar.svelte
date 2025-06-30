@@ -178,9 +178,9 @@
 
           <!-- Actions -->
           <div class="space-y-1 p-2">
-            <Button variant="ghost" class="org-dropdown-btn">
+            <Button href="/app/{currentOrg.id}/settings" variant="ghost" class="org-dropdown-btn">
               <Settings class="mr-2 h-4 w-4" />
-              <a href="/app/{currentOrg.id}/settings">Settings</a>
+              Settings
             </Button>
             {#if user.id === currentOrg.owner_id}
               <Button
