@@ -180,7 +180,7 @@
           <div class="space-y-1 p-2">
             <Button variant="ghost" class="org-dropdown-btn">
               <Settings class="mr-2 h-4 w-4" />
-              Settings
+              <a href="/app/{currentOrg.id}/settings">Settings</a>
             </Button>
             {#if user.id === currentOrg.owner_id}
               <Button

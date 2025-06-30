@@ -1,6 +1,7 @@
 <script lang="ts">
   import Sidebar from '$lib/components/dashboard/Sidebar.svelte';
   import MobileTopNav from '$lib/components/dashboard/MobileTopNav.svelte';
+  import { page } from '$app/stores';
   import type { LayoutData } from './$types';
   import { onMount } from 'svelte';
   import * as realtime from '$lib/realtime';
@@ -10,6 +11,8 @@
 
   let sidebarOpen = false;
   let isMobile = false;
+
+  $: isChat = $page.url.pathname.includes('/chat/');
 
   onMount(() => {
     const checkMobile = () => {
@@ -39,7 +42,7 @@
 <div
   class="flex h-screen bg-gradient-to-br from-purple-100/80 via-blue-100/80 to-indigo-200/80 dark:from-gray-900 dark:via-purple-900/20 dark:to-blue-900/20"
 >
-  <Sidebar
+  {#if data.auth.user && !isChat}
     currentOrg={data.org}
     orgs={data.orgList}
     user={data.auth.user}
