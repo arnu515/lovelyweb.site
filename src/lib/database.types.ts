@@ -419,7 +419,7 @@ export type Database = {
       notebooks: {
         Row: {
           color: string;
-          created_at: string | null;
+          created_at: string;
           description: string | null;
           id: string;
           name: string;
@@ -683,6 +683,30 @@ export type Database = {
           org_id: string;
           typ: Database['public']['Enums']['msg_type'];
           data: Json;
+        };
+        Returns: undefined;
+      };
+      send_group_voice_message: {
+        Args: {
+          msg_id: string;
+          group_id: string;
+          org_id: string;
+          by_id: string;
+          time_sec: number;
+          size_bytes: number;
+          blob_path: string;
+        };
+        Returns: undefined;
+      };
+      send_voice_message: {
+        Args: {
+          msg_id: string;
+          to_id: string;
+          org_id: string;
+          from_id: string;
+          time_sec: number;
+          size_bytes: number;
+          blob_path: string;
         };
         Returns: undefined;
       };
