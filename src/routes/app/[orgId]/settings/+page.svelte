@@ -6,7 +6,6 @@
   import * as Alert from '$lib/components/ui/alert';
   import * as Dialog from '$lib/components/ui/dialog';
   import { 
-    Settings, 
     Building, 
     Trash2, 
     Save, 
@@ -18,7 +17,6 @@
   import { enhance } from '$app/forms';
   import { toast } from 'svelte-sonner';
   import { goto } from '$app/navigation';
-  import { page } from '$app/stores';
   import { cn } from '$lib/utils';
 
   export let data;
@@ -82,7 +80,7 @@
       goto('/app');
     } catch (error) {
       toast.error('Failed to delete organization', {
-        description: error.message
+        description: (error as any).message
       });
       deleteLoading = false;
     }
@@ -134,15 +132,6 @@
     <form 
       method="POST" 
       action="?/updateDetails"
-      use:enhance={() => {
-        loading = true;
-        error = '';
-        success = '';
-        return async ({ update }) => {
-          loading = false;
-          update();
-        };
-      }}
       class="space-y-6"
     >
       <div>
@@ -420,4 +409,3 @@
     </Dialog.Footer>
   </Dialog.Content>
 </Dialog.Root>
-</script>

@@ -2,6 +2,9 @@ import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { z } from 'zod/v4';
 import { captureException } from '@sentry/sveltekit';
+import { createClient } from '@supabase/supabase-js';
+import { PUBLIC_SUPABASE_URL } from '$env/static/public';
+import { SUPABASE_SERVICE_ROLE_KEY } from '$env/static/private';
 
 const updateDetailsSchema = z.object({
   name: z
@@ -21,6 +24,11 @@ const updateDetailsSchema = z.object({
 const updateSubscriptionSchema = z.object({
   plan: z.enum(['free', 'basic', 'pro'], { error: 'Please select a valid plan' })
 });
+
+const supabase = createClient(
+  PUBLIC_SUPABASE_URL,
+  SUPABASE_SERVICE_ROLE_KEY
+)
 
 export const load: PageServerLoad = async ({ locals: { supabase, auth }, params }) => {
   if (!auth.session || !auth.user) redirect(303, '/auth');
@@ -67,7 +75,7 @@ export const load: PageServerLoad = async ({ locals: { supabase, auth }, params 
 };
 
 export const actions: Actions = {
-  updateDetails: async ({ request, locals: { supabase, auth }, params }) => {
+  updateDetails: async ({ request, locals: { auth }, params }) => {
     if (!auth.session || !auth.user) redirect(303, '/auth');
     
     const formData = await request.formData();
@@ -116,7 +124,7 @@ export const actions: Actions = {
     return { error: '', success: 'Organization details updated successfully' };
   },
   
-  updateSubscription: async ({ request, locals: { supabase, auth }, params }) => {
+  updateSubscription: async ({ request, locals: { auth }, params }) => {
     if (!auth.session || !auth.user) redirect(303, '/auth');
     
     const formData = await request.formData();
@@ -160,7 +168,7 @@ export const actions: Actions = {
         return fail(500, { error: countError.message, success: '' });
       }
       
-      if (count > 0) {
+      if (count !== 0) {
         return fail(400, { 
           error: 'You already have an organization on the Free plan. Please upgrade that organization or delete it first.',
           success: ''
