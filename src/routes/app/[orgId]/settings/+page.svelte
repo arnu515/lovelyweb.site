@@ -77,7 +77,7 @@
       }
 
       toast.success('Organization deleted successfully');
-      goto('/app');
+      window.location.href = '/app';
     } catch (error) {
       toast.error('Failed to delete organization', {
         description: (error as any).message

@@ -1,7 +1,6 @@
 <script lang="ts">
   import Sidebar from '$lib/components/dashboard/Sidebar.svelte';
   import MobileTopNav from '$lib/components/dashboard/MobileTopNav.svelte';
-  import { page } from '$app/stores';
   import type { LayoutData } from './$types';
   import { onMount } from 'svelte';
   import * as realtime from '$lib/realtime';
@@ -11,8 +10,6 @@
 
   let sidebarOpen = false;
   let isMobile = false;
-
-  $: isChat = $page.url.pathname.includes('/chat/');
 
   onMount(() => {
     const checkMobile = () => {
@@ -24,8 +21,8 @@
     checkMobile();
     window.addEventListener('resize', checkMobile);
 
+    const orgUnsub = realtime.org(data.org.id)
     const boardMembershipsUnsub = realtime.kanbanBoardMemberships(
-      data.org.id,
       data.auth.user.id
     );
 
@@ -34,6 +31,7 @@
     return () => {
       window.removeEventListener('resize', checkMobile);
       boardMembershipsUnsub?.();
+      orgUnsub?.();
       chat.cleanupRealtime();
     };
   });

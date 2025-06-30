@@ -5,6 +5,7 @@
   import { chat, chatOverview } from '$lib/stores/chat';
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
+  import * as realtime from '$lib/realtime';
 
   export let data: LayoutData;
 
@@ -14,11 +15,17 @@
       goto('/auth');
       return;
     }
+    const orgUnsub = realtime.org(orgId)
+    const boardMembershipsUnsub = realtime.kanbanBoardMemberships(
+      data.auth.user.id
+    );
     chat.init(orgId, data.auth.user.id).then(fetched => {
       if (!fetched && !$chatOverview)
         chatOverview.fetchOverview(orgId, data.auth.user!.id);
     });
     return () => {
+      boardMembershipsUnsub?.();
+      orgUnsub?.();
       chat.cleanupRealtime();
     };
   });
