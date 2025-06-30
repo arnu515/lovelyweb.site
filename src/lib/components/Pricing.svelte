@@ -103,13 +103,7 @@
 
     <!-- Bottom Note -->
     <div class="mx-auto mt-12 max-w-screen-sm text-center">
-      <p class="text-gray-600 dark:text-gray-300">
-        Plan limits are arbitrary. They are put in place since I am using free tiers
-        of the services used to power this application. As people purchase paid
-        plans, the limits will be increased. Thank you for supporting this project.
-        <br />
-        To reiterate: LIMITS ARE ARBITRARY AND MAY CHANGE AT ANY TIME.
-      </p>
+      <p class="text-muted-foreground">Please note that upgrading your plan has no effect as of now.</p>
       <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
         Need a custom solution? <a
           href="mailto:support@lovelyweb.site"

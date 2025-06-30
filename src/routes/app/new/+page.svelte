@@ -366,12 +366,6 @@
     </p>
   </div>
   <div class="mx-auto mt-8 max-w-screen-sm text-center">
-    <p class="text-gray-600 dark:text-gray-300">
-      Plan limits are arbitrary. They are put in place since I am using free tiers
-      of the services used to power this application. As people purchase paid plans,
-      the limits will be increased. Thank you for supporting this project.
-      <br />
-      To reiterate: LIMITS ARE ARBITRARY AND MAY CHANGE AT ANY TIME.
-    </p>
+    <p class="text-muted-foreground">Please note that upgrading your plan has no effect as of now.</p>
   </div>
 </div>

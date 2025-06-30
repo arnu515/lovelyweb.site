@@ -307,6 +307,7 @@
         {/if}
         Update Subscription
       </Button>
+      <p class="text-muted-foreground">Please note that upgrading your plan has no effect as of now.</p>
     </form>
   </div>
 
