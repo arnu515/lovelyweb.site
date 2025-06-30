@@ -4,7 +4,7 @@
   import { Input } from '$lib/components/ui/input';
   import { Textarea } from '$lib/components/ui/textarea';
   import { Label } from '$lib/components/ui/label';
-  import { Edit3, Volume2, X, Sparkles, Loader2 } from 'lucide-svelte';
+  import { FileEdit as Edit3, Volume2, X, Sparkles, Loader2 } from 'lucide-svelte';
   import { cn } from '$lib/utils';
   import { toast } from 'svelte-sonner';
   import { page } from '$app/stores';
