@@ -209,7 +209,7 @@
       <Tabs.Content value="cht">
         <div class="glass dark:glass-dark rounded-2xl p-4 sm:p-8">
           <UsersList
-            genHref={({ username }) => `/app/${orgId}/chat/@${username}`}
+            genHref={({ id }) => `/app/${orgId}/chat/@${id}`}
             on:refresh={() => invalidate(`org:${orgId}:members`)}
             showRefreshButton
             {users}

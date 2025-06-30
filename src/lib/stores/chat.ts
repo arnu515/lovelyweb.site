@@ -360,8 +360,8 @@ function createChatStore() {
         : individualMessagesData.get(id);
       console.log({ currentUserId });
       if (!msgStore) {
-        currentUserId &&
-          chat.messages.fetch((ov.is_group ? '-' : '@') + ov.id, currentUserId);
+        currentUserId && currentOrgId &&
+          chat.messages.fetch((ov.is_group ? '-' : '@') + ov.id, currentOrgId, currentUserId);
       } else {
         msgStore.subscribe(msgs => {
           if (Array.isArray(msgs) && msgs.length > 0) {
@@ -388,6 +388,28 @@ function createChatStore() {
   // Chat overview functionality
   const chatOverview = {
     subscribe: subscribeOverview,
+    async forceFetchOverview(userId: string) {
+      if (!isBrowser()) return;
+      const {data, error} = await supabase.from("users").select().eq("id", userId).maybeSingle()
+      if (error) {
+        captureException(error, { tags: { supabase: "users" }})
+        toast.error("Failed to fetch user information", { description: error.message })
+        return false
+      }
+      if (!data) return false
+      const ov = {
+        avatar_url: data.avatar_url,
+        id: data.id,
+        name: data.name,
+        is_group: false,
+        typ: null
+      } as any
+      overviewData.push(ov)
+      overviewDataMap['@' + userId] = ov
+      console.log(overviewData)
+      setOverview({ data: overviewData, dataMap: overviewDataMap });
+      return true
+    },
     async fetchOverview(orgId: string, userId: string) {
       if (!isBrowser()) return;
 
@@ -477,6 +499,7 @@ function createChatStore() {
             }));
             store.set(messagesWithSender);
           } else {
+            console.log({data})
             store.set(data);
           }
         }

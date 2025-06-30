@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { afterUpdate } from 'svelte';
+  import { afterUpdate, onMount, tick } from 'svelte';
   import { Button } from '$lib/components/ui/button';
   import { Input } from '$lib/components/ui/input';
   import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
@@ -31,7 +31,6 @@
 
   let messageInput = '';
   let messagesContainer: HTMLElement;
-  let fileInput: HTMLInputElement;
   let showChatInfo = false;
   let showVoiceRecorder = false;
   let aiMode: 'refine' | 'voice' | null = null;
@@ -340,14 +339,6 @@
     }
   }
 
-  function handleFileSelected(event: Event) {
-    const files = (event.target as HTMLInputElement).files;
-    if (files && files.length > 0) {
-      // Handle file upload
-      console.log('Files selected:', files);
-    }
-  }
-
   type NormMsg = {
     id: string;
     from_id: string;
@@ -400,6 +391,19 @@
       .from('avatars')
       .getPublicUrl(`/org/${orgId}/group/${gid}.${avatar_type}`).data.publicUrl;
   }
+
+  let loading = true;
+  onMount(async () => {
+    const chatId = $page.params.chatId
+    if (!$currentChat && chatId.charAt(0) === '@') {
+      chat.chatOverview.forceFetchOverview(chatId.substring(1))
+        .then(async () => {
+          await tick()
+          console.log($currentChat, messages)
+          loading = false
+        })
+    } else loading = false;
+  })
 </script>
 
 <svelte:head>
@@ -407,6 +411,7 @@
 </svelte:head>
 
 {#if $currentChat === undefined || typeof messages === 'undefined' || typeof $messages === 'string'}
+  {#if !loading}
   <div class="mx-auto my-10 flex max-w-screen-md p-4">
     <div class="glass dark:glass-dark rounded-2xl p-8">
       <h1 class="mb-4 text-xl">
@@ -424,6 +429,7 @@
       </p>
     </div>
   </div>
+  {/if}
 {:else}
   <div class="flex h-full flex-col">
     <!-- Chat Header -->
@@ -826,16 +832,6 @@
       {/if}
     </div>
   </div>
-
-  <!-- Hidden file input -->
-  <input
-    bind:this={fileInput}
-    type="file"
-    multiple
-    accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt"
-    class="hidden"
-    on:change={handleFileSelected}
-  />
 
   <!-- Chat Info Sidebar -->
   <ChatInfoSidebar
