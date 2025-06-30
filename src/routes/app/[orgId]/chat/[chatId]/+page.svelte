@@ -4,27 +4,7 @@
   import { Input } from '$lib/components/ui/input';
   import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
   import ChatInfoSidebar from './ChatInfoSidebar.svelte';
-  import {
-    Send,
-    Paperclip,
-    Mic,
-    Phone,
-    Video,
-    MoreVertical,
-    Smile,
-    Image as ImageIcon,
-    Sparkles,
-    Volume2,
-    Edit3,
-    ArrowLeft,
-    CheckCheck,
-    Loader2,
-    MessageCircle,
-    Info,
-    Trash2,
-    Check,
-    X
-  } from 'lucide-svelte';
+  import { Send, Paperclip, Mic, Phone, Video, MoreVertical, Smile, Image as ImageIcon, Sparkles, Volume2, FileEdit as Edit3, ArrowLeft, CheckCheck, Loader2, MessageCircle, Info, Trash2, Check, X } from 'lucide-svelte';
   import { cn } from '$lib/utils';
   import { page } from '$app/stores';
   import { chat } from '$lib/stores/chat.js';
