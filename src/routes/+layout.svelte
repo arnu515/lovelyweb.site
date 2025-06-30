@@ -5,6 +5,8 @@
   import { onMount } from 'svelte';
   import type { LayoutData } from './$types';
   import { Toaster } from '$lib/components/ui/sonner';
+  import "@fontsource-variable/inter";
+  import "@fontsource-variable/red-hat-mono";
 
   export let data: LayoutData;
   $: ({

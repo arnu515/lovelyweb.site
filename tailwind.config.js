@@ -21,6 +21,11 @@ const config = {
         '2xl': '1400px'
       }
     },
+    fontFamily: {
+      sans: ['Inter Variable', 'sans-serif'],
+      serif: ['Inter Variable', 'serif'],
+      mono: ['Red Hat Mono Variable', 'monospace'],
+    },
     extend: {
       colors: {
         border: 'hsl(var(--border) / <alpha-value>)',

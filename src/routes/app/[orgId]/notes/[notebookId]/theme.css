@@ -17,10 +17,9 @@
   --crepe-color-selected: #ede0d4;
   --crepe-color-inline-area: #e4d8cc;
 
-  --crepe-font-title: Georgia, Cambria, 'Times New Roman', Times, serif;
-  --crepe-font-default: 'Open Sans', Arial, Helvetica, sans-serif;
-  --crepe-font-code:
-    Fira Code, Menlo, Monaco, 'Courier New', Courier, monospace;
+  --crepe-font-title: 'Inter Variable', sans-serif;
+  --crepe-font-default: 'Inter Variable', sans-serif;
+  --crepe-font-code: 'Red Hat Mono Variable', monospace;
 
   --crepe-shadow-1:
     0px 1px 3px 1px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.3);
@@ -47,10 +46,9 @@
   --crepe-color-selected: #3b342b;
   --crepe-color-inline-area: #3f3830;
 
-  --crepe-font-title: Georgia, Cambria, 'Times New Roman', Times, serif;
-  --crepe-font-default: 'Open Sans', Arial, Helvetica, sans-serif;
-  --crepe-font-code:
-    Fira Code, Menlo, Monaco, 'Courier New', Courier, monospace;
+  --crepe-font-title: 'Inter Variable', sans-serif;
+  --crepe-font-default: 'Inter Variable', sans-serif;
+  --crepe-font-code: 'Red Hat Mono Variable', monospace;
 
   --crepe-shadow-1:
     0px 1px 2px 0px rgba(255, 255, 255, 0.3),
