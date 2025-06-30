@@ -116,7 +116,7 @@ export const POST: RequestHandler = async ({ request, locals: { auth } }) => {
     captureException(error, { tags: { action: 'voice_upload' } });
     
     if (error instanceof z.ZodError) {
-      return json({ error: 'Invalid request data', details: error.issues.map(i => i.message).join("\n") }, { status: 400 });
+      return json({ error: error.issues.map(i => i.message).join("\n") }, { status: 400 });
     }
     
     return json({ error: error.message || 'Internal server error' }, { status: 500 });

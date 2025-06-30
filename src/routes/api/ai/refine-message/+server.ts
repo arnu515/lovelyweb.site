@@ -122,8 +122,7 @@ Important guidelines:
     
     if (error instanceof z.ZodError) {
       return json({ 
-        error: 'Invalid request data', 
-        details: error.issues.map(i => i.message).join('\n') 
+        error: error.issues.map(i => i.message).join('\n') 
       }, { status: 400 });
     }
     

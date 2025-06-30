@@ -92,7 +92,7 @@ export const POST: RequestHandler = async ({ request, locals: { auth } }) => {
       SUPABASE_SERVICE_ROLE_KEY
     );
 
-    const durationInSeconds = Math.round(getDuration(audioData, 48000));
+    const durationInSeconds = getDuration(audioData, 48000)+1;
     const sizeInBytes = audioData.byteLength;
 
     // Insert into database using RPC function
