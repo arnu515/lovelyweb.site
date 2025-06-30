@@ -196,8 +196,12 @@
   }
 
   function handleVoiceSend(event: CustomEvent<{ blob: Blob; duration: number }>) {
+    const { blob, duration } = event.detail;
     showVoiceRecorder = false;
-    // Voice message has been sent successfully via the VoiceRecorder component
+    
+    // Here you would normally send the voice message
+    // For now, we'll just show a toast as requested
+    toast.success(`Voice message recorded: ${duration}s, ${Math.round(blob.size / 1024)}KB`);
   }
 
   function handleKeyPress(event: KeyboardEvent) {
@@ -503,10 +507,24 @@
                   >
                     {#if message.typ === 'text'}
                       <p class="text-sm leading-relaxed">{message.data}</p>
+                    {:else if message.typ === 'voice'}
+                      <!-- Voice Message -->
+                      <div class="flex items-center space-x-3">
+                        <div class="flex h-8 w-8 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900">
+                          <Volume2 class="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                        </div>
+                        <div class="flex-1">
+                          <div class="text-xs text-gray-500 dark:text-gray-400">
+                            Voice message • {Math.round(message.data.time)}s
+                          </div>
+                          <!-- TODO: Add audio player controls -->
+                          <div class="mt-1 text-xs text-gray-400">
+                            Click to play
+                          </div>
+                        </div>
+                      </div>
                     {:else if message.typ === 'attachment'}
                       <!-- TODO: attachment -->
-                    {:else if message.typ === 'voice'}
-                      <!-- TODO: voice message -->
                     {/if}
                   </div>
                   
