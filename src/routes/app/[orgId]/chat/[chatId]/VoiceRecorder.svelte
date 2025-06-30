@@ -12,6 +12,8 @@
   } from 'lucide-svelte';
   import { cn } from '$lib/utils';
   import { toast } from 'svelte-sonner';
+  import { nanoid } from 'nanoid';
+  import { page } from '$app/stores';
 
   const dispatch = createEventDispatcher<{
     cancel: void;
@@ -35,6 +37,11 @@
   let waveformCanvas: HTMLCanvasElement;
 
   let recordingTimer: ReturnType<typeof setInterval> | null = null;
+
+  $: orgId = $page.params.orgId;
+  $: chatId = $page.params.chatId;
+  $: isGroup = chatId.startsWith('-');
+  $: actualChatId = chatId.substring(1);
 
   onMount(async () => {
     await initializeRecording();
@@ -237,20 +244,56 @@
     }
   }
 
-  function sendRecording() {
+  async function sendRecording() {
     if (!recordedBlob) return;
 
-    // Dummy function as requested
     const durationInSeconds = Math.round(duration * 10) / 10;
     const sizeInBytes = recordedBlob.size;
-    const sizeInKB = Math.round(sizeInBytes / 1024 * 10) / 10;
+    const messageId = nanoid();
 
-    console.log(`Voice message recorded:
-      Duration: ${durationInSeconds} seconds
-      Size: ${sizeInBytes} bytes (${sizeInKB} KB)
-      Type: ${recordedBlob.type}`);
+    // Show loading toast
+    const loadingToast = toast.loading('Uploading voice message...');
 
-    dispatch('send', { blob: recordedBlob, duration: durationInSeconds });
+    try {
+      // Prepare form data
+      const formData = new FormData();
+      formData.append('audio', recordedBlob, `${messageId}.webm`);
+      
+      const metadata = {
+        messageId,
+        orgId,
+        senderId: $page.data.auth.user.id,
+        ...(isGroup ? { groupId: actualChatId } : { toId: actualChatId }),
+        duration: durationInSeconds,
+        size: sizeInBytes,
+        contentType: recordedBlob.type
+      };
+      
+      formData.append('metadata', JSON.stringify(metadata));
+
+      // Upload to server
+      const response = await fetch('/api/voice/upload', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Upload failed');
+      }
+
+      // Success
+      toast.dismiss(loadingToast);
+      toast.success('Voice message sent successfully');
+      dispatch('send', { blob: recordedBlob, duration: durationInSeconds });
+      
+    } catch (error: any) {
+      toast.dismiss(loadingToast);
+      toast.error('Failed to send voice message', {
+        description: error.message
+      });
+      console.error('Voice upload error:', error);
+    }
   }
 
   function cancelRecording() {

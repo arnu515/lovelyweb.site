@@ -196,12 +196,8 @@
   }
 
   function handleVoiceSend(event: CustomEvent<{ blob: Blob; duration: number }>) {
-    const { blob, duration } = event.detail;
     showVoiceRecorder = false;
-    
-    // Here you would normally send the voice message
-    // For now, we'll just show a toast as requested
-    toast.success(`Voice message recorded: ${duration}s, ${Math.round(blob.size / 1024)}KB`);
+    // Voice message has been sent successfully via the VoiceRecorder component
   }
 
   function handleKeyPress(event: KeyboardEvent) {
