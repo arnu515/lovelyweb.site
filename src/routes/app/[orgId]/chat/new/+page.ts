@@ -1,7 +1,6 @@
 import { captureException } from '@sentry/sveltekit';
 import type { PageLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
-import { invalidate } from '$app/navigation';
 
 export const load: PageLoad = async ({ parent, params: { orgId }, depends }) => {
   depends(`org:${orgId}:members`);
@@ -23,9 +22,6 @@ export const load: PageLoad = async ({ parent, params: { orgId }, depends }) => 
       }
       return users.map(i => i.users);
     });
-
-  // Invalidate chat overview when new chat page loads to ensure fresh data
-  invalidate('chat:overview');
 
   return { users };
 };
