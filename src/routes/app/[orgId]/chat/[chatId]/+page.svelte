@@ -3,7 +3,7 @@
   import { Button } from '$lib/components/ui/button';
   import { Input } from '$lib/components/ui/input';
   import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-  import { Send, Paperclip, Mic, Phone, Video, MoreVertical, Smile, Sparkles, Volume2, FileEdit as Edit3, ArrowLeft, CheckCheck, Loader2, MessageCircle, Info, Trash2, Check, X } from 'lucide-svelte';
+  import { Send, Mic, Phone, Video, MoreVertical, Sparkles, Volume2, FileEdit as Edit3, ArrowLeft, CheckCheck, Loader2, MessageCircle, Info, Trash2, Check, X } from 'lucide-svelte';
   import { cn } from '$lib/utils';
   import { page } from '$app/stores';
   import { chat } from '$lib/stores/chat.js';
@@ -313,10 +313,6 @@
     }
   }
 
-  function handleFileUpload() {
-    fileInput.click();
-  }
-
   function handleFileSelected(event: Event) {
     const files = (event.target as HTMLInputElement).files;
     if (files && files.length > 0) {
@@ -616,8 +612,6 @@
                         size={message.data.size || 0}
                         isOwn={message.from_id === user.id}
                       />
-                    {:else if message.typ === 'attachment'}
-                      <!-- TODO: attachment -->
                     {/if}
                   
                   <!-- Message Actions (only for user's own text messages) -->
@@ -713,16 +707,6 @@
       {/if}
       
       <div class="flex items-end space-x-2">
-        <!-- Attachment Button -->
-        <Button
-          variant="ghost"
-          size="icon"
-          class="h-10 w-10 flex-shrink-0"
-          on:click={handleFileUpload}
-        >
-          <Paperclip class="h-4 w-4" />
-        </Button>
-
         <!-- Message Input -->
         <div class="flex-1">
           <div
@@ -746,13 +730,6 @@
               class="border-0 bg-transparent pr-12 focus:ring-0"
               on:keypress={handleKeyPress}
             />
-            <Button
-              variant="ghost"
-              size="icon"
-              class="absolute right-1 top-1/2 h-8 w-8 -translate-y-1/2"
-            >
-              <Smile class="h-4 w-4" />
-            </Button>
           </div>
         </div>
         
@@ -784,9 +761,9 @@
           <DropdownMenu.Content
             class="glass dark:glass-dark border-white/20 dark:border-gray-700/50"
           >
-            <DropdownMenu.Item class="gap-2">
+            <DropdownMenu.Item class="gap-2" on:click={() => aiMode = 'refine'}>
               <Edit3 class="h-4 w-4" />
-              <span on:click={() => aiMode = 'refine'}>Refine Message</span>
+              <span>Refine Message</span>
             </DropdownMenu.Item>
             <DropdownMenu.Item class="gap-2" on:click={() => aiMode = 'voice'}>
               <Volume2 class="h-4 w-4" />

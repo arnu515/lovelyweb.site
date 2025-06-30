@@ -213,8 +213,6 @@
                       {:else}
                         {chat.data}
                       {/if}
-                    {:else if chat.typ === 'attachment'}
-                      TODO: attachment
                     {:else if chat.typ === 'voice'}
                       <p class="flex items-center gap-1">
                         <Volume2 class="w-4 h-4"/>
