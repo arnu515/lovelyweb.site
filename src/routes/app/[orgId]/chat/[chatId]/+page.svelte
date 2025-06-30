@@ -29,6 +29,7 @@
   import { page } from '$app/stores';
   import { chat } from '$lib/stores/chat.js';
   import VoiceRecorder from './VoiceRecorder.svelte';
+  import VoicePlayer from './VoicePlayer.svelte';
   import { derived } from 'svelte/store';
   import { Skeleton } from '$lib/components/ui/skeleton/index.js';
   import {
@@ -508,21 +509,14 @@
                     {#if message.typ === 'text'}
                       <p class="text-sm leading-relaxed">{message.data}</p>
                     {:else if message.typ === 'voice'}
-                      <!-- Voice Message -->
-                      <div class="flex items-center space-x-3">
-                        <div class="flex h-8 w-8 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900">
-                          <Volume2 class="h-4 w-4 text-purple-600 dark:text-purple-400" />
-                        </div>
-                        <div class="flex-1">
-                          <div class="text-xs text-gray-500 dark:text-gray-400">
-                            Voice message • {Math.round(message.data.time)}s
-                          </div>
-                          <!-- TODO: Add audio player controls -->
-                          <div class="mt-1 text-xs text-gray-400">
-                            Click to play
-                          </div>
-                        </div>
-                      </div>
+                      <VoicePlayer
+                        messageId={message.id}
+                        {orgId}
+                        isGroup={messages.isGroup}
+                        duration={message.data.time || 0}
+                        size={message.data.size || 0}
+                        isOwn={message.from_id === user.id}
+                      />
                     {:else if message.typ === 'attachment'}
                       <!-- TODO: attachment -->
                     {/if}
