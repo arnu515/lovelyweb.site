@@ -4,7 +4,7 @@
   import { Label } from '$lib/components/ui/label';
   import * as Dialog from '$lib/components/ui/dialog';
   import { Skeleton } from '$lib/components/ui/skeleton';
-  import { Plus, Trash2, FileText, Save, ArrowLeft } from 'lucide-svelte';
+  import { Plus, Trash2, FileText, Save, ArrowLeft, Loader2 } from 'lucide-svelte';
   import { createBrowserClient } from '@supabase/ssr';
   import { 
     PUBLIC_SUPABASE_ANON_KEY, 
@@ -16,8 +16,10 @@
   import type { Database } from '$lib/database.types';
   import { nanoid } from 'nanoid';
   import { page } from '$app/stores';
-  import { onMount, onDestroy } from 'svelte';
+  import { onDestroy } from 'svelte';
   import { Crepe } from '@milkdown/crepe';
+  import '@milkdown/crepe/theme/common/style.css';
+  import './theme.css';
 
   export let data;
 
@@ -38,26 +40,34 @@
 
   // Editor state
   let selectedPageId: string | null = null;
-  let editorContainer: HTMLElement;
   let crepeEditor: Crepe | null = null;
   let hasUnsavedChanges = false;
   let currentContent = '';
 
-  $: if (selectedPageId && crepeEditor) {
-    loadPageContent(selectedPageId);
+  $: if (selectedPageId) {
+    initEditor(selectedPageId);
   }
 
-  async function initializeEditor() {
-    if (!editorContainer || crepeEditor) return;
+  async function initEditor(pageId: string) {
+    if (crepeEditor) {
+      crepeEditor.destroy();
+      crepeEditor = null;
+    };
 
     try {
-      // Import CSS dynamically
-      await import('@milkdown/crepe/theme/common/style.css');
-      await import('@milkdown/crepe/theme/frame.css');
+      const { data: page, error } = await supabase
+        .from('notebook_pages')
+        .select('content')
+        .eq('id', pageId)
+        .single();
+      if (error) throw error;
+
+      currentContent = page.content || '';
+      hasUnsavedChanges = false;
 
       crepeEditor = new Crepe({
-        root: editorContainer,
-        defaultValue: "# Welcome to your notebook!\n\nStart writing your notes here...",
+        root: "#editor",
+        defaultValue: currentContent,
         features: {
           [Crepe.Feature.CodeMirror]: true,
           [Crepe.Feature.ListItem]: true,
@@ -84,7 +94,7 @@
 
       // Set up event listeners
       crepeEditor.on((listener) => {
-        listener.markdownUpdated((markdown) => {
+        listener.markdownUpdated((_, markdown) => {
           currentContent = markdown;
           hasUnsavedChanges = true;
         });
@@ -101,39 +111,6 @@
     } catch (error) {
       console.error('Failed to initialize Crepe editor:', error);
       toast.error('Failed to initialize editor');
-    }
-  }
-
-  async function loadPageContent(pageId: string) {
-    if (!crepeEditor) return;
-
-    try {
-      const { data: page, error } = await supabase
-        .from('notebook_pages')
-        .select('content')
-        .eq('id', pageId)
-        .single();
-
-      if (error) throw error;
-      
-      const content = page.content || "# New Page\n\nStart writing...";
-      currentContent = content;
-      
-      // Set content in Crepe editor
-      await crepeEditor.editor.action((ctx) => {
-        const view = ctx.get('editorViewCtx');
-        const parser = ctx.get('parserCtx');
-        const doc = parser(content);
-        const state = view.state;
-        const tr = state.tr.replaceWith(0, state.doc.content.size, doc.content);
-        view.dispatch(tr);
-      });
-
-      hasUnsavedChanges = false;
-    } catch (error: any) {
-      toast.error('Failed to load page content', {
-        description: error.message
-      });
     }
   }
 
@@ -246,11 +223,6 @@
     }, 2000); // Auto-save after 2 seconds of inactivity
   }
 
-  onMount(() => {
-    // Initialize editor after component mounts
-    setTimeout(initializeEditor, 100);
-  });
-
   onDestroy(() => {
     if (crepeEditor) {
       crepeEditor.destroy();
@@ -361,7 +333,7 @@
   <div class="flex flex-1 flex-col">
     {#if selectedPageId}
       <!-- Editor Header -->
-      <div class="glass dark:glass-dark border-b border-white/20 p-4 dark:border-gray-700/50">
+      <div class="glass dark:glass-dark border-b border-white/20 p-4 dark:border-gray-700/50 shadow-none">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
             <div class="h-2 w-2 rounded-full {hasUnsavedChanges ? 'bg-orange-500' : 'bg-green-500'}"></div>
@@ -383,11 +355,16 @@
       </div>
 
       <!-- Crepe Editor Container -->
-      <div class="flex-1 overflow-hidden">
+      <div class="flex-1 relative overflow-hidden">
         <div 
-          bind:this={editorContainer}
+          id="editor"
           class="h-full w-full crepe-editor-container"
         />
+        {#if !crepeEditor}
+          <div class="absolute grid place-items-center p-4" style="left: 50%; top: 50%; transform: translate(-50% -50%);">
+            <Loader2 class="w-8 h-8 text-purple-500 animate-spin" />
+          </div>
+        {/if}
       </div>
     {:else}
       <!-- No Page Selected -->
